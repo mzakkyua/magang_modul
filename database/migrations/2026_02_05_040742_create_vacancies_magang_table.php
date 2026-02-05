@@ -19,6 +19,7 @@ return new class extends Migration
             $table->enum('registration_mode', ['individu', 'kelompok', 'hybrid'])->default('individu');
             
             $table->integer('quota_slots')->default(0);
+            $table->integer('min_members')->default(1); // Batas Bawah (Cth: Minimal 2 org untuk kelompok)
             $table->integer('max_members')->default(1);
             
             // Timeline Visual
