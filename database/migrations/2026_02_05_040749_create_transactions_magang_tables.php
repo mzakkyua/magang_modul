@@ -14,7 +14,9 @@ return new class extends Migration
             $table->foreignId('vacancy_id')->constrained('vacancies_magang');
             $table->foreignId('leader_user_id')->constrained('users_magang');
             $table->string('research_title')->nullable();
+            // --- REVISI KHUSUS PENELITIAN ---
             $table->text('research_abstract')->nullable(); // Abstrak (NEW)
+            // --------------------------------
             $table->timestamp('submission_date')->useCurrent();
             
             // Logic Kuota: Rejected = Restock
