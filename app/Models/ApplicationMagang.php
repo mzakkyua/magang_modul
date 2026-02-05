@@ -14,6 +14,7 @@ class ApplicationMagang extends Model
 
     protected $fillable = [
         'vacancy_id', 'leader_user_id', 'research_title', 
+        'research_abstract',
         'submission_date', 'status', 'admin_feedback'
     ];
     

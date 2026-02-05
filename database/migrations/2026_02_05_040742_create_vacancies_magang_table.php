@@ -30,8 +30,9 @@ return new class extends Migration
             
             // Kontrol Admin
             $table->enum('status', ['open', 'closed', 'archived'])->default('open');
-            
+
             $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
         });
     }
 
