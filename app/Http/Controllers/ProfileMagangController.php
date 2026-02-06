@@ -16,7 +16,7 @@ class ProfileMagangController extends Controller
         $user = Auth::guard('magang')->user();
         
         // Ambil data profilnya
-        $profile = $user->profile;
+        $profile = $user->profile ?? new ProfileMagang();
 
         return view('profile.edit', compact('profile', 'user'));
     }
