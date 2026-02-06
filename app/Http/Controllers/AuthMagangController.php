@@ -27,7 +27,7 @@ class AuthMagangController extends Controller
         $request->validate([
             'username' => 'required|string|max:50|unique:users_magang,username',
             'email'    => 'required|email|max:100|unique:users_magang,email',
-            'password' => 'required|string|min:6|confirmed', // confirmed = harus ada field password_confirmation di form
+            'password' => 'required|string|min:8|confirmed', // confirmed = harus ada field password_confirmation di form
             
             // Validasi Data Profil Awal (Bisa ditambah sesuai form register)
             'full_name' => 'required|string|max:150',

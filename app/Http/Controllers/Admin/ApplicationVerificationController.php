@@ -5,7 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\ApplicationMagang;
-use App\Models\VacancyMagang;
+use App\Models\MagangAccessRight; // <--- PENTING: Panggil Model Hak Akses
+use Illuminate\Support\Facades\Auth;
 
 class ApplicationVerificationController extends Controller
 {
@@ -14,25 +15,37 @@ class ApplicationVerificationController extends Controller
     // =================================================================
     public function index(Request $request)
     {
-        // Query Dasar: Ambil semua aplikasi pelamar
-        // with('vacancy', 'leader') -> Eager Loading (Biar hemat query SQL)
-        // Kita ambil data lowongannya & data ketua kelompoknya sekalian
-        $applications = ApplicationMagang::with(['vacancy', 'leader'])
-            ->orderBy('submission_date', 'desc'); // Yang baru daftar ada di atas
+        // 1. Ambil ID User Login
+        $userId = Auth::id();
 
-        // -------------------------------------------------------------
-        // FITUR FILTER (Opsional tapi Penting)
-        // Admin bisa filter berdasarkan Status atau Lowongan
-        // -------------------------------------------------------------
-        if ($request->has('status')) {
+        // 2. Cek SK Hak Akses
+        $hakAkses = MagangAccessRight::where('user_id', $userId)->first();
+
+        // 3. Safety Check
+        if (!$hakAkses) {
+            abort(403, 'Anda tidak memiliki akses ke halaman verifikasi ini.');
+        }
+
+        // 4. Mulai Query: Ambil Pelamar + Data Lowongannya + Data Ketua
+        $applications = ApplicationMagang::with(['vacancy', 'leader'])
+            ->orderBy('submission_date', 'desc');
+
+        // 5. --- LOGIC FILTER (ADMIN BIDANG) ---
+        // Kalau BUKAN Superadmin, filter berdasarkan divisi di SK-nya
+        if ($hakAkses->role !== 'superadmin') {
+            
+            // Logic: "Ambil lamaran yang Lowongannya memiliki nama divisi yang sama dengan saya"
+            $applications->whereHas('vacancy', function($q) use ($hakAkses) {
+                $q->where('division_name', $hakAkses->division_name);
+            });
+        }
+        // -----------------------------------
+
+        // Filter tambahan dari Request (Misal Admin pilih dropdown Status)
+        if ($request->has('status') && $request->status != '') {
             $applications->where('status', $request->status);
         }
-        
-        if ($request->has('vacancy_id')) {
-            $applications->where('vacancy_id', $request->vacancy_id);
-        }
 
-        // Tampilkan 10 data per halaman
         $data = $applications->paginate(10);
 
         return view('admin.applications.index', compact('data'));
@@ -43,10 +56,22 @@ class ApplicationVerificationController extends Controller
     // =================================================================
     public function show($id)
     {
-        // Ambil data lamaran beserta semua anggotanya & profil mereka
-        // Nested Eager Loading: members.user.profile (Ambil Anggota -> User -> Profilnya)
+        // Ambil Data
         $application = ApplicationMagang::with(['members.user.profile', 'vacancy'])
             ->findOrFail($id);
+
+        // --- SECURITY CHECK (PENTING!) ---
+        // Mencegah Admin IT mengintip URL detail pelamar Keuangan
+        $userId = Auth::id();
+        $hakAkses = MagangAccessRight::where('user_id', $userId)->first();
+
+        if ($hakAkses->role !== 'superadmin') {
+            // Cek apakah divisi pelamar SAMA dengan divisi Admin?
+            if ($application->vacancy->division_name !== $hakAkses->division_name) {
+                abort(403, 'Akses Ditolak: Pelamar ini bukan untuk divisi Anda.');
+            }
+        }
+        // ----------------------------------
 
         return view('admin.applications.show', compact('application'));
     }
@@ -56,51 +81,54 @@ class ApplicationVerificationController extends Controller
     // =================================================================
     public function updateStatus(Request $request, $id)
     {
-        // Cari data lamaran
         $app = ApplicationMagang::findOrFail($id);
+
+        // --- SECURITY CHECK (PENTING!) ---
+        // Mencegah Admin IT menolak/menerima pelamar Keuangan
+        $userId = Auth::id();
+        $hakAkses = MagangAccessRight::where('user_id', $userId)->first();
+
+        if ($hakAkses->role !== 'superadmin') {
+            if ($app->vacancy->division_name !== $hakAkses->division_name) {
+                abort(403, 'Akses Ditolak: Anda tidak berhak memverifikasi pelamar ini.');
+            }
+        }
+        // ----------------------------------
 
         // 1. Validasi Input Admin
         $request->validate([
-            // Status hanya boleh diganti ke yang valid
             'status' => 'required|in:verified,interview,accepted,rejected',
-            
-            // LOGIC KHUSUS: Jika DITOLAK, WAJIB ISI ALASAN!
-            // required_if:status,rejected -> Kalau status == rejected, feedback wajib diisi
+            // Wajib isi alasan kalau Reject
             'admin_feedback' => 'required_if:status,rejected|nullable|string|max:500',
         ], [
-            // Pesan Error Custom biar Admin "Peka"
-            'admin_feedback.required_if' => 'Mohon maaf Pak/Bu, jika menolak lamaran, WAJIB menyertakan alasannya agar mahasiswa bisa belajar.',
+            'admin_feedback.required_if' => 'Mohon maaf, jika menolak lamaran, WAJIB menyertakan alasannya.',
         ]);
 
-        // 2. Logic Cek Kuota (Hanya Jaga-jaga)
-        // Kalau Admin mau Mengubah dari REJECTED kembali ke ACCEPTED,
-        // Kita harus cek dulu: "Jangan-jangan kuotanya udah diambil orang lain?"
+        // 2. Logic Cek Kuota (Safety Net)
+        // Kalau Admin mengubah dari REJECTED -> ACCEPTED, cek kuota dulu
         if ($app->status == 'rejected' && in_array($request->status, ['accepted', 'verified'])) {
             
-            // Hitung sisa kuota lowongan ini sekarang
             $terpakai = ApplicationMagang::where('vacancy_id', $app->vacancy_id)
                         ->whereIn('status', ['pending', 'verified', 'interview', 'accepted'])
                         ->count();
             
-            // Ambil data lowongan buat tau total slot
             $quota = $app->vacancy->quota_slots;
 
             if (($quota - $terpakai) <= 0) {
-                return back()->with('error', 'Gagal memulihkan status! Kuota lowongan ini sudah penuh terisi pelamar lain.');
+                return back()->with('error', 'Gagal memulihkan status! Kuota lowongan ini sudah penuh.');
             }
         }
 
-        // 3. Simpan Perubahan Status
+        // 3. Simpan Perubahan
         $app->status = $request->status;
         
-        // Simpan feedback (Hanya jika ada inputan, kalau kosong biarkan null)
         if ($request->filled('admin_feedback')) {
             $app->admin_feedback = $request->admin_feedback;
         }
 
-        $app->save(); // Update database
+        $app->save();
 
-        // Feedback ke Admin
+        // Pesan Sukses
         $msg = "Status berhasil diubah menjadi " . ucfirst($request->status);
         if ($request->status == 'rejected') {
             $msg .= " (Kuota slot lowongan otomatis bertambah kembali).";
