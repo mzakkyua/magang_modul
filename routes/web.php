@@ -12,7 +12,7 @@ use App\Http\Controllers\LandingController;
 // Panggil Controller Admin
 use App\Http\Controllers\Admin\VacancyMagangController;
 use App\Http\Controllers\Admin\ApplicationVerificationController;
-
+use App\Http\Controllers\Admin\AdminDashboardController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -79,6 +79,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     
     // --- MANAJEMEN LOWONGAN (CRUD) ---
     Route::resource('vacancies', VacancyMagangController::class);
+
+    // --- DASHBOARD ADMIN GRAFIK ---
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     
     // Route Spesial: Manual Close (Saklar Admin)
     // Pakai PATCH karena kita mengubah sebagian data (status)
