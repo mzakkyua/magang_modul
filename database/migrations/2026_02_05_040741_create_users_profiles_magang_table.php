@@ -27,7 +27,6 @@ return new class extends Migration
             $table->string('major', 100);
             $table->string('phone_number', 20);
             $table->text('address')->nullable();
-            $table->string('dokumen')->nullable();
             $table->string('cv_file_path')->nullable();
             $table->string('proposal_file_path')->nullable();
             
