@@ -32,6 +32,8 @@ class ApplicationMagangController extends Controller
         // (Ketua wajib dihitung sebagai 1 orang)
         $memberIds = $request->members ?? []; 
         array_unshift($memberIds, $leaderId); // Masukkan Ketua ke antrian pertama
+        // HILANGKAN DUPLIKAT (INI WAJIB)
+        $memberIds = array_unique($memberIds);
         $totalOrang = count($memberIds);
 
         // =================================================================
