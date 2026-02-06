@@ -10,7 +10,7 @@ class ProfileMagang extends Model
 
     protected $fillable = [
         'user_id', 'full_name', 'nim_nisn', 'institution_name',
-        'major', 'phone_number', 'address', 'cv_file_path', 'proposal_file_path'
+        'major', 'phone_number', 'address', 'dokumen', 'cv_file_path', 'proposal_file_path'
     ];
 
     public function user()
