@@ -13,6 +13,7 @@ use App\Http\Controllers\LandingController;
 use App\Http\Controllers\Admin\VacancyMagangController;
 use App\Http\Controllers\Admin\ApplicationVerificationController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AssessmentController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -100,5 +101,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     // Eksekusi Terima/Tolak
     Route::patch('/applications/{id}/update-status', [ApplicationVerificationController::class, 'updateStatus'])
         ->name('applications.update-status');
+
+        // --- PENILAIAN / ASSESSMENT (INI YANG BARU) ---
+    // Menu daftar mahasiswa yang siap dinilai
+    Route::get('/assessments', [AssessmentController::class, 'index'])->name('assessments.index');
+    
+    // Form Input Nilai (Berdasarkan ID Anggota/Member)
+    Route::get('/assessments/{member_id}/create', [AssessmentController::class, 'create'])->name('assessments.create');
+    
+    // Proses Simpan Nilai
+    Route::post('/assessments/{member_id}/store', [AssessmentController::class, 'store'])->name('assessments.store');
 
 });
