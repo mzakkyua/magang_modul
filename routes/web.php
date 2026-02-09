@@ -113,4 +113,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     // Proses Simpan Nilai
     Route::post('/assessments/{member_id}/store', [AssessmentController::class, 'store'])->name('assessments.store');
 
+    // --- PENGATURAN PROFIL ADMIN ---
+    Route::get('/profile', [App\Http\Controllers\Admin\AdminProfileController::class, 'index'])->name('profile');
+    Route::put('/profile', [App\Http\Controllers\Admin\AdminProfileController::class, 'update'])->name('profile.update');
+
 });
