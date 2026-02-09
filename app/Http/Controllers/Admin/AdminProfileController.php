@@ -44,17 +44,21 @@ class AdminProfileController extends Controller
         ]);
 
         // --- LOGIC UPLOAD FOTO BARU ---
-        if ($request->hasFile('photo')) {
-            // 1. Hapus foto lama jika ada (Biar server gak penuh sampah)
+        // --- 1. LOGIC HAPUS FOTO (Eksekusi duluan) ---
+        // Jika user klik tombol sampah, input hidden ini bernilai '1'
+        if ($request->input('delete_photo') == '1') {
             if ($user->profile_photo_path && Storage::disk('public')->exists($user->profile_photo_path)) {
                 Storage::disk('public')->delete($user->profile_photo_path);
             }
+            $user->profile_photo_path = null;
+        }
 
-            // 2. Simpan foto baru ke folder 'profile-photos' di storage public
-            // Hasilnya misal: 'profile-photos/acak123.jpg'
+        // --- 2. LOGIC UPLOAD FOTO BARU (Menimpa logic hapus jika ada) ---
+        if ($request->hasFile('photo')) {
+            if ($user->profile_photo_path && Storage::disk('public')->exists($user->profile_photo_path)) {
+                Storage::disk('public')->delete($user->profile_photo_path);
+            }
             $path = $request->file('photo')->store('profile-photos', 'public');
-
-            // 3. Update path di database user
             $user->profile_photo_path = $path;
         }
         // ------------------------------

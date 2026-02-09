@@ -9,14 +9,21 @@
     <div class="col-span-1">
         <div class="bg-white rounded-lg shadow p-6 text-center border-t-4 border-blue-600">
             
-            <div class="mb-4">
+            <div class="mb-4 relative group inline-block">
+                
                 <img id="photoPreview" src="{{ $user->profile_photo_path ? asset('storage/' . $user->profile_photo_path) : '' }}" 
-                    class="{{ $user->profile_photo_path ? '' : 'hidden' }} h-32 w-32 rounded-full mx-auto object-cover border-4 border-gray-200 shadow-sm" 
-                    alt="Foto Profil">
+                     class="{{ $user->profile_photo_path ? '' : 'hidden' }} h-32 w-32 rounded-full mx-auto object-cover border-4 border-gray-200 shadow-sm" 
+                     alt="Foto Profil">
 
                 <div id="initialPlaceholder" class="{{ $user->profile_photo_path ? 'hidden' : '' }} h-32 w-32 rounded-full bg-blue-100 mx-auto flex items-center justify-center text-blue-600 text-5xl font-bold border-4 border-white shadow-sm">
                     {{ substr($user->name, 0, 1) }}
                 </div>
+
+                <button type="button" id="btnDeletePhoto" 
+                        class="{{ $user->profile_photo_path ? '' : 'hidden' }} absolute bottom-0 right-0 bg-red-100 text-red-600 p-2 rounded-full hover:bg-red-600 hover:text-white shadow-md border border-red-200 transition duration-200"
+                        title="Hapus Foto Profil">
+                    <i class="bi bi-trash-fill"></i>
+                </button>
             </div>
             <h3 class="text-xl font-bold text-gray-800">{{ $user->name }}</h3>
             <p class="text-gray-500 text-sm">{{ $user->email }}</p>
@@ -62,10 +69,12 @@
                     @csrf
                     @method('PUT')
 
+                    <input type="hidden" name="delete_photo" id="deletePhotoInput" value="0">
+
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Foto Profil Baru (Opsional)</label>
                         <div class="flex items-center">
-                            <label class="cursor-pointer bg-white border border-gray-300 rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500 px-4 py-2 shadow-sm">
+                            <label class="cursor-pointer bg-white border border-gray-300 rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500 px-4 py-2 shadow-sm transition">
                                 <span><i class="bi bi-upload mr-2"></i> Pilih File Foto</span>
                                 <input id="photoInput" name="photo" type="file" class="sr-only" accept="image/png, image/jpeg, image/jpg">
                             </label>
@@ -115,8 +124,15 @@
                     </div>
 
                     <div class="flex justify-end">
-                        <button type="button" id="btnSaveProfile" disabled class="bg-blue-600 text-white font-bold py-2 px-6 rounded shadow transition opacity-50 cursor-not-allowed hover:bg-blue-600">
-                            Simpan Perubahan
+                        <button type="button" id="btnSaveProfile" disabled class="bg-blue-600 text-white font-bold py-2 px-6 rounded shadow transition opacity-50 cursor-not-allowed hover:bg-blue-600 flex items-center">
+                            <span id="btnText">Simpan Perubahan</span>
+                            <span id="btnLoading" class="hidden items-center">
+                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Menyimpan...
+                            </span>
                         </button>
                     </div>
                 </form>
@@ -126,12 +142,14 @@
 </div>
 
 <script>
-    // Script kecil untuk preview gambar real-time
     const photoInput = document.getElementById('photoInput');
     const photoPreview = document.getElementById('photoPreview');
     const initialPlaceholder = document.getElementById('initialPlaceholder');
     const fileNameDisplay = document.getElementById('fileNameDisplay');
+    const btnDeletePhoto = document.getElementById('btnDeletePhoto');
+    const deletePhotoInput = document.getElementById('deletePhotoInput');
 
+    // Saat Pilih File
     photoInput.addEventListener('change', function() {
         const file = this.files[0];
         if (file) {
@@ -141,16 +159,14 @@
                 photoPreview.src = e.target.result;
                 photoPreview.classList.remove('hidden');
                 initialPlaceholder.classList.add('hidden');
+                
+                // Munculkan tombol hapus karena sekarang ada foto preview
+                if(btnDeletePhoto) btnDeletePhoto.classList.remove('hidden');
+                
+                // Reset flag delete jika user jadi upload
+                deletePhotoInput.value = '0';
             }
             reader.readAsDataURL(file);
-        } else {
-            fileNameDisplay.innerText = 'Tidak ada file dipilih';
-             // Jika batal pilih, kembalikan ke kondisi semula (cek dari DB ada foto gak)
-             // (Logic sederhana: anggap balik ke inisial untuk visual feedback cepat)
-            @if(!$user->profile_photo_path)
-                photoPreview.classList.add('hidden');
-                initialPlaceholder.classList.remove('hidden');
-            @endif
         }
     });
 </script>
