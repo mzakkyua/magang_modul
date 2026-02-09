@@ -28,6 +28,7 @@ use App\Http\Controllers\Admin\AssessmentController;
 // Siapapun (Tamu/Member/Admin) bisa buka halaman ini
 // ========================================================================
 
+
 Route::get('/', [LandingController::class, 'index'])->name('landing.index');
 Route::get('/lowongan/{id}', [LandingController::class, 'show'])->name('landing.show');
 

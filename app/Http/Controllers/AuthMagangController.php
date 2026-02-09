@@ -78,29 +78,38 @@ class AuthMagangController extends Controller
         return view('auth.magang-login');
     }
 
+
+
+
     public function login(Request $request)
-    {
-        // A. Validasi Input
-        $credentials = $request->validate([
-            'username' => 'required|string',
-            'password' => 'required|string',
-        ]);
-
-        // B. Cek Login Pakai Guard 'magang'
-        // PENTING: Kita pakai Auth::guard('magang'), bukan Auth::attempt() biasa.
-        // Karena Auth::attempt() biasa itu ngecek ke tabel 'users' (Pegawai).
-        if (Auth::guard('magang')->attempt(['username' => $request->username, 'password' => $request->password])) {
-            
-            // Jika Sukses:
-            $request->session()->regenerate(); // Security: Cegah session fixation
-            return redirect()->intended('dashboard'); // Redirect ke halaman yg mau dituju
+        {
+            // 1. Validasi Input
+            $credentials = $request->validate([
+                'email' => ['required', 'email'],
+                'password' => ['required'],
+            ]);
+        
+            // 2. CEK PERTAMA: Apakah ini ADMIN/PEGAWAI?
+            // Kita suruh cek ke Guard 'web' (tabel users)
+            if (Auth::guard('web')->attempt($credentials)) {
+                $request->session()->regenerate();
+                // Kalau ketemu, lempar ke Dashboard Admin
+                return redirect()->intended(route('admin.dashboard')); 
+            }
+        
+            // 3. CEK KEDUA: Apakah ini MAHASISWA?
+            // Kita suruh cek ke Guard 'magang' (tabel users_magang)
+            if (Auth::guard('magang')->attempt($credentials)) {
+                $request->session()->regenerate();
+                // Kalau ketemu, lempar ke Dashboard Mahasiswa
+                return redirect()->intended(route('dashboard'));
+            }
+        
+            // 4. Kalau Dua-duanya Gagal
+            return back()->withErrors([
+                'email' => 'Email tidak terdaftar sebagai Pegawai maupun Peserta Magang.',
+            ])->onlyInput('email');
         }
-
-        // C. Jika Gagal:
-        return back()->withErrors([
-            'username' => 'Login gagal! Username atau password salah.',
-        ])->onlyInput('username');
-    }
 
     // =================================================================
     // 3. BAGIAN LOGOUT (KELUAR)
