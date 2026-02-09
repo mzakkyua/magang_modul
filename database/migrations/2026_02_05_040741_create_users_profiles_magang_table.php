@@ -8,31 +8,39 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // 1. Tabel User Magang (Akun)
+        // 1. Tabel User Magang (Akun Login)
         Schema::create('users_magang', function (Blueprint $table) {
             $table->id();
             $table->string('username', 50)->unique();
             $table->string('email', 100)->unique();
-            $table->string('password_hash'); // Nanti di Model harus di-map ke 'password'
-            $table->timestamp('created_at')->useCurrent();
+            $table->string('password_hash');
+
+            // PERBAIKAN 1: Gunakan timestamps() bawaan Laravel
+            // Ini otomatis bikin kolom 'created_at' DAN 'updated_at' sekaligus.
+            $table->timestamps();
         });
 
         // 2. Tabel Profil Magang (Biodata)
         Schema::create('profiles_magang', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users_magang')->onDelete('cascade');
-            $table->enum('education_level', ['siswa_smk', 'mahasiswa'])->default('mahasiswa');
+
+            // Data Wajib saat Register (Hanya Nama)
             $table->string('full_name', 150);
-            $table->string('nim_nisn', 50);
-            $table->string('institution_name', 100);
-            $table->string('major', 100);
-            $table->string('phone_number', 20);
+
+            // PERBAIKAN 2: Semua data detail SAYA BUAT NULLABLE
+            // Supaya bisa Register dulu, baru lengkapi data nanti di dashboard.
+            $table->enum('education_level', ['siswa_smk', 'mahasiswa'])->default('mahasiswa');
+            $table->string('nim_nisn', 50)->nullable();      // Boleh kosong dulu
+            $table->string('institution_name', 100)->nullable(); // Boleh kosong dulu
+            $table->string('major', 100)->nullable();            // Boleh kosong dulu
+            $table->string('phone_number', 20)->nullable();      // Boleh kosong dulu
             $table->text('address')->nullable();
             $table->string('cv_file_path')->nullable();
             $table->string('proposal_file_path')->nullable();
-            
-            // updated_at otomatis update current timestamp
-            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate(); 
+
+            // Timestamps standar
+            $table->timestamps();
         });
     }
 

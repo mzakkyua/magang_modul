@@ -13,16 +13,16 @@ class DashboardMagangController extends Controller
         // 1. AMBIL LIST LOWONGAN MAGANG (PKL)
         // Logic: Cari yang tipe 'magang' DAN statusnya 'open'
         $lowonganMagang = VacancyMagang::where('type', 'magang')
-                            ->where('status', 'open')
-                            ->orderBy('created_at', 'desc')
-                            ->get();
+            ->where('status', 'open')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         // 2. AMBIL LIST LOWONGAN PENELITIAN
         // Logic: Cari yang tipe 'penelitian' DAN statusnya 'open'
         $lowonganPenelitian = VacancyMagang::where('type', 'penelitian')
-                            ->where('status', 'open')
-                            ->orderBy('created_at', 'desc')
-                            ->get();
+            ->where('status', 'open')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         // 3. LOGIC TAMBAHAN: CEK USER SMK ATAU MAHASISWA?
         // (Opsional: Jika SMK tidak boleh lihat Penelitian, bisa difilter di sini)
@@ -30,7 +30,7 @@ class DashboardMagangController extends Controller
         $isSMK = $user->profile->education_level === 'siswa_smk';
 
         // Kirim 2 bungkusan data (Magang & Penelitian) ke View
-        return view('dashboard.index', [
+        return view('magang.dashboard.index', [
             'listMagang' => $lowonganMagang,
             'listPenelitian' => $lowonganPenelitian,
             'isSMK' => $isSMK // Biar di frontend bisa diatur tampilannya
