@@ -8,7 +8,7 @@
     
     <div class="bg-white rounded-lg shadow p-5 border-l-4 border-blue-500">
         <div class="flex items-center">
-            <div class="flex-shrink-0 p-3 rounded-full bg-blue-100 text-blue-600">
+            <div class="shrink-0 p-3 rounded-full bg-blue-100 text-blue-600">
                 <i class="bi bi-briefcase text-2xl"></i>
             </div>
             <div class="ml-4">
@@ -20,7 +20,7 @@
 
     <div class="bg-white rounded-lg shadow p-5 border-l-4 border-yellow-500 cursor-pointer hover:bg-yellow-50 transition" onclick="window.location='{{ route('admin.applications.index') }}'">
         <div class="flex items-center">
-            <div class="flex-shrink-0 p-3 rounded-full bg-yellow-100 text-yellow-600">
+            <div class="shrink-0 p-3 rounded-full bg-yellow-100 text-yellow-600">
                 <i class="bi bi-file-earmark-person text-2xl"></i>
             </div>
             <div class="ml-4">
@@ -33,7 +33,7 @@
 
     <div class="bg-white rounded-lg shadow p-5 border-l-4 border-green-500">
         <div class="flex items-center">
-            <div class="flex-shrink-0 p-3 rounded-full bg-green-100 text-green-600">
+            <div class="shrink-0 p-3 rounded-full bg-green-100 text-green-600">
                 <i class="bi bi-people text-2xl"></i>
             </div>
             <div class="ml-4">
@@ -45,7 +45,7 @@
 
     <div class="bg-white rounded-lg shadow p-5 border-l-4 border-gray-500">
         <div class="flex items-center">
-            <div class="flex-shrink-0 p-3 rounded-full bg-gray-100 text-gray-600">
+            <div class="shrink-0 p-3 rounded-full bg-gray-100 text-gray-600">
                 <i class="bi bi-person-badge text-2xl"></i>
             </div>
             <div class="ml-4">

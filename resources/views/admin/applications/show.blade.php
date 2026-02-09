@@ -27,7 +27,7 @@
             @foreach($application->members as $index => $member)
             <div class="mb-4 p-4 border rounded-lg bg-gray-50 hover:bg-white hover:shadow transition">
                 <div class="flex items-start gap-4">
-                    <div class="flex-shrink-0 bg-blue-100 text-blue-600 rounded-full w-10 h-10 flex items-center justify-center font-bold">
+                    <div class="shrink-0 bg-blue-100 text-blue-600 rounded-full w-10 h-10 flex items-center justify-center font-bold">
                         {{ $loop->iteration }}
                     </div>
                     
