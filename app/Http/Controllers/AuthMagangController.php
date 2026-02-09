@@ -5,68 +5,61 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
 use App\Models\UserMagang;
 use App\Models\ProfileMagang;
 
 class AuthMagangController extends Controller
 {
     // =================================================================
-    // 1. BAGIAN REGISTER (DAFTAR AKUN)
+    // 1. BAGIAN REGISTER (DAFTAR AKUN BARU)
     // =================================================================
 
     public function showRegisterForm()
     {
-        return view('auth.magang-register'); // Pastikan view ini nanti dibuat
+        return view('auth.magang-register');
     }
 
     public function register(Request $request)
     {
         // A. Validasi Input
-        // Pastikan email & username belum pernah dipakai orang lain
+        // Kita hanya minta Nama, Email, dan Password.
+        // Pastikan di View, input namenya: nama_lengkap, email, password, password_confirmation
         $request->validate([
-            'username' => 'required|string|max:50|unique:users_magang,username',
-            'email'    => 'required|email|max:100|unique:users_magang,email',
-            'password' => 'required|string|min:8|confirmed', // confirmed = harus ada field password_confirmation di form
-
-            // Validasi Data Profil Awal (Bisa ditambah sesuai form register)
-            'full_name' => 'required|string|max:150',
-            'nim_nisn'  => 'required|string|max:50',
-            'education_level' => 'required|in:siswa_smk,mahasiswa', // Penanda SMK/Mahasiswa
+            'nama_lengkap' => 'required|string|max:255',
+            'email'        => 'required|email|unique:users_magang,email',
+            'password'     => 'required|min:8|confirmed',
         ]);
 
-        // B. Proses Simpan (Pakai Transaction lagi biar aman)
-        // Kita harus simpan ke 2 Tabel: users_magang DAN profiles_magang
-        DB::transaction(function () use ($request) {
+        // B. Generate Username Otomatis
+        // Ambil nama depan dari email + angka acak (Contoh: budi@gmail.com -> budi882)
+        $username = explode('@', $request->email)[0] . rand(100, 999);
 
-            // 1. Buat Akun Login
+        // C. Simpan ke Database (User & Profile)
+        // Kita bungkus transaction biar kalau gagal satu, gagal semua (aman)
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $username) {
+
+            // 1. Buat User Login (Tabel users_magang)
             $user = UserMagang::create([
-                'username' => $request->username,
-                'email'    => $request->email,
-                'password_hash' => Hash::make($request->password), // Enkripsi Password!
+                'username'      => $username,
+                'email'         => $request->email,
+                'password_hash' => Hash::make($request->password), // Enkripsi password
             ]);
 
-            // 2. Buat Profil Biodata
-            // Profil otomatis dibuat saat register, sisanya bisa diedit nanti (update profile)
+            // 2. Buat Profile Dasar (Tabel profile_magang)
+            // Kolom lain (NIM, Univ, dll) biarkan NULL dulu karena belum diisi
             ProfileMagang::create([
-                'user_id'   => $user->id,
-                'full_name' => $request->full_name,
-                'nim_nisn'  => $request->nim_nisn,
-                'education_level' => $request->education_level,
-
-                // Field lain kita kosongkan dulu (nullable di database),
-                // Nanti user disuruh "Lengkapi Profil" setelah login.
-                'institution_name' => '-',
-                'major' => '-',
-                'phone_number' => '-',
+                'user_id'      => $user->id,
+                'full_name' => $request->nama_lengkap,
+                'status'       => 'active',
             ]);
 
-            // 3. Auto Login (Opsional)
-            // Begitu daftar, langsung masuk dashboard tanpa perlu login ulang
+            // 3. Auto Login
+            // Setelah daftar langsung masuk, tidak perlu login ulang
             Auth::guard('magang')->login($user);
         });
 
-        return redirect()->route('dashboard')->with('success', 'Akun berhasil dibuat! Silakan lengkapi profil Anda.');
+        // D. Redirect ke Dashboard
+        return redirect()->route('dashboard')->with('success', 'Pendaftaran Berhasil! Silakan lengkapi biodata Anda.');
     }
 
     // =================================================================
@@ -80,45 +73,51 @@ class AuthMagangController extends Controller
 
     public function login(Request $request)
     {
-        // 1. Validasi Input
+        // A. Validasi Input
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
+            'email'    => ['required', 'email'],
             'password' => ['required'],
         ]);
 
-        // 2. CEK PERTAMA: Apakah ini ADMIN/PEGAWAI?
-        // Kita suruh cek ke Guard 'web' (tabel users)
+        // B. Cek Login: ADMIN / PEGAWAI (Guard: web)
         if (Auth::guard('web')->attempt($credentials)) {
             $request->session()->regenerate();
-            // Kalau ketemu, lempar ke Dashboard Admin
+            // Redirect ke Dashboard Admin
             return redirect()->intended(route('admin.dashboard'));
         }
 
-        // 3. CEK KEDUA: Apakah ini MAHASISWA?
-        // Kita suruh cek ke Guard 'magang' (tabel users_magang)
+        // C. Cek Login: MAHASISWA / PESERTA (Guard: magang)
         if (Auth::guard('magang')->attempt($credentials)) {
             $request->session()->regenerate();
-            // Kalau ketemu, lempar ke Dashboard Mahasiswa
+            // Redirect ke Dashboard Peserta
             return redirect()->intended(route('dashboard'));
         }
 
-        // 4. Kalau Dua-duanya Gagal
+        // D. Jika Gagal Login
         return back()->withErrors([
-            'email' => 'Email tidak terdaftar sebagai Pegawai maupun Peserta Magang.',
+            'email' => 'Email atau password salah.',
         ])->onlyInput('email');
     }
 
     // =================================================================
-    // 3. BAGIAN LOGOUT (KELUAR)
+    // 3. BAGIAN LOGOUT (KELUAR) - UNIVERSAL
     // =================================================================
 
     public function logout(Request $request)
     {
-        Auth::guard('magang')->logout(); // Logout cuma yang magang
+        // Cek siapa yang sedang login, lalu logout sesuai guard-nya
 
+        if (Auth::guard('web')->check()) {
+            Auth::guard('web')->logout();       // Logout Admin
+        } elseif (Auth::guard('magang')->check()) {
+            Auth::guard('magang')->logout();    // Logout Mahasiswa
+        }
+
+        // Bersihkan Sesi Browser
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
+        // Lempar kembali ke Halaman Depan (Landing Page)
         return redirect('/');
     }
 }
