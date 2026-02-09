@@ -7,21 +7,26 @@ use App\Models\VacancyMagang;
 
 class LandingController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Ambil SEMUA lowongan yang statusnya OPEN
-        // Tidak perlu filter SMK/Mahasiswa dulu, tampilkan saja semua biar menarik
-        $vacancies = VacancyMagang::where('status', 'open')
-                    ->orderBy('created_at', 'desc')
-                    ->paginate(9); // Tampilkan 9 lowongan per halaman (Grid 3x3)
+        // Ambil lowongan yang statusnya 'open'
+        $query = VacancyMagang::where('status', 'open');
 
+        // Fitur Cari (Opsional)
+        if ($request->has('search')) {
+            $query->where('title', 'like', '%' . $request->search . '%');
+        }
+
+        // Urutkan terbaru & pagination
+        $vacancies = $query->orderBy('created_at', 'desc')->paginate(9);
+
+        // PENTING: return view 'landing' (sesuai nama file landing.blade.php)
         return view('landing', compact('vacancies'));
     }
-    
-    // Tampilkan Detail Lowongan untuk Publik
+
     public function show($id)
     {
         $vacancy = VacancyMagang::findOrFail($id);
-        return view('landing-detail', compact('vacancy'));
+        return view('landing_detail', compact('vacancy')); // Nanti kita buat file ini juga
     }
 }

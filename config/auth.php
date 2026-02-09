@@ -5,6 +5,7 @@ return [
     /*
     |--------------------------------------------------------------------------
     | Authentication Defaults
+
     |--------------------------------------------------------------------------
     |
     | This option defines the default authentication "guard" and password
@@ -36,9 +37,16 @@ return [
     */
 
     'guards' => [
+        // 1. Guard Default (Pegawai/Admin)
         'web' => [
             'driver' => 'session',
-            'provider' => 'users',
+            'provider' => 'users', // Nembak ke tabel users pegawai
+        ],
+
+        // 2. Guard Khusus Mahasiswa
+        'magang' => [
+            'driver' => 'session',
+            'provider' => 'users_magang', // Nembak ke tabel mahasiswa
         ],
     ],
 
@@ -60,11 +68,17 @@ return [
     */
 
     'providers' => [
+       // 1. Provider untuk Pegawai (Admin)
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
+            'model' => App\Models\User::class, // <-- Tetap pakai User bawaan
         ],
 
+        // 2. Provider untuk Mahasiswa (Peserta Magang)
+        'users_magang' => [ // <-- Pastikan namanya beda, misal 'users_magang'
+            'driver' => 'eloquent',
+            'model' => App\Models\UserMagang::class, // <-- Ini Model Mahasiswa
+        ],
         // 'users' => [
         //     'driver' => 'database',
         //     'table' => 'users',
