@@ -21,12 +21,12 @@ class LandingController extends Controller
         $vacancies = $query->orderBy('created_at', 'desc')->paginate(9);
 
         // PENTING: return view 'landing' (sesuai nama file landing.blade.php)
-        return view('landing', compact('vacancies'));
+        return view('landing.index', compact('vacancies'));
     }
 
     public function show($id)
     {
         $vacancy = VacancyMagang::findOrFail($id);
-        return view('landing_detail', compact('vacancy')); // Nanti kita buat file ini juga
+        return view('landing.show', compact('vacancy')); // Nanti kita buat file ini juga
     }
 }
