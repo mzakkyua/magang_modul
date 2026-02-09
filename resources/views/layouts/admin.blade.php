@@ -13,7 +13,7 @@
 
     <div class="flex h-screen overflow-hidden">
         
-        <aside class="w-64 bg-slate-800 text-white flex-shrink-0 hidden md:flex flex-col">
+        <aside class="w-64 bg-slate-800 text-white shrink-0 hidden md:flex flex-col">
             <div class="h-16 flex items-center justify-center bg-slate-900 shadow-md">
                 <h1 class="text-xl font-bold tracking-wider">SINAKERTRANS</h1>
             </div>
