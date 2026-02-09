@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 use Illuminate\Validation\Rule;
 
 class AdminProfileController extends Controller
@@ -14,8 +16,48 @@ class AdminProfileController extends Controller
     // 1. TAMPILKAN HALAMAN PROFIL
     public function index()
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
-        return view('admin.profile', compact('user'));
+
+        // --- AMBIL DATA SESI LOGIN ---
+        $sessions = DB::table('sessions')
+            ->where('user_id', $user->id)
+            ->orderBy('last_activity', 'desc')
+            ->get()
+            ->map(function ($session) {
+                return (object) [
+                    'agent' => $this->createAgent($session->user_agent),
+                    'ip_address' => $session->ip_address,
+                    'is_current_device' => $session->id === request()->session()->getId(),
+                    'last_active' => Carbon::createFromTimestamp($session->last_activity)->diffForHumans(),
+                ];
+            });
+
+        return view('admin.profile', compact('user', 'sessions'));
+    }
+
+    // --- FUNGSI BANTUAN BIAR NAMA BROWSER RAPI (HELPER) ---
+    // Taruh di paling bawah class controller (private function)
+    private function createAgent($userAgent)
+    {
+        $agent = [
+            'platform' => 'Tidak Diketahui',
+            'browser'  => 'Tidak Diketahui',
+        ];
+
+        if (preg_match('/windows|win32/i', $userAgent)) $agent['platform'] = 'Windows';
+        elseif (preg_match('/macintosh|mac os x/i', $userAgent)) $agent['platform'] = 'macOS';
+        elseif (preg_match('/linux/i', $userAgent)) $agent['platform'] = 'Linux';
+        elseif (preg_match('/android/i', $userAgent)) $agent['platform'] = 'Android';
+        elseif (preg_match('/iphone/i', $userAgent)) $agent['platform'] = 'iPhone';
+
+        if (preg_match('/MSIE/i', $userAgent) && !preg_match('/Opera/i', $userAgent)) $agent['browser'] = 'Internet Explorer';
+        elseif (preg_match('/Firefox/i', $userAgent)) $agent['browser'] = 'Firefox';
+        elseif (preg_match('/Chrome/i', $userAgent)) $agent['browser'] = 'Chrome';
+        elseif (preg_match('/Safari/i', $userAgent)) $agent['browser'] = 'Safari';
+        elseif (preg_match('/Opera/i', $userAgent)) $agent['browser'] = 'Opera';
+
+        return (object) $agent;
     }
 
     public function update(Request $request)
@@ -27,11 +69,11 @@ class AdminProfileController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', \Illuminate\Validation\Rule::unique('users')->ignore($user->id)],
-            
+
             // LOGIC BARU: Saling Membutuhkan
             // Jika new_password diisi, current_password WAJIB ada.
-            'current_password' => 'nullable|required_with:new_password', 
-            
+            'current_password' => 'nullable|required_with:new_password',
+
             // Jika current_password diisi, new_password WAJIB ada.
             'new_password' => 'nullable|required_with:current_password|min:8|confirmed',
 
@@ -66,12 +108,12 @@ class AdminProfileController extends Controller
         // 2. LOGIC UPDATE PASSWORD
         // Kita hanya proses JIKA user benar-benar mengisi password BARU
         if ($request->filled('new_password')) {
-            
+
             // Cek Password Lama
             if (!Hash::check($request->current_password, $user->password)) {
                 return back()->withErrors(['current_password' => 'Password lama salah!']);
             }
-            
+
             // Simpan Password Baru
             $user->password = Hash::make($request->new_password);
         }
