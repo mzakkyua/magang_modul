@@ -21,6 +21,7 @@ return new class extends Migration
         Schema::create('profiles_magang', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users_magang')->onDelete('cascade');
+            $table->enum('education_level', ['siswa_smk', 'mahasiswa'])->default('mahasiswa');
             $table->string('full_name', 150);
             $table->string('nim_nisn', 50);
             $table->string('institution_name', 100);
