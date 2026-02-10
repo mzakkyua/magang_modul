@@ -123,7 +123,7 @@
             <div class="text-center py-12 bg-white rounded-lg border border-dashed border-gray-300">
                 <i class="bi bi-emoji-frown text-4xl text-gray-400 mb-3 block"></i>
                 <h3 class="text-lg font-medium text-gray-900">Belum ada lowongan dibuka</h3>
-                <p class="text-gray-500">Silakan kembali lagi nanti untuk info terbaru.</p>
+                <p class="text-gray-500">Silahkan kembali lagi nanti untuk info terbaru.</p>
             </div>
         @endif
     </div>
