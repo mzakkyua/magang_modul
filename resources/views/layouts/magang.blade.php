@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+     @vite(['resources/css/app.css', 'resources/js/app.js'])
+     
     </head>
+
 <body>
     <header id="header" class="fixed top-0 w-full z-20 transition-all duration-300 bg-white shadow-md">
         <div class="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -20,8 +24,8 @@
                     <li><a href="#statistik" class="hover:text-blue-500 transition">Statistik</a></li>
                     <li><a href="#team" class="hover:text-blue-500 transition">Team</a></li>
                 </ul>
-                <a href="/login" class="px-5 py-2 bg-[#37517e] text-white rounded-full text-sm font-medium hover:bg-blue-600 transition shadow-lg transform hover:-translate-y-0.5">
-                    Login
+                <a href="#" class="px-5 py-2 bg-[#37517e] text-white rounded-full text-sm font-medium hover:bg-blue-600 transition shadow-lg transform hover:-translate-y-0.5">
+                    Logout
                 </a>
             </nav>
 
@@ -42,8 +46,9 @@
         </div>
     </header>
 
-     <main class="flex-grow mt-16">
+     <main class="grow mt-16">
         @yield('content')
+        
     </main>
 
 
