@@ -6,37 +6,48 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\VacancyMagang;
 use App\Models\MagangAccessRight;
-use App\Models\ApplicationMagang;
 use Illuminate\Support\Facades\Auth;
+use App\Helpers\DashboardCache;
 
 class VacancyMagangController extends Controller
 {
-    // =================================================================
-    // 1. READ DATA (MENAMPILKAN DAFTAR LOWONGAN)
-    // =================================================================
-    public function index(Request $request)
+    /* =========================================================
+     * HELPER: HAK AKSES
+     * ========================================================= */
+    private function getHakAkses()
     {
-        $userId = Auth::id();
-        $hakAkses = MagangAccessRight::where('user_id', $userId)->first();
+        $hakAkses = MagangAccessRight::where('user_id', Auth::id())->first();
 
         if (!$hakAkses) {
-            abort(403, 'Anda tidak memiliki hak akses ke Modul Magang.');
+            abort(403, 'Anda tidak memiliki akses ke Modul Magang.');
         }
 
-        $query = VacancyMagang::query();
+        return $hakAkses;
+    }
+
+    /* =========================================================
+     * INDEX
+     * ========================================================= */
+    public function index()
+    {
+        $hakAkses = $this->getHakAkses();
+
+        $query = VacancyMagang::withCount('applications');
 
         if ($hakAkses->role !== 'superadmin') {
             $query->where('division_name', $hakAkses->division_name);
         }
 
-        $vacancies = $query->orderBy('created_at', 'desc')->paginate(10);
+        $vacancies = $query
+            ->orderByDesc('created_at')
+            ->paginate(10);
 
         return view('admin.vacancies.index', compact('vacancies'));
     }
 
-    // =================================================================
-    // 2. CREATE DATA
-    // =================================================================
+    /* =========================================================
+     * CREATE
+     * ========================================================= */
     public function create()
     {
         return view('admin.vacancies.create');
@@ -44,20 +55,10 @@ class VacancyMagangController extends Controller
 
     public function store(Request $request)
     {
-        $userId = Auth::id();
-        $hakAkses = MagangAccessRight::where('user_id', $userId)->first();
-
-        if (!$hakAkses) {
-            abort(403, 'Akses Ditolak');
-        }
-
-        $divisiInput = ($hakAkses->role === 'superadmin')
-            ? $request->division_name
-            : $hakAkses->division_name;
+        $hakAkses = $this->getHakAkses();
 
         $request->validate([
             'title'             => 'required|string|max:200',
-            'division_name'     => ($hakAkses->role === 'superadmin' ? 'required|string|max:100' : 'nullable'),
             'type'              => 'required|in:magang,penelitian',
             'registration_mode' => 'required|in:individu,kelompok,hybrid',
             'quota_slots'       => 'required|integer|min:1',
@@ -68,37 +69,21 @@ class VacancyMagangController extends Controller
             'max_members'       => 'nullable|integer|min:1',
         ]);
 
-        $min  = $request->min_members;
-        $max  = $request->max_members;
-        $mode = $request->registration_mode;
+        $division = $hakAkses->role === 'superadmin'
+            ? $request->division_name
+            : $hakAkses->division_name;
 
-        if ($mode === 'individu') {
-            $min = 1;
-            $max = 1;
-        } elseif ($mode === 'kelompok') {
-            if ($min < 2) {
-                return back()->withInput()->withErrors([
-                    'min_members' => 'Mode Kelompok wajib minimal 2 orang!'
-                ]);
-            }
-            if ($max < $min) {
-                return back()->withInput()->withErrors([
-                    'max_members' => 'Maksimal anggota harus lebih besar dari minimal!'
-                ]);
-            }
-        } elseif ($mode === 'hybrid') {
-            if ($max < $min) {
-                return back()->withInput()->withErrors([
-                    'max_members' => 'Logic Error: Max < Min'
-                ]);
-            }
-        }
+        [$min, $max] = $this->resolveMemberRange(
+            $request->registration_mode,
+            $request->min_members,
+            $request->max_members
+        );
 
         VacancyMagang::create([
             'title'             => $request->title,
-            'division_name'     => $divisiInput,
+            'division_name'     => $division,
             'type'              => $request->type,
-            'registration_mode' => $mode,
+            'registration_mode' => $request->registration_mode,
             'quota_slots'       => $request->quota_slots,
             'min_members'       => $min,
             'max_members'       => $max,
@@ -108,104 +93,141 @@ class VacancyMagangController extends Controller
             'status'            => 'open',
         ]);
 
-        return redirect()->route('admin.vacancies.index')
-            ->with('success', 'Lowongan berhasil dibuat!');
+        DashboardCache::clear();
+
+        return redirect()
+            ->route('admin.vacancies.index')
+            ->with('success', 'Lowongan berhasil dibuat.');
     }
 
-    // =================================================================
-    // 3. UPDATE DATA (LOWONGAN TERKUNCI JIKA SUDAH ADA PENDAFTAR)
-    // =================================================================
-    public function edit($id)
+    /* =========================================================
+     * EDIT
+     * ========================================================= */
+    public function edit(VacancyMagang $vacancy)
     {
-        $vacancy = VacancyMagang::findOrFail($id);
+        $hakAkses = $this->getHakAkses();
 
-        $userId = Auth::id();
-        $hakAkses = MagangAccessRight::where('user_id', $userId)->first();
-
-        if ($hakAkses->role !== 'superadmin'
-            && $vacancy->division_name !== $hakAkses->division_name) {
-            abort(403, 'Anda tidak boleh mengedit lowongan divisi lain!');
+        if (
+            $hakAkses->role !== 'superadmin' &&
+            $vacancy->division_name !== $hakAkses->division_name
+        ) {
+            abort(403, 'Anda tidak boleh mengedit lowongan divisi lain.');
         }
 
-        $hasApplicant = ApplicationMagang::where('vacancy_id', $id)->exists();
+        $hasApplicant = $vacancy->applications()->exists();
 
-        return view('admin.vacancies.edit', compact('vacancy', 'hasApplicant'));
+        return view('admin.vacancies.edit', compact('vacancy', 'hasApplicant', 'hakAkses'));
     }
 
-    public function update(Request $request, $id)
+    /* =========================================================
+     * UPDATE
+     * ========================================================= */
+    public function update(Request $request, VacancyMagang $vacancy)
     {
-        $vacancy = VacancyMagang::findOrFail($id);
+        $hakAkses = $this->getHakAkses();
+        $hasApplicant = $vacancy->applications()->exists();
 
         $request->validate([
             'title'       => 'required|string|max:200',
+            'type'        => 'required|in:magang,penelitian',
             'start_date'  => 'required|date',
             'end_date'    => 'required|date|after_or_equal:start_date',
+            'description' => 'nullable|string',
         ]);
 
-        $hasApplicant = ApplicationMagang::where('vacancy_id', $id)->exists();
+        // ===============================
+        // DATA YANG SELALU BOLEH DIUBAH
+        // ===============================
+        $data = [
+            'title'       => $request->title,
+            'type'        => $request->type,
+            'description' => $request->description,
+            'start_date'  => $request->start_date,
+            'end_date'    => $request->end_date,
+            'division_name' => $hakAkses->role === 'superadmin'
+                ? $request->division_name
+                : $vacancy->division_name,
+        ];
 
-        // Field yang SELALU boleh diubah
-        $data = $request->only([
-            'title',
-            'description',
-            'start_date',
-            'end_date',
-        ]);
-
-        // Field aturan inti HANYA boleh diubah jika BELUM ADA PENDAFTAR
+        // ===============================
+        // JIKA BELUM ADA PENDAFTAR
+        // ===============================
         if (!$hasApplicant) {
-            $data = array_merge($data, $request->only([
-                'registration_mode',
-                'min_members',
-                'max_members',
-                'quota_slots',
-            ]));
+            $request->validate([
+                'registration_mode' => 'required|in:individu,kelompok,hybrid',
+                'quota_slots'       => 'required|integer|min:1',
+                'min_members'       => 'nullable|integer|min:1',
+                'max_members'       => 'nullable|integer|min:1',
+            ]);
+
+            [$min, $max] = $this->resolveMemberRange(
+                $request->registration_mode,
+                $request->min_members,
+                $request->max_members
+            );
+
+            $data = array_merge($data, [
+                'registration_mode' => $request->registration_mode,
+                'quota_slots'       => $request->quota_slots,
+                'min_members'       => $min,
+                'max_members'       => $max,
+            ]);
         }
 
         $vacancy->update($data);
+        DashboardCache::clear();
 
-        return redirect()->route('admin.vacancies.index')
+        return redirect()
+            ->route('admin.vacancies.index')
             ->with('success', 'Lowongan berhasil diperbarui.');
     }
 
-    // =================================================================
-    // 4. MANUAL OPEN / CLOSE
-    // =================================================================
-    public function toggleStatus($id)
+    /* =========================================================
+     * TOGGLE STATUS
+     * ========================================================= */
+    public function toggleStatus(VacancyMagang $vacancy)
     {
-        $vacancy = VacancyMagang::findOrFail($id);
+        $vacancy->update([
+            'status' => $vacancy->status === 'open' ? 'closed' : 'open',
+        ]);
 
-        if ($vacancy->status === 'open') {
-            $vacancy->status = 'closed';
-            $msg = 'Lowongan berhasil ditutup.';
-        } else {
-            $vacancy->status = 'open';
-            $msg = 'Lowongan berhasil dibuka kembali.';
-        }
+        DashboardCache::clear();
 
-        $vacancy->save();
-
-        return back()->with('success', $msg);
+        return back()->with('success', 'Status lowongan berhasil diubah.');
     }
 
-    // =================================================================
-    // 5. DELETE DATA (DISARANKAN JANGAN DIPAKAI JIKA SUDAH ADA PENDAFTAR)
-    // =================================================================
-    public function destroy($id)
+    /* =========================================================
+     * DELETE
+     * ========================================================= */
+    public function destroy(VacancyMagang $vacancy)
     {
-        $vacancy = VacancyMagang::findOrFail($id);
-
-        $hasApplicant = ApplicationMagang::where('vacancy_id', $id)->exists();
-
-        if ($hasApplicant) {
+        if ($vacancy->applications()->exists()) {
             return back()->withErrors([
-                'error' => 'Lowongan tidak dapat dihapus karena sudah memiliki pendaftar.'
+                'error' => 'Lowongan tidak dapat dihapus karena sudah memiliki pendaftar.',
             ]);
         }
 
         $vacancy->delete();
+        DashboardCache::clear();
 
-        return redirect()->route('admin.vacancies.index')
+        return redirect()
+            ->route('admin.vacancies.index')
             ->with('success', 'Lowongan berhasil dihapus.');
+    }
+
+    /* =========================================================
+     * HELPER: ATUR MIN / MAX ANGGOTA
+     * ========================================================= */
+    private function resolveMemberRange($mode, $min, $max)
+    {
+        if ($mode === 'individu') {
+            return [1, 1];
+        }
+
+        if ($max < $min) {
+            abort(422, 'Jumlah maksimal anggota harus ≥ minimal.');
+        }
+
+        return [$min, $max];
     }
 }

@@ -3,75 +3,115 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\VacancyMagang;
 use App\Models\ApplicationMagang;
 use App\Models\UserMagang;
-use App\Models\MagangAccessRight; // <--- PENTING: Panggil Model SK
+use App\Models\MagangAccessRight;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class AdminDashboardController extends Controller
 {
     public function index()
     {
-        // 1. Ambil ID User yang sedang Login (Pegawai)
-        $userId = Auth::id();
+        /* =====================================================
+         * 1. USER LOGIN & HAK AKSES
+         * ===================================================== */
+        $user = Auth::user();
 
-        // 2. Cek Jabatan dia di tabel SK Magang
-        $hakAkses = MagangAccessRight::where('user_id', $userId)->first();
+        $hakAkses = MagangAccessRight::where('user_id', $user->id)->first();
 
-        // 3. Safety Check: Kalau tidak punya hak akses, tendang keluar
         if (!$hakAkses) {
             abort(403, 'Akses Ditolak: Anda tidak terdaftar sebagai Admin Magang.');
         }
 
-        // 4. Siapkan Query Dasar (Belum dieksekusi)
-        $lowonganQuery = VacancyMagang::where('status', 'open');
-        $pelamarQuery  = ApplicationMagang::where('status', 'pending');
-        $magangQuery   = ApplicationMagang::where('status', 'accepted');
+        $isSuperAdmin = $hakAkses->role === 'superadmin';
+        $division     = $hakAkses->division_name;
 
-        // 5. --- LOGIC FILTER (KHUSUS ADMIN BIDANG) ---
-        // Jika rolenya BUKAN 'superadmin', kita persempit datanya
-        if ($hakAkses->role !== 'superadmin') {
-            
-            // A. Filter Lowongan: Cuma hitung lowongan divisi dia (misal: IT)
-            $lowonganQuery->where('division_name', $hakAkses->division_name);
-            
-            // B. Filter Pelamar: Cuma hitung pelamar yang melamar ke lowongan IT
-            $pelamarQuery->whereHas('vacancy', function($q) use ($hakAkses) {
-                $q->where('division_name', $hakAkses->division_name);
-            });
+        /* =====================================================
+         * 2. CACHE KEY
+         * ===================================================== */
+        $cacheKey = $isSuperAdmin
+            ? 'dashboard_superadmin'
+            : 'dashboard_admin_' . strtolower($division);
 
-            // C. Filter Anak Magang: Cuma hitung yang diterima di lowongan IT
-            $magangQuery->whereHas('vacancy', function($q) use ($hakAkses) {
-                $q->where('division_name', $hakAkses->division_name);
-            });
-        }
-        // ---------------------------------------------
+        /* =====================================================
+         * 3. AMBIL DATA DASHBOARD (CACHE)
+         * ===================================================== */
+        $dashboardData = Cache::remember($cacheKey, now()->addMinutes(1), function () use ($isSuperAdmin, $division) {
 
-        // 6. Eksekusi Hitung Data (COUNT)
-        $totalLowongan   = $lowonganQuery->count();
-        $perluVerifikasi = $pelamarQuery->count();
-        $sedangMagang    = $magangQuery->count();
+            /* ================= LOWONGAN AKTIF ================= */
+            $lowonganQuery = VacancyMagang::where('status', 'open');
 
-        // 7. Statistik Peserta (Siswa SMK vs Mahasiswa)
-        // Note: Ini kita biarkan Global dulu agar terlihat ramai, 
-        // karena User Magang itu akunnya global (belum tentu terikat divisi kalau belum daftar).
-        $totalSiswa = UserMagang::whereHas('profile', function($q){
-            $q->where('education_level', 'siswa_smk');
-        })->count();
-        
-        $totalMahasiswa = UserMagang::whereHas('profile', function($q){
-            $q->where('education_level', 'mahasiswa');
-        })->count();
+            if (!$isSuperAdmin) {
+                $lowonganQuery->where('division_name', $division);
+            }
 
-        // 8. Kirim ke View
-        return view('admin.dashboard.index', compact(
-            'totalLowongan', 
-            'perluVerifikasi', 
-            'sedangMagang',
-            'totalSiswa',
-            'totalMahasiswa'
+            $totalLowongan = $lowonganQuery->count();
+
+            /* ================= PENDAFTARAN ================= */
+            $pendingQuery = ApplicationMagang::where('status', 'pending');
+            $activeQuery  = ApplicationMagang::whereIn('status', ['accepted', 'active']);
+
+            if (!$isSuperAdmin) {
+                $pendingQuery->whereHas('vacancy', function ($q) use ($division) {
+                    $q->where('division_name', $division);
+                });
+
+                $activeQuery->whereHas('vacancy', function ($q) use ($division) {
+                    $q->where('division_name', $division);
+                });
+            }
+
+            $perluVerifikasi = $pendingQuery->count();
+            $sedangMagang    = $activeQuery->count();
+
+            /* ================= STATISTIK PESERTA ================= */
+            $totalSiswa = UserMagang::whereHas('profile', function ($q) {
+                $q->where('education_level', 'siswa_smk');
+            })->count();
+
+            $totalMahasiswa = UserMagang::whereHas('profile', function ($q) {
+                $q->where('education_level', 'mahasiswa');
+            })->count();
+
+            /* ================= PENDAFTARAN TERBARU ================= */
+            $pendaftaranQuery = ApplicationMagang::with([
+                'leader.user:id,name',
+                'leader.user.profile:id,user_id,institution_name',
+                'vacancy:id,title,division_name'
+            ])
+                ->orderByDesc('submission_date');
+
+            if (!$isSuperAdmin) {
+                $pendaftaranQuery->whereHas('vacancy', function ($q) use ($division) {
+                    $q->where('division_name', $division);
+                });
+            }
+
+            $pendaftaranTerbaru = $pendaftaranQuery
+                ->limit(5)
+                ->get();
+
+            return [
+                'totalLowongan'      => $totalLowongan,
+                'perluVerifikasi'    => $perluVerifikasi,
+                'sedangMagang'       => $sedangMagang,
+                'totalSiswa'         => $totalSiswa,
+                'totalMahasiswa'     => $totalMahasiswa,
+                'pendaftaranTerbaru' => $pendaftaranTerbaru,
+            ];
+        });
+
+        /* =====================================================
+         * 4. KIRIM KE VIEW
+         * ===================================================== */
+        return view('admin.dashboard.index', array_merge(
+            $dashboardData,
+            [
+                'user'      => $user,
+                'hakAkses'  => $hakAkses,
+            ]
         ));
     }
 }

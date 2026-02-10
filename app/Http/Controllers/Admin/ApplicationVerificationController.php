@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\ApplicationMagang;
 use App\Models\MagangAccessRight; // <--- PENTING: Panggil Model Hak Akses
 use Illuminate\Support\Facades\Auth;
+use App\Helpers\DashboardCache;
 
 class ApplicationVerificationController extends Controller
 {
@@ -33,9 +34,9 @@ class ApplicationVerificationController extends Controller
         // 5. --- LOGIC FILTER (ADMIN BIDANG) ---
         // Kalau BUKAN Superadmin, filter berdasarkan divisi di SK-nya
         if ($hakAkses->role !== 'superadmin') {
-            
+
             // Logic: "Ambil lamaran yang Lowongannya memiliki nama divisi yang sama dengan saya"
-            $applications->whereHas('vacancy', function($q) use ($hakAkses) {
+            $applications->whereHas('vacancy', function ($q) use ($hakAkses) {
                 $q->where('division_name', $hakAkses->division_name);
             });
         }
@@ -107,11 +108,11 @@ class ApplicationVerificationController extends Controller
         // 2. Logic Cek Kuota (Safety Net)
         // Kalau Admin mengubah dari REJECTED -> ACCEPTED, cek kuota dulu
         if ($app->status == 'rejected' && in_array($request->status, ['accepted', 'verified'])) {
-            
+
             $terpakai = ApplicationMagang::where('vacancy_id', $app->vacancy_id)
-                        ->whereIn('status', ['pending', 'verified', 'interview', 'accepted'])
-                        ->count();
-            
+                ->whereIn('status', ['pending', 'verified', 'interview', 'accepted'])
+                ->count();
+
             $quota = $app->vacancy->quota_slots;
 
             if (($quota - $terpakai) <= 0) {
@@ -121,12 +122,13 @@ class ApplicationVerificationController extends Controller
 
         // 3. Simpan Perubahan
         $app->status = $request->status;
-        
+
         if ($request->filled('admin_feedback')) {
             $app->admin_feedback = $request->admin_feedback;
         }
 
         $app->save();
+        DashboardCache::clear();
 
         // Pesan Sukses
         $msg = "Status berhasil diubah menjadi " . ucfirst($request->status);
