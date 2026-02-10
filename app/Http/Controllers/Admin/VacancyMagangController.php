@@ -8,6 +8,7 @@ use App\Models\VacancyMagang;
 use App\Models\MagangAccessRight;
 use App\Models\ApplicationMagang;
 use Illuminate\Support\Facades\Auth;
+use App\Helpers\DashboardCache;
 
 class VacancyMagangController extends Controller
 {
@@ -107,6 +108,7 @@ class VacancyMagangController extends Controller
             'description'       => $request->description,
             'status'            => 'open',
         ]);
+        DashboardCache::clear();
 
         return redirect()->route('admin.vacancies.index')
             ->with('success', 'Lowongan berhasil dibuat!');
@@ -122,8 +124,10 @@ class VacancyMagangController extends Controller
         $userId = Auth::id();
         $hakAkses = MagangAccessRight::where('user_id', $userId)->first();
 
-        if ($hakAkses->role !== 'superadmin'
-            && $vacancy->division_name !== $hakAkses->division_name) {
+        if (
+            $hakAkses->role !== 'superadmin'
+            && $vacancy->division_name !== $hakAkses->division_name
+        ) {
             abort(403, 'Anda tidak boleh mengedit lowongan divisi lain!');
         }
 
@@ -163,6 +167,7 @@ class VacancyMagangController extends Controller
         }
 
         $vacancy->update($data);
+        DashboardCache::clear();
 
         return redirect()->route('admin.vacancies.index')
             ->with('success', 'Lowongan berhasil diperbarui.');
@@ -184,6 +189,7 @@ class VacancyMagangController extends Controller
         }
 
         $vacancy->save();
+        DashboardCache::clear();
 
         return back()->with('success', $msg);
     }
@@ -204,6 +210,7 @@ class VacancyMagangController extends Controller
         }
 
         $vacancy->delete();
+        DashboardCache::clear();
 
         return redirect()->route('admin.vacancies.index')
             ->with('success', 'Lowongan berhasil dihapus.');
