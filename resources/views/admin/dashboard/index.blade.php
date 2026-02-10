@@ -5,8 +5,8 @@
 @section('content')
 
     {{-- =======================
-    CARD STATISTIK
-======================= --}}
+    STATISTIK DASHBOARD
+    ======================= --}}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 
         {{-- Lowongan Aktif --}}
@@ -41,7 +41,7 @@
                         {{ $perluVerifikasi }}
                     </h3>
                     <span class="text-xs text-yellow-600 font-semibold">
-                        Perlu ditindak -->
+                        Perlu ditindak →
                     </span>
                 </div>
             </div>
@@ -85,8 +85,9 @@
 
     {{-- =======================
     PENDAFTARAN TERBARU
-======================= --}}
+    ======================= --}}
     <div class="bg-white rounded-lg shadow-sm border border-slate-200 mb-8">
+
         <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
             <h3 class="text-lg font-medium text-slate-800">
                 <i class="bi bi-clock-history mr-2 text-blue-500"></i>
@@ -109,18 +110,19 @@
                         <th class="px-6 py-3 text-right font-semibold text-slate-600">Aksi</th>
                     </tr>
                 </thead>
+
                 <tbody class="divide-y divide-slate-100">
 
-                    @forelse($pendaftaranTerbaru ?? [] as $item)
+                    @forelse ($pendaftaranTerbaru as $item)
                         <tr class="hover:bg-slate-50">
-                            <td class="px-6 py-4 text-slate-800 font-medium">
-                                {{ $item->name }}
+                            <td class="px-6 py-4 font-medium text-slate-800">
+                                {{ $item->leader->user->name ?? '-' }}
                             </td>
                             <td class="px-6 py-4 text-slate-600">
-                                {{ $item->institution }}
+                                {{ $item->leader->user->profile->institution_name ?? '-' }}
                             </td>
                             <td class="px-6 py-4 text-slate-600">
-                                {{ $item->created_at->format('d M Y') }}
+                                {{ \Carbon\Carbon::parse($item->submission_date)->format('d M Y') }}
                             </td>
                             <td class="px-6 py-4">
                                 @switch($item->status)
@@ -156,7 +158,7 @@
                                 @endswitch
                             </td>
                             <td class="px-6 py-4 text-right">
-                                <a href="{{ route('admin.applications.show', $item->id) }}"
+                                <a href="{{ route('admin.applications.show', $item) }}"
                                     class="text-blue-600 hover:underline font-medium">
                                     Detail
                                 </a>
@@ -183,7 +185,7 @@
 
         {{-- =======================
     INFORMASI SISTEM
-======================= --}}
+    ======================= --}}
         <div class="bg-white rounded-lg shadow-sm border border-slate-200">
             <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
                 <h3 class="text-lg font-medium text-slate-800">
@@ -194,22 +196,19 @@
 
             <div class="p-6 text-slate-700 text-sm">
                 <p class="mb-4">
-                    Selamat datang kembali, <strong>{{ Auth::user()->name }}</strong>.
+                    Selamat datang kembali,
+                    <strong>{{ $user->name }}</strong>.
                 </p>
 
-                @php
-                    $akses = \App\Models\MagangAccessRight::where('user_id', Auth::id())->first();
-                @endphp
-
                 <div class="bg-blue-50 border-l-4 border-blue-400 p-4 rounded text-blue-700">
-                    @if ($akses->role === 'superadmin')
+                    @if ($hakAkses->role === 'superadmin')
                         <p>
                             <strong>Status: SUPER ADMIN.</strong>
                             Anda memiliki akses penuh ke seluruh data magang dari semua divisi.
                         </p>
                     @else
                         <p>
-                            <strong>Status: ADMIN BIDANG ({{ $akses->division_name }}).</strong>
+                            <strong>Status: ADMIN BIDANG ({{ $hakAkses->division_name }}).</strong>
                             Data pada dashboard dan menu magang telah difilter otomatis sesuai divisi Anda.
                         </p>
                     @endif

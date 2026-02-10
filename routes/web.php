@@ -1,126 +1,168 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 
-// --- IMPORT CONTROLLER ---
+// =====================
+// IMPORT CONTROLLER
+// =====================
 
-// 1. Controller Umum & Peserta Magang
+// Umum & Peserta Magang
 use App\Http\Controllers\AuthMagangController;
 use App\Http\Controllers\DashboardMagangController;
 use App\Http\Controllers\ProfileMagangController;
 use App\Http\Controllers\ApplicationMagangController;
 use App\Http\Controllers\LandingController;
 
-// 2. Controller Admin
+// Admin
 use App\Http\Controllers\Admin\VacancyMagangController;
 use App\Http\Controllers\Admin\ApplicationVerificationController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AssessmentController;
-use App\Http\Controllers\Admin\AdminProfileController; // Pastikan ini di-import
+use App\Http\Controllers\Admin\AdminProfileController;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes
+| WEB ROUTES
 |--------------------------------------------------------------------------
 */
 
-// ========================================================================
-// ROUTE LOGOUT (UNIVERSAL)
-// Bisa diakses oleh Admin (web) maupun Peserta (magang)
-// ========================================================================
-Route::post('/logout', [AuthMagangController::class, 'logout'])->name('logout');
+/*
+|--------------------------------------------------------------------------
+| LOGOUT (UNIVERSAL - MULTI GUARD SAFE)
+|--------------------------------------------------------------------------
+| Bisa logout dari admin (web) atau peserta (magang)
+| TANPA MERUSAK AUTH YANG SUDAH ADA
+*/
 
-// ========================================================================
-// 1. ZONA PUBLIK (BEBAS AKSES)
-// Siapapun (Tamu/Member/Admin) bisa buka halaman ini.
-// PENTING: Jangan masukkan ke dalam middleware auth.
-// ========================================================================
 
+Route::post('/logout', function () {
+
+    if (Auth::guard('magang')->check()) {
+        Auth::guard('magang')->logout();
+    }
+
+    if (Auth::check()) {
+        Auth::logout();
+    }
+
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+
+    return redirect('/');
+})->name('logout');
+
+
+/*
+|--------------------------------------------------------------------------
+| 1. ZONA PUBLIK
+|--------------------------------------------------------------------------
+| Bisa diakses siapa saja
+*/
 Route::get('/', [LandingController::class, 'index'])->name('landing.index');
-Route::get('/lowongan/{id}', [LandingController::class, 'show'])->name('landing.show');
+Route::get('/lowongan/{vacancy}', [LandingController::class, 'show'])->name('landing.show');
 
 
-// ========================================================================
-// 2. ZONA TAMU (GUEST)
-// Hanya bisa diakses kalau BELUM Login (sebagai peserta magang)
-// ========================================================================
+/*
+|--------------------------------------------------------------------------
+| 2. ZONA GUEST (BELUM LOGIN - PESERTA MAGANG)
+|--------------------------------------------------------------------------
+*/
+Route::middleware('guest:magang')->group(function () {
 
-Route::middleware(['guest:magang'])->group(function () {
-
-    // Login Routes
     Route::get('/login', [AuthMagangController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AuthMagangController::class, 'login']);
 
-    // Register Routes
     Route::get('/register', [AuthMagangController::class, 'showRegisterForm'])->name('register');
     Route::post('/register', [AuthMagangController::class, 'register']);
 });
 
 
-// ========================================================================
-// 3. ZONA PESERTA / MAHASISWA (AUTH MAGANG)
-// Wajib Login sebagai user magang baru bisa akses
-// ========================================================================
+/*
+|--------------------------------------------------------------------------
+| 3. ZONA AUTH PESERTA MAGANG
+|--------------------------------------------------------------------------
+*/
+Route::middleware('auth:magang')->group(function () {
 
-Route::middleware(['auth:magang'])->group(function () {
+    Route::get('/dashboard', [DashboardMagangController::class, 'index'])
+        ->name('dashboard');
 
-    // Dashboard Peserta
-    Route::get('/dashboard', [DashboardMagangController::class, 'index'])->name('dashboard');
+    Route::get('/profile', [ProfileMagangController::class, 'edit'])
+        ->name('profile.edit');
 
-    // Profil Peserta (Lengkapi Biodata & Upload CV)
-    Route::get('/profile', [ProfileMagangController::class, 'edit'])->name('profile.edit');
-    Route::put('/profile', [ProfileMagangController::class, 'update'])->name('profile.update');
+    Route::put('/profile', [ProfileMagangController::class, 'update'])
+        ->name('profile.update');
 
-    // Proses Pendaftaran (Submit Lamaran)
-    Route::post('/apply', [ApplicationMagangController::class, 'store'])->name('apply.store');
+    Route::post('/applications', [ApplicationMagangController::class, 'store'])
+        ->name('applications.store');
 });
 
 
-// ========================================================================
-// 4. ZONA ADMIN DINAS (AUTH PEGAWAI)
-// Wajib Login sebagai Admin (Guard: web/default)
-// ========================================================================
+/*
+|--------------------------------------------------------------------------
+| 4. ZONA ADMIN DINAS
+|--------------------------------------------------------------------------
+| Guard default (web)
+*/
+Route::prefix('admin')
+    ->name('admin.')
+    ->middleware(['auth']) // TODO: tambahkan role admin middleware
+    ->group(function () {
 
-// Prefix 'admin' -> URL jadi: domain.com/admin/vacancies
-// Name 'admin.' -> Route name jadi: admin.vacancies.index, admin.dashboard, dst.
-Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
+        // Dashboard Admin
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])
+            ->name('dashboard');
 
-    // --- DASHBOARD ADMIN ---
-    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+        // CRUD Lowongan
+        Route::resource('vacancies', VacancyMagangController::class);
 
-    // --- MANAJEMEN LOWONGAN (CRUD) ---
-    Route::resource('vacancies', VacancyMagangController::class);
+        // Open / Close Lowongan
+        Route::patch(
+            '/vacancies/{vacancy}/toggle',
+            [VacancyMagangController::class, 'toggleStatus']
+        )->name('vacancies.toggle');
 
-    // Route Spesial: Manual Close/Open Lowongan
-    Route::patch('/vacancies/{id}/toggle', [VacancyMagangController::class, 'toggleStatus'])
-        ->name('vacancies.toggle');
+        // Verifikasi Lamaran
+        Route::get(
+            '/applications',
+            [ApplicationVerificationController::class, 'index']
+        )->name('applications.index');
 
-    // --- VERIFIKASI LAMARAN ---
-    // Lihat Daftar Pelamar
-    Route::get('/applications', [ApplicationVerificationController::class, 'index'])
-        ->name('applications.index');
+        Route::get(
+            '/applications/{application}',
+            [ApplicationVerificationController::class, 'show']
+        )->name('applications.show');
 
-    // Lihat Detail Satu Pelamar
-    Route::get('/applications/{id}', [ApplicationVerificationController::class, 'show'])
-        ->name('applications.show');
+        Route::patch(
+            '/applications/{application}/update-status',
+            [ApplicationVerificationController::class, 'updateStatus']
+        )->name('applications.update-status');
 
-    // Eksekusi Terima/Tolak
-    Route::patch('/applications/{id}/update-status', [ApplicationVerificationController::class, 'updateStatus'])
-        ->name('applications.update-status');
+        // Assessment / Penilaian
+        Route::get(
+            '/assessments',
+            [AssessmentController::class, 'index']
+        )->name('assessments.index');
 
-    // --- PENILAIAN / ASSESSMENT ---
-    // Menu daftar mahasiswa yang siap dinilai
-    Route::get('/assessments', [AssessmentController::class, 'index'])->name('assessments.index');
+        Route::get(
+            '/assessments/{member}/create',
+            [AssessmentController::class, 'create']
+        )->name('assessments.create');
 
-    // Form Input Nilai
-    Route::get('/assessments/{member_id}/create', [AssessmentController::class, 'create'])->name('assessments.create');
+        Route::post(
+            '/assessments/{member}/store',
+            [AssessmentController::class, 'store']
+        )->name('assessments.store');
 
-    // Proses Simpan Nilai
-    Route::post('/assessments/{member_id}/store', [AssessmentController::class, 'store'])->name('assessments.store');
+        // Profil Admin
+        Route::get(
+            '/profile',
+            [AdminProfileController::class, 'index']
+        )->name('profile');
 
-    // --- PENGATURAN PROFIL ADMIN ---
-    // Penjelasan: name('profile') akan digabung dengan prefix 'admin.' 
-    // Hasil akhirnya = 'admin.profile' (Sesuai yang dipanggil di Sidebar/View)
-    Route::get('/profile', [AdminProfileController::class, 'index'])->name('profile');
-    Route::put('/profile', [AdminProfileController::class, 'update'])->name('profile.update');
-});
+        Route::put(
+            '/profile',
+            [AdminProfileController::class, 'update']
+        )->name('profile.update');
+    });

@@ -1,109 +1,188 @@
 @extends('layouts.admin')
+{{-- 
+    Layout utama admin.
+    Semua halaman admin akan mewarisi header, sidebar, dan footer dari layout ini.
+--}}
 
 @section('title', 'Manajemen Lowongan Magang')
+{{-- 
+    Judul halaman.
+    Biasanya dipakai di <title> browser dan header halaman.
+--}}
 
 @section('content')
+    {{-- 
+    =========================
+    KONTEN UTAMA HALAMAN
+    =========================
+--}}
 
-<div class="flex justify-between items-center mb-6">
-    <p class="text-gray-600">Kelola daftar lowongan magang yang tersedia.</p>
-    <a href="{{ route('admin.vacancies.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow flex items-center">
-        <i class="bi bi-plus-lg mr-2"></i> Buat Lowongan Baru
-    </a>
-</div>
+    {{-- =========================
+    HEADER HALAMAN + ACTION
+    ========================= --}}
+    <div class="flex justify-between items-center mb-6">
+        {{-- Deskripsi singkat halaman --}}
+        <p class="text-gray-600">
+            Kelola daftar lowongan magang yang tersedia.
+            <span class="text-sm text-gray-400">(Buka / Tutup / Edit sesuai kondisi)</span>
+        </p>
 
-<div class="bg-white rounded-lg shadow overflow-hidden">
-    <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-            <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judul & Divisi</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe & Mode</th>
-                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Kuota</th>
-                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Periode</th>
-                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-            </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-            @forelse($vacancies as $vacancy)
-            <tr class="hover:bg-gray-50">
-                <td class="px-6 py-4">
-                    <div class="text-sm font-bold text-gray-900">{{ $vacancy->title }}</div>
-                    <div class="text-xs text-gray-500 bg-gray-100 inline-block px-2 py-1 rounded mt-1">
-                        Divisi: {{ $vacancy->division_name }}
-                    </div>
-                </td>
-
-                <td class="px-6 py-4">
-                    <span class="block text-sm text-gray-700 capitalize">{{ $vacancy->type }}</span>
-                    <span class="text-xs text-gray-500 capitalize">Mode: {{ $vacancy->registration_mode }}</span>
-                </td>
-
-                <td class="px-6 py-4 text-center">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {{ $vacancy->quota_slots }} Slot
-                    </span>
-                </td>
-
-                <td class="px-6 py-4 text-center text-sm text-gray-500">
-                    <div>{{ \Carbon\Carbon::parse($vacancy->start_date)->format('d M Y') }}</div>
-                    <div class="text-xs">s/d</div>
-                    <div>{{ \Carbon\Carbon::parse($vacancy->end_date)->format('d M Y') }}</div>
-                </td>
-
-                <td class="px-6 py-4 text-center">
-                    @if($vacancy->status == 'open')
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                            DIBUKA
-                        </span>
-                    @else
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                            DITUTUP
-                        </span>
-                    @endif
-                </td>
-
-                <td class="px-6 py-4 text-center text-sm font-medium space-x-2">
-                    <a href="{{ route('admin.vacancies.edit', $vacancy->id) }}" class="text-indigo-600 hover:text-indigo-900" title="Edit">
-                        <i class="bi bi-pencil-square text-lg"></i>
-                    </a>
-
-                    <form action="{{ route('admin.vacancies.toggle', $vacancy->id) }}" method="POST" class="inline-block">
-                        @csrf @method('PATCH')
-                        <button type="submit" class="text-gray-500 hover:text-gray-900" title="Ubah Status (Buka/Tutup)">
-                            @if($vacancy->status == 'open')
-                                <i class="bi bi-toggle-on text-green-600 text-xl"></i>
-                            @else
-                                <i class="bi bi-toggle-off text-gray-400 text-xl"></i>
-                            @endif
-                        </button>
-                    </form>
-
-                    <form action="{{ route('admin.vacancies.destroy', $vacancy->id) }}" method="POST" class="inline-block form-delete" data-name="{{ $vacancy->title }}">
-                        @csrf 
-                        @method('DELETE')
-                        <button type="submit" class="text-red-600 hover:text-red-900" title="Hapus Permanen">
-                            <i class="bi bi-trash text-lg"></i>
-                        </button>
-                    </form>
-                </td>
-            </tr>
-            @empty
-            <tr>
-                <td colspan="6" class="px-6 py-10 text-center text-gray-500">
-                    Belum ada lowongan dibuat. Silakan klik tombol "Buat Lowongan Baru".
-                </td>
-            </tr>
-            @endforelse
-        </tbody>
-    </table>
-    
-    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
-        {{ $vacancies->links() }}
+        {{-- Tombol menuju halaman CREATE lowongan --}}
+        <a href="{{ route('admin.vacancies.create') }}"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md shadow flex items-center">
+            <i class="bi bi-plus-lg mr-2"></i> Buat Lowongan Baru
+        </a>
     </div>
-</div>
 
-@push('scripts')
-    @vite(['resources/js/admin/delete-confirm.js'])
-@endpush
+    {{-- =========================
+    TABEL DATA LOWONGAN
+    ========================= --}}
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+            {{-- Header kolom tabel --}}
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left font-semibold text-gray-500">Judul & Divisi</th>
+                    <th class="px-6 py-3 text-left font-semibold text-gray-500">Tipe & Mode</th>
+                    <th class="px-6 py-3 text-center font-semibold text-gray-500">Kuota</th>
+                    <th class="px-6 py-3 text-center font-semibold text-gray-500">Periode</th>
+                    <th class="px-6 py-3 text-center font-semibold text-gray-500">Status</th>
+                    <th class="px-6 py-3 text-center font-semibold text-gray-500">Aksi</th>
+                </tr>
+            </thead>
+
+            {{-- Body tabel --}}
+            <tbody class="divide-y divide-gray-100">
+                {{-- Loop data lowongan --}}
+                @forelse ($vacancies as $vacancy)
+                    <tr class="hover:bg-gray-50">
+
+                        {{-- =========================
+                        KOLOM JUDUL & DIVISI
+                        ========================= --}}
+                        <td class="px-6 py-4">
+                            {{-- Judul lowongan --}}
+                            <div class="font-semibold text-gray-900">
+                                {{ $vacancy->title }}
+                            </div>
+
+                            {{-- Badge divisi & indikator pendaftar --}}
+                            <div class="mt-1 flex gap-2 text-xs">
+                                <span class="bg-gray-100 px-2 py-0.5 rounded">
+                                    {{ $vacancy->division_name }}
+                                </span>
+
+                                {{-- Indikator jika sudah ada pendaftar --}}
+                                @if ($vacancy->applications_count > 0)
+                                    <span class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded">
+                                        Ada Pendaftar
+                                    </span>
+                                @endif
+                            </div>
+                        </td>
+
+                        {{-- =========================
+                        KOLOM TIPE & MODE
+                        ========================= --}}
+                        <td class="px-6 py-4">
+                            <div class="capitalize font-medium">
+                                {{ $vacancy->type }}
+                            </div>
+                            <div class="text-xs text-gray-500 capitalize">
+                                Mode: {{ $vacancy->registration_mode }}
+                            </div>
+                        </td>
+
+                        {{-- =========================
+                        KOLOM KUOTA
+                        ========================= --}}
+                        <td class="px-6 py-4 text-center">
+                            <span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold">
+                                {{ $vacancy->quota_slots }} Slot
+                            </span>
+                        </td>
+
+                        {{-- =========================
+                        KOLOM PERIODE MAGANG
+                        ========================= --}}
+                        <td class="px-6 py-4 text-center text-gray-600">
+                            {{ \Carbon\Carbon::parse($vacancy->start_date)->format('d M Y') }}
+                            <div class="text-xs text-gray-400">s/d</div>
+                            {{ \Carbon\Carbon::parse($vacancy->end_date)->format('d M Y') }}
+                        </td>
+
+                        {{-- =========================
+                        KOLOM STATUS LOWONGAN
+                        ========================= --}}
+                        <td class="px-6 py-4 text-center">
+                            <span
+                                class="px-2 py-0.5 text-xs font-semibold rounded-full
+                                {{ $vacancy->status === 'open' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                {{ strtoupper($vacancy->status) }}
+                            </span>
+                        </td>
+
+                        {{-- =========================
+                        KOLOM AKSI (EDIT / TOGGLE / DELETE)
+                        ========================= --}}
+                        <td class="px-6 py-4 text-center space-x-3">
+
+                            {{-- Aksi EDIT --}}
+                            <a href="{{ route('admin.vacancies.edit', $vacancy) }}" class="text-indigo-600"
+                                title="Edit Lowongan">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+
+                            {{-- Aksi TOGGLE STATUS (open / closed) --}}
+                            <form action="{{ route('admin.vacancies.toggle', $vacancy) }}" method="POST"
+                                class="inline-block form-toggle" data-title="{{ $vacancy->title }}"
+                                data-status="{{ $vacancy->status }}">
+                                @csrf
+                                @method('PATCH')
+
+                                <button type="submit" title="Buka / Tutup Lowongan">
+                                    <i
+                                        class="bi {{ $vacancy->status === 'open' ? 'bi-toggle-on text-green-600' : 'bi-toggle-off text-gray-400' }} text-xl"></i>
+                                </button>
+                            </form>
+
+                            {{-- Aksi DELETE (hanya jika belum ada pendaftar) --}}
+                            @if ($vacancy->applications_count === 0)
+                                <form action="{{ route('admin.vacancies.destroy', $vacancy) }}" method="POST"
+                                    class="inline-block form-delete" data-name="{{ $vacancy->title }}">
+                                    @csrf
+                                    @method('DELETE')
+
+                                    <button type="submit" class="text-red-600 hover:text-red-800" title="Hapus Permanen">
+                                        <i class="bi bi-trash text-lg"></i>
+                                    </button>
+                                </form>
+                            @else
+                                {{-- Icon disabled jika tidak boleh dihapus --}}
+                                <i class="bi bi-trash text-gray-300 cursor-not-allowed"
+                                    title="Tidak dapat dihapus karena sudah ada pendaftar"></i>
+                            @endif
+                        </td>
+                    </tr>
+
+                    {{-- Kondisi jika tidak ada data --}}
+                @empty
+                    <tr>
+                        <td colspan="6" class="py-12 text-center text-gray-500">
+                            Belum ada lowongan dibuat.
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+
+        {{-- =========================
+        PAGINATION
+        ========================= --}}
+        <div class="px-6 py-4 bg-gray-50 border-t">
+            {{ $vacancies->links() }}
+        </div>
+    </div>
 
 @endsection
