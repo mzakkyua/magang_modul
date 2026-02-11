@@ -28,4 +28,10 @@ class UserMagang extends Authenticatable
     {
         return $this->hasOne(ProfileMagang::class, 'user_id');
     }
+        public function getNamaPesertaAttribute()
+{
+    return $this->profile->full_name ?? 'Peserta';
+}
+
+    
 }
