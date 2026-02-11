@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Masuk - SINAKERTRANS</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 </head>
 
 <body class="bg-gray-100 flex items-center justify-center h-screen">
@@ -24,24 +25,36 @@
             </div>
         @endif
 
-        <form action="{{ route('login') }}" method="POST">
+        <form action="{{ route('login') }}" method="POST" id="loginForm">
             @csrf
 
             <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2">Email</label>
-                <input type="email" name="email"
-                    class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300"
+                <input type="email" name="email" value="{{ old('email') }}"
+                    class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 @error('email') border-red-500 @enderror"
                     placeholder="nama@email.com" required>
+                @error('email')
+                    <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div class="mb-6">
                 <label class="block text-gray-700 text-sm font-bold mb-2">Password</label>
-                <input type="password" name="password"
-                    class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300"
-                    placeholder="********" required>
+                <div class="relative">
+                    <input type="password" id="password" name="password"
+                        class="w-full pr-10 px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 @error('password') border-red-500 @enderror"
+                        placeholder="********" required>
+                    <button type="button" id="togglePassword"
+                        class="absolute right-3 top-2 text-gray-500 hover:text-gray-700">
+                        <i class="bi bi-eye-slash text-xl"></i>
+                    </button>
+                </div>
+                @error('password')
+                    <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
-            <button type="submit"
+            <button type="submit" id="submitBtn"
                 class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 transition duration-200">
                 Masuk
             </button>
@@ -54,6 +67,28 @@
                     class="hover:underline">Kembali ke Beranda</a></p>
         </div>
     </div>
+
+    <script>
+        // ===== PASSWORD TOGGLE (Bug #6) =====
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+
+        togglePassword?.addEventListener('click', function(e) {
+            e.preventDefault();
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.innerHTML = type === 'password' ?
+                '<i class="bi bi-eye-slash text-xl"></i>' :
+                '<i class="bi bi-eye text-xl"></i>';
+        });
+
+        // ===== LOADING STATE (Improvement #7) =====
+        document.getElementById('loginForm')?.addEventListener('submit', function(e) {
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split animate-spin mr-2"></i>Memproses...';
+        });
+    </script>
 
 </body>
 

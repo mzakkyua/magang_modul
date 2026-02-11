@@ -27,7 +27,7 @@
             </div>
         @endif
 
-        <form action="{{ route('register') }}" method="POST">
+        <form action="{{ route('register') }}" method="POST" id="registerForm">
             @csrf
 
             {{-- INPUT NAMA LENGKAP --}}
@@ -92,7 +92,25 @@
                 </div>
             </div>
 
-            <button type="submit"
+            {{-- PASSWORD STRENGTH INDICATOR --}}
+            <div id="strengthBar" class="mb-4 h-2 bg-gray-200 rounded overflow-hidden hidden">
+                <div id="fill" class="w-0 h-full bg-red-500 transition-all duration-300"></div>
+            </div>
+            <p id="strength" class="text-xs text-gray-500 mb-4"></p>
+
+            {{-- CHECKBOX T&C --}}
+            <div class="mb-6">
+                <label class="flex items-center text-sm text-gray-700">
+                    <input type="checkbox" name="terms" class="mr-2 rounded @error('terms') border-red-500 @enderror">
+                    <span>Saya setuju dengan <a href="#"
+                            class="text-blue-600 hover:underline font-semibold">Syarat & Ketentuan</a></span>
+                </label>
+                @error('terms')
+                    <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <button type="submit" id="submitBtn"
                 class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                 Daftar Sekarang
             </button>
@@ -111,6 +129,72 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // ===== PASSWORD TOGGLE (Bug #6) =====
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+
+        togglePassword?.addEventListener('click', function(e) {
+            e.preventDefault();
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            this.innerHTML = type === 'password' ?
+                '<i class="bi bi-eye-slash text-xl"></i>' :
+                '<i class="bi bi-eye text-xl"></i>';
+        });
+
+        // ===== PASSWORD STRENGTH INDICATOR (Improvement #8) =====
+        const passwordField = document.querySelector('input[name="password"]');
+        const strengthBar = document.getElementById('strengthBar');
+        const fill = document.getElementById('fill');
+        const strength = document.getElementById('strength');
+
+        passwordField?.addEventListener('input', function(e) {
+            const pwd = e.target.value;
+            const result = calculateStrength(pwd);
+
+            if (pwd.length === 0) {
+                strengthBar.classList.add('hidden');
+                strength.textContent = '';
+                return;
+            }
+
+            strengthBar.classList.remove('hidden');
+            fill.style.width = result.percent + '%';
+            fill.className = `h-full transition-all duration-300 bg-${result.color}-500`;
+            strength.textContent = result.text;
+            strength.className = `text-xs text-${result.color}-600 mb-4`;
+        });
+
+        function calculateStrength(pwd) {
+            let percent = 0;
+            let color = 'red';
+            let text = 'Lemah';
+
+            if (pwd.length >= 8) percent = 25, color = 'red';
+            if (pwd.length >= 12) percent = 50, color = 'yellow';
+            if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) percent = 60, color = 'yellow';
+            if (/[0-9]/.test(pwd)) percent = 75, color = 'blue', text = 'Kuat';
+            if (/[@!#$%^&*]/.test(pwd)) percent = 100, color = 'green', text = 'Sangat Kuat';
+
+            if (percent === 25) text = 'Lemah';
+            else if (percent <= 50) text = 'Sedang';
+
+            return {
+                percent,
+                color,
+                text
+            };
+        }
+
+        // ===== LOADING STATE (Improvement #7) =====
+        document.getElementById('registerForm')?.addEventListener('submit', function(e) {
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split animate-spin mr-2"></i>Mendaftarkan...';
+        });
+    </script>
 
 </body>
 
