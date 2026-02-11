@@ -70,6 +70,29 @@
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <i class="bi bi-lock text-gray-400"></i>
                     </div>
+
+                    @error('password')
+                        <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                    @enderror
+
+                    <!-- TAMBAHKAN id="password" -->
+                    <input type="password" id="password" name="password"
+                        class="w-full pl-10 pr-10 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 @error('password') border-red-500 @enderror"
+                        placeholder="Minimal 8 karakter" required>
+
+                    <!-- TAMBAHKAN TOMBOL MATA -->
+                    <button type="button" id="togglePassword"
+                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
+                        <i class="bi bi-eye-slash text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            {{-- <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2">Password</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="bi bi-lock text-gray-400"></i>
+                    </div>
                     <input type="password" name="password"
                         class="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 @error('password') border-red-500 @enderror"
                         placeholder="Minimal 8 karakter" required>
@@ -77,7 +100,7 @@
                 @error('password')
                     <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
                 @enderror
-            </div>
+            </div> --}}
 
             {{-- INPUT KONFIRMASI PASSWORD --}}
             <div class="mb-6">

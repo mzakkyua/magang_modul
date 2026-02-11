@@ -29,8 +29,8 @@ return new class extends Migration
             $table->string('full_name', 150);
 
             // PERBAIKAN 2: Semua data detail SAYA BUAT NULLABLE
-            // Supaya bisa Register dulu, baru lengkapi data nanti di dashboard.
-            $table->enum('education_level', ['siswa_smk', 'mahasiswa'])->default('mahasiswa');
+            // Supaya bisa Register dulu, baru lengkapi data nanti di dashboard.    
+            $table->enum('education_level', ['siswa_smk', 'mahasiswa'])->nullable(); // Boleh kosong dulu
             $table->string('nim_nisn', 50)->nullable();      // Boleh kosong dulu
             $table->string('institution_name', 100)->nullable(); // Boleh kosong dulu
             $table->string('major', 100)->nullable();            // Boleh kosong dulu

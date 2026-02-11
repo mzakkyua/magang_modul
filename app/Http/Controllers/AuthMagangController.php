@@ -52,6 +52,15 @@ class AuthMagangController extends Controller
                 'user_id'   => $user->id,
                 'full_name' => $request->nama_lengkap,
                 'status'    => 'active',
+                'nim_nisn'  => $request->nim_nisn,
+                'education_level' => $request->education_level,
+
+                // Field lain kita kosongkan dulu (nullable di database),
+                // Nanti user disuruh "Lengkapi Profil" setelah login.
+                'institution_name' => '-',
+                'major' => '-',
+                'phone_number' => '-',
+                'user_id'      => $user->id
             ]);
 
             // 3. Auto Login
