@@ -16,16 +16,16 @@ class ProfileMagangController extends Controller
         $user = Auth::guard('magang')->user();
         
         // Ambil data profilnya
-        $profile = $user->profile ?? new ProfileMagang();
+        $profile = $user->profile ?? new ProfileMagang(['user_id' => $user->id]);
 
-        return view('profile.edit', compact('profile', 'user'));
+        return view('magang.profile.edit', compact('profile', 'user'));
     }
 
     // 2. Simpan Perubahan (Termasuk Upload CV)
     public function update(Request $request)
     {
         $user = Auth::guard('magang')->user();
-        $profile = $user->profile;
+        $profile = $user->profile ?? new ProfileMagang(['user_id' => $user->id]);
 
         // A. Validasi Input
         $request->validate([
@@ -44,8 +44,8 @@ class ProfileMagangController extends Controller
         // B. Logic Upload File CV
         if ($request->hasFile('cv_file')) {
             // 1. Hapus file lama jika ada (biar server gak penuh sampah)
-            if ($profile->cv_file_path && Storage::exists($profile->cv_file_path)) {
-                Storage::delete($profile->cv_file_path);
+            if ($profile->cv_file_path && Storage::disk('public')->exists($profile->cv_file_path)) {
+                Storage::disk('public')->delete($profile->cv_file_path);
             }
 
             // 2. Simpan file baru
@@ -58,8 +58,8 @@ class ProfileMagangController extends Controller
 
         // C. Logic Upload File Proposal (Sama seperti CV)
         if ($request->hasFile('proposal_file')) {
-            if ($profile->proposal_file_path && Storage::exists($profile->proposal_file_path)) {
-                Storage::delete($profile->proposal_file_path);
+            if ($profile->proposal_file_path && Storage::disk('public')->exists($profile->proposal_file_path)) {
+                Storage::disk('public')->delete($profile->proposal_file_path);
             }
 
             $proposalPath = $request->file('proposal_file')->store('proposal_uploads', 'public');
