@@ -27,7 +27,7 @@ class DashboardMagangController extends Controller
         // 3. LOGIC TAMBAHAN: CEK USER SMK ATAU MAHASISWA?
         // (Opsional: Jika SMK tidak boleh lihat Penelitian, bisa difilter di sini)
         $user = Auth::guard('magang')->user();
-        $isSMK = $user->profile->education_level === 'siswa_smk';
+        $isSMK = optional($user->profile)->education_level === 'siswa_smk';
 
         // Kirim 2 bungkusan data (Magang & Penelitian) ke View
         return view('magang.dashboard.index', [
