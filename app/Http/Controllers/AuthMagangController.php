@@ -22,39 +22,39 @@ class AuthMagangController extends Controller
     public function register(Request $request)
     {
         // A. Validasi Input
-        // Kita hanya minta Nama, Email, dan Password.
-        // Pastikan di View, input namenya: nama_lengkap, email, password, password_confirmation
         $request->validate([
             'nama_lengkap' => 'required|string|max:255',
             'email'        => 'required|email|unique:users_magang,email',
             'password'     => 'required|min:8|confirmed',
+            'terms'        => 'accepted', // T&C checkbox wajib
+        ], [
+            'terms.accepted' => 'Anda harus menyetujui syarat dan ketentuan.',
         ]);
 
-        // B. Generate Username Otomatis
-        // Ambil nama depan dari email + angka acak (Contoh: budi@gmail.com -> budi882)
-        $username = explode('@', $request->email)[0] . rand(100, 999);
+        // B. Normalize email (lowercase) untuk avoid duplicate case
+        $email = strtolower($request->email);
 
-        // C. Simpan ke Database (User & Profile)
-        // Kita bungkus transaction biar kalau gagal satu, gagal semua (aman)
-        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $username) {
+        // C. Generate Username Otomatis
+        $username = explode('@', $email)[0] . rand(100, 999);
+
+        // D. Simpan ke Database (User & Profile) dengan Transaction
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $email, $username) {
 
             // 1. Buat User Login (Tabel users_magang)
             $user = UserMagang::create([
                 'username'      => $username,
-                'email'         => $request->email,
-                'password_hash' => Hash::make($request->password), // Enkripsi password
+                'email'         => $email, // Sudah lowercase
+                'password_hash' => Hash::make($request->password),
             ]);
 
             // 2. Buat Profile Dasar (Tabel profile_magang)
-            // Kolom lain (NIM, Univ, dll) biarkan NULL dulu karena belum diisi
             ProfileMagang::create([
-                'user_id'      => $user->id,
+                'user_id'   => $user->id,
                 'full_name' => $request->nama_lengkap,
-                'status'       => 'active',
+                'status'    => 'active',
             ]);
 
             // 3. Auto Login
-            // Setelah daftar langsung masuk, tidak perlu login ulang
             Auth::guard('magang')->login($user);
         });
 
@@ -79,21 +79,22 @@ class AuthMagangController extends Controller
             'password' => ['required'],
         ]);
 
-        // B. Cek Login: ADMIN / PEGAWAI (Guard: web)
+        // B. Normalize email untuk konsistensi
+        $credentials['email'] = strtolower($credentials['email']);
+
+        // C. Cek Login: ADMIN / PEGAWAI (Guard: web)
         if (Auth::guard('web')->attempt($credentials)) {
             $request->session()->regenerate();
-            // Redirect ke Dashboard Admin
             return redirect()->intended(route('admin.dashboard'));
         }
 
-        // C. Cek Login: MAHASISWA / PESERTA (Guard: magang)
+        // D. Cek Login: MAHASISWA / PESERTA (Guard: magang)
         if (Auth::guard('magang')->attempt($credentials)) {
             $request->session()->regenerate();
-            // Redirect ke Dashboard Peserta
             return redirect()->intended(route('dashboard'));
         }
 
-        // D. Jika Gagal Login
+        // E. Jika Gagal Login
         return back()->withErrors([
             'email' => 'Email atau password salah.',
         ])->onlyInput('email');

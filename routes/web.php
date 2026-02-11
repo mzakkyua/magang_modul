@@ -71,10 +71,10 @@ Route::get('/lowongan/{vacancy}', [LandingController::class, 'show'])->name('lan
 Route::middleware('guest:magang')->group(function () {
 
     Route::get('/login', [AuthMagangController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [AuthMagangController::class, 'login']);
+    Route::post('/login', [AuthMagangController::class, 'login'])->name('login.post');
 
     Route::get('/register', [AuthMagangController::class, 'showRegisterForm'])->name('register');
-    Route::post('/register', [AuthMagangController::class, 'register']);
+    Route::post('/register', [AuthMagangController::class, 'register'])->name('register.post');
 });
 
 
