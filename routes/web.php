@@ -107,7 +107,7 @@ Route::middleware('auth:magang')->group(function () {
 */
 Route::prefix('admin')
     ->name('admin.')
-    ->middleware(['auth']) // TODO: tambahkan role admin middleware
+    ->middleware(['auth', 'adminOnly'])
     ->group(function () {
 
         // Dashboard Admin

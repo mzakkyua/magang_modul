@@ -107,9 +107,9 @@
                         KOLOM PERIODE MAGANG
                         ========================= --}}
                         <td class="px-6 py-4 text-center text-gray-600">
-                            {{ \Carbon\Carbon::parse($vacancy->start_date)->format('d M Y') }}
+                            {{ $vacancy->start_date->format('d M Y') }}
                             <div class="text-xs text-gray-400">s/d</div>
-                            {{ \Carbon\Carbon::parse($vacancy->end_date)->format('d M Y') }}
+                            {{ $vacancy->end_date->format('d M Y') }}
                         </td>
 
                         {{-- =========================

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
 
@@ -45,17 +46,40 @@ class AdminProfileController extends Controller
             'browser'  => 'Tidak Diketahui',
         ];
 
-        if (preg_match('/windows|win32/i', $userAgent)) $agent['platform'] = 'Windows';
-        elseif (preg_match('/macintosh|mac os x/i', $userAgent)) $agent['platform'] = 'macOS';
-        elseif (preg_match('/linux/i', $userAgent)) $agent['platform'] = 'Linux';
-        elseif (preg_match('/android/i', $userAgent)) $agent['platform'] = 'Android';
-        elseif (preg_match('/iphone/i', $userAgent)) $agent['platform'] = 'iPhone';
+        try {
+            // Parse platform
+            if (preg_match('/windows|win32/i', $userAgent)) {
+                $agent['platform'] = 'Windows';
+            } elseif (preg_match('/macintosh|mac os x/i', $userAgent)) {
+                $agent['platform'] = 'macOS';
+            } elseif (preg_match('/linux/i', $userAgent)) {
+                $agent['platform'] = 'Linux';
+            } elseif (preg_match('/android/i', $userAgent)) {
+                $agent['platform'] = 'Android';
+            } elseif (preg_match('/iphone/i', $userAgent)) {
+                $agent['platform'] = 'iPhone';
+            } elseif (preg_match('/ipad/i', $userAgent)) {
+                $agent['platform'] = 'iPad';
+            }
 
-        if (preg_match('/MSIE/i', $userAgent) && !preg_match('/Opera/i', $userAgent)) $agent['browser'] = 'Internet Explorer';
-        elseif (preg_match('/Firefox/i', $userAgent)) $agent['browser'] = 'Firefox';
-        elseif (preg_match('/Chrome/i', $userAgent)) $agent['browser'] = 'Chrome';
-        elseif (preg_match('/Safari/i', $userAgent)) $agent['browser'] = 'Safari';
-        elseif (preg_match('/Opera/i', $userAgent)) $agent['browser'] = 'Opera';
+            // Parse browser
+            if (preg_match('/MSIE|Trident/i', $userAgent) && !preg_match('/Opera/i', $userAgent)) {
+                $agent['browser'] = 'Internet Explorer';
+            } elseif (preg_match('/Firefox/i', $userAgent)) {
+                $agent['browser'] = 'Firefox';
+            } elseif (preg_match('/Chrome/i', $userAgent)) {
+                $agent['browser'] = 'Chrome';
+            } elseif (preg_match('/Safari/i', $userAgent)) {
+                $agent['browser'] = 'Safari';
+            } elseif (preg_match('/Opera/i', $userAgent)) {
+                $agent['browser'] = 'Opera';
+            } elseif (preg_match('/Edge/i', $userAgent)) {
+                $agent['browser'] = 'Edge';
+            }
+        } catch (\Exception $e) {
+            // Jika parsing error, fallback ke default
+            Log::warning('User agent parsing error', ['user_agent' => $userAgent, 'error' => $e->getMessage()]);
+        }
 
         return (object) $agent;
     }

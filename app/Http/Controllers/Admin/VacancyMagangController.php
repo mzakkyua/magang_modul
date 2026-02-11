@@ -57,7 +57,8 @@ class VacancyMagangController extends Controller
     {
         $hakAkses = $this->getHakAkses();
 
-        $request->validate([
+        // Validasi dasar
+        $baseRules = [
             'title'             => 'required|string|max:200',
             'type'              => 'required|in:magang,penelitian',
             'registration_mode' => 'required|in:individu,kelompok,hybrid',
@@ -65,9 +66,18 @@ class VacancyMagangController extends Controller
             'start_date'        => 'required|date',
             'end_date'          => 'required|date|after_or_equal:start_date',
             'description'       => 'nullable|string',
-            'min_members'       => 'nullable|integer|min:1',
-            'max_members'       => 'nullable|integer|min:1',
-        ]);
+        ];
+
+        // Jika bukan individu, wajibkan min/max members
+        if ($request->registration_mode !== 'individu') {
+            $baseRules['min_members'] = 'required|integer|min:1';
+            $baseRules['max_members'] = 'required|integer|min:1|gte:min_members';
+        } else {
+            $baseRules['min_members'] = 'nullable|integer|min:1';
+            $baseRules['max_members'] = 'nullable|integer|min:1';
+        }
+
+        $request->validate($baseRules);
 
         $division = $hakAkses->role === 'superadmin'
             ? $request->division_name
@@ -127,13 +137,16 @@ class VacancyMagangController extends Controller
         $hakAkses = $this->getHakAkses();
         $hasApplicant = $vacancy->applications()->exists();
 
-        $request->validate([
+        // Validasi dasar (selalu ada)
+        $baseRules = [
             'title'       => 'required|string|max:200',
             'type'        => 'required|in:magang,penelitian',
             'start_date'  => 'required|date',
             'end_date'    => 'required|date|after_or_equal:start_date',
             'description' => 'nullable|string',
-        ]);
+        ];
+
+        $request->validate($baseRules);
 
         // ===============================
         // DATA YANG SELALU BOLEH DIUBAH
@@ -153,12 +166,21 @@ class VacancyMagangController extends Controller
         // JIKA BELUM ADA PENDAFTAR
         // ===============================
         if (!$hasApplicant) {
-            $request->validate([
+            $extraRules = [
                 'registration_mode' => 'required|in:individu,kelompok,hybrid',
                 'quota_slots'       => 'required|integer|min:1',
-                'min_members'       => 'nullable|integer|min:1',
-                'max_members'       => 'nullable|integer|min:1',
-            ]);
+            ];
+
+            // Jika bukan individu, wajibkan min/max members
+            if ($request->registration_mode !== 'individu') {
+                $extraRules['min_members'] = 'required|integer|min:1';
+                $extraRules['max_members'] = 'required|integer|min:1|gte:min_members';
+            } else {
+                $extraRules['min_members'] = 'nullable|integer|min:1';
+                $extraRules['max_members'] = 'nullable|integer|min:1';
+            }
+
+            $request->validate($extraRules);
 
             [$min, $max] = $this->resolveMemberRange(
                 $request->registration_mode,
@@ -224,10 +246,7 @@ class VacancyMagangController extends Controller
             return [1, 1];
         }
 
-        if ($max < $min) {
-            abort(422, 'Jumlah maksimal anggota harus ≥ minimal.');
-        }
-
+        // Validasi sudah ditangani di request->validate() dengan gte rule
         return [$min, $max];
     }
 }
