@@ -74,6 +74,6 @@ class ProfileMagangController extends Controller
         
         $profile->save(); // Simpan ke database
 
-        return redirect()->route('dashboard')->with('success', 'Profil berhasil diperbarui! Sekarang Anda bisa melamar.');
+        return redirect()->route('landing.index')->with('success', 'Profil berhasil diperbarui! Sekarang Anda bisa melamar.');
     }
 }

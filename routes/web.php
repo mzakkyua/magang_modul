@@ -14,6 +14,8 @@ use App\Http\Controllers\ProfileMagangController;
 use App\Http\Controllers\ApplicationMagangController;
 use App\Http\Controllers\LandingController;
 
+
+
 // Admin
 use App\Http\Controllers\Admin\VacancyMagangController;
 use App\Http\Controllers\Admin\ApplicationVerificationController;
@@ -84,6 +86,7 @@ Route::middleware('guest:magang')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth:magang')->group(function () {
+    
 
     Route::get('/dashboard', [DashboardMagangController::class, 'index'])
         ->name('dashboard');

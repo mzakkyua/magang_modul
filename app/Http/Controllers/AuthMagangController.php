@@ -90,7 +90,7 @@ class AuthMagangController extends Controller
         if (Auth::guard('magang')->attempt($credentials)) {
             $request->session()->regenerate();
             // Redirect ke Dashboard Peserta
-            return redirect()->intended(route('dashboard'));
+            return redirect()->intended(route('landing.index'));
         }
 
         // D. Jika Gagal Login
