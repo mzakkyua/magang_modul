@@ -133,19 +133,13 @@
     <div class="container mx-auto py-16 px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 md:grid-cols-2 items-center gap-8">
             <div class="max-w-lg">
-                <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">About Us</h2>
+                <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Tentang Kami</h2>
                 <p class="mt-4 text-gray-600 text-lg">
-                    Bappa flour mill provides our customers with the highest quality products and services. We offer a
-                    wide variety of flours and spices to choose from, and we are always happy to help our customers find
-                    the perfect products for their needs.
-                    We are committed to providing our customers with the best possible experience. We offer competitive
-                    prices, fast shipping, and excellent customer service. We are also happy to answer any questions
-                    that our customers may have about our products or services.
-                    If you are looking for a flour and spices service business that can provide you with the highest
-                    quality products and services, then we are the company for you. We look forward to serving you!</p>
+                    Dinas Tenaga Kerja dan Provinsi Jawa Timur berfokus pada peningkatan kompetensi tenaga kerja, pengembangan lapangan kerja, 
+                    perlindungan hak tenaga kerja, dan pengelolaan transmigrasi berkelanjutan untuk kesejahteraan masyarakat.</p>
             </div>
             <div class="mt-12 md:mt-0">
-                <img src="https://images.unsplash.com/photo-1531973576160-7125cd663d86" alt="About Us Image" class="object-cover rounded-lg shadow-md">
+                <img src="https://scontent.fcgk6-2.fna.fbcdn.net/v/t39.30808-6/470135193_993433886144297_8821151376106934837_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=101&ccb=1-7&_nc_sid=cc71e4&_nc_eui2=AeFTSm6vIuoAft1LuwZ5982u4cU_dTHek4PhxT91Md6Tg4ZNZ9eDuyWloqtDMutED2zwtqHGZb3XgYAwUtDv8k8n&_nc_ohc=Ve4Qu1EQQOkQ7kNvwEGdtZu&_nc_oc=Adn_YowWPQWIrSQqLOcNXs3NrAavHTTXTAEfECZKbip4BmCsIqF7aclIf0aQmM1Ns4A&_nc_zt=23&_nc_ht=scontent.fcgk6-2.fna&_nc_gid=qeo18flWANNy_4rvGuxrUQ&oh=00_AfsfHhZ23cvtZQs3JfDLUVmreB73COFQpqnMQD0R7o9mPw&oe=6991F9C3" alt="About Us Image" class="object-cover rounded-lg shadow-md">
             </div>
         </div>
     </div>

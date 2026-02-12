@@ -19,13 +19,17 @@
             <p class="text-gray-500 text-sm mt-1">Daftar sebagai peserta magang/penelitian.</p>
         </div>
 
-        {{-- ALERT ERROR UMUM (JIKA ADA) --}}
+        {{-- ALERT ERROR UMUM Update(JIKA ADA) --}}
         @if ($errors->any())
-            <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6" role="alert">
-                <p class="font-bold">Terjadi Kesalahan</p>
-                <p class="text-sm">Mohon periksa kembali inputan Anda.</p>
-            </div>
-        @endif
+    <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6" role="alert">
+        <p class="font-bold">Ups! Ada masalah:</p>
+        <ul class="mt-2 ml-4 list-disc list-inside text-sm">
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 
         <form action="{{ route('register') }}" method="POST" id="registerForm">
             @csrf
