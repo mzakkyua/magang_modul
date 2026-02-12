@@ -52,7 +52,7 @@
         <div class="col-span-1 md:col-span-2">
             <div class="bg-white rounded-lg shadow overflow-hidden">
                 <div class="px-6 py-4 border-b bg-gray-50">
-                    <h3 class="font-bold text-gray-700">Edit Informasi Akun</h3>
+                    <h3 class="font-bold text-gray-700">Ubah Informasi Akun</h3>
                 </div>
 
                 <div class="p-6">
@@ -78,11 +78,12 @@
                         <input type="hidden" name="delete_photo" id="deletePhotoInput" value="0">
 
                         <div class="mb-6">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Foto Profil Baru (Opsional)</label>
+                            <label class="block text-sm font-bold text-gray-800 mb-2">
+                                <i class="bi bi-person mr-2"></i>Ubah Foto Profil</label>
                             <div class="flex items-center">
                                 <label
                                     class="cursor-pointer bg-white border border-gray-300 rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500 px-4 py-2 shadow-sm transition">
-                                    <span><i class="bi bi-upload mr-2"></i> Pilih File Foto</span>
+                                    <span><i class="bi bi-upload mr-2"></i> Upload Foto</span>
                                     <input id="photoInput" name="photo" type="file" class="sr-only"
                                         accept="image/png, image/jpeg, image/jpg">
                                 </label>
@@ -105,15 +106,14 @@
 
                         <hr class="my-6 border-gray-200">
                         <h4 class="text-sm font-bold text-gray-800 mb-4 flex items-center">
-                            <i class="bi bi-shield-lock mr-2"></i> Ganti Password (Opsional)
+                            <i class="bi bi-shield-lock mr-2"></i> Ganti Password
                         </h4>
 
                         <div class="mb-4 relative">
                             <label class="block text-sm font-medium text-gray-700 mb-1">Password Lama</label>
                             <div class="relative">
                                 <input type="password" name="current_password" id="current_password"
-                                    class="w-full border-gray-300 rounded-md shadow-sm p-2 border pr-10"
-                                    placeholder="Kosongkan jika tidak ingin mengganti">
+                                    class="w-full border-gray-300 rounded-md shadow-sm p-2 border pr-10">
                                 <button type="button"
                                     class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-500 hover:text-blue-600 toggle-password"
                                     data-target="current_password"><i class="bi bi-eye-slash"></i></button>
@@ -162,14 +162,13 @@
                         </div>
                         <div class="bg-white rounded-lg shadow overflow-hidden mt-6">
                             <div class="px-6 py-4 border-b bg-gray-50">
-                                <h3 class="font-bold text-gray-700 flex items-center">
+                                <h3 class="font-bold text-gray-800 flex items-center">
                                     <i class="bi bi-laptop mr-2"></i> Perangkat Terhubung
                                 </h3>
                             </div>
                             <div class="p-6">
                                 <p class="text-sm text-gray-600 mb-4">
-                                    Ini adalah daftar perangkat yang sedang login menggunakan akun Anda.
-                                    Jika ada yang mencurigakan, segera ganti password.
+                                    Perangkat yang terhubung dalam akun akan ditampilkan disini, jika ada perangkat yang bukan milik anda segera ganti password!
                                 </p>
 
                                 <div class="space-y-4">

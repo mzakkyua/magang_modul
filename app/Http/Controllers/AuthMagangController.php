@@ -93,6 +93,7 @@ class AuthMagangController extends Controller
             $request->session()->regenerate();
             // Redirect ke Dashboard Peserta
             return redirect()->intended(route('landing.index'));
+            
         }
 
         // E. Jika Gagal Login
