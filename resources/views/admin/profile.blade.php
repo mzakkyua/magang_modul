@@ -160,7 +160,10 @@
                                 </span>
                             </button>
                         </div>
-                        <div class="bg-white rounded-lg shadow overflow-hidden mt-6">
+
+                        {{-- FUNGSI PERANGKAT TERHUBUNG SEBELUMNYA --}}
+
+                        {{-- <div class="bg-white rounded-lg shadow overflow-hidden mt-6">
                             <div class="px-6 py-4 border-b bg-gray-50">
                                 <h3 class="font-bold text-gray-700 flex items-center">
                                     <i class="bi bi-laptop mr-2"></i> Perangkat Terhubung
@@ -179,10 +182,7 @@
                                             <div class="flex items-center">
                                                 <div
                                                     class="h-10 w-10 rounded-full flex items-center justify-center bg-gray-200 text-gray-500 mr-4">
-                                                    @if (
-                                                        $session->agent->platform == 'Windows' ||
-                                                            $session->agent->platform == 'macOS' ||
-                                                            $session->agent->platform == 'Linux')
+                                                    @if ($session->agent->platform == 'Windows' || $session->agent->platform == 'macOS' || $session->agent->platform == 'Linux')
                                                         <i class="bi bi-display text-xl"></i>
                                                     @else
                                                         <i class="bi bi-phone text-xl"></i>
@@ -209,7 +209,10 @@
                                     @endforeach
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
+
+
+                        {{-- /FUNGSI PERANGKAT TERHUBUNG SEBELUMNYA --}}
 
                 </div>
             </div>
