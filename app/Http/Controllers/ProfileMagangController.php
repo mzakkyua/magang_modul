@@ -31,6 +31,7 @@ class ProfileMagangController extends Controller
         $request->validate([
             'phone_number' => 'required|string|max:20',
             'institution_name' => 'required|string|max:100', // Wajib diisi sekarang
+            'nim_nisn' => 'required|string|max:20',
             'major' => 'required|string|max:100',
             'address' => 'required|string',
             
@@ -68,6 +69,7 @@ class ProfileMagangController extends Controller
 
         // D. Simpan Data Teks Lainnya
         $profile->phone_number = $request->phone_number;
+        $profile->nim_nisn = $request->nim_nisn;
         $profile->institution_name = $request->institution_name;
         $profile->major = $request->major;
         $profile->address = $request->address;

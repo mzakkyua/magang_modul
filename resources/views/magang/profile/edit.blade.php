@@ -45,7 +45,7 @@
     </div>
 
     <div>
-        <label>Instansi</label>
+        <label>Instansi/Sekolah</label>
         <input type="text" name="institution_name"
         value="{{ old('institution_name',$profile->institution_name ?? '') }}"
         class="w-full border rounded px-3 py-2">
