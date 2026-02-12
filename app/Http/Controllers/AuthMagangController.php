@@ -21,22 +21,40 @@ class AuthMagangController extends Controller
 
     public function register(Request $request)
     {
-        // A. Validasi Input
+        // A. Validasi Input Update 
         $request->validate([
-            'nama_lengkap' => 'required|string|max:255',
-            'email'        => 'required|email|unique:users_magang,email',
-            'password'     => 'required|min:8|confirmed',
-            'terms'        => 'accepted', // T&C checkbox wajib
-        ], [
-            'terms.accepted' => 'Anda harus menyetujui syarat dan ketentuan.',
-        ]);
+    'nama_lengkap' => 'required|string|max:255',
+    'email'        => 'required|email|unique:users_magang,email',
+    'password'     => 'required|min:8|confirmed',
+    'terms'        => 'accepted',
+], [
+    // Pesan Formal untuk Nama
+    'nama_lengkap.required' => 'Kolom nama lengkap wajib diisi.',
 
+    // Pesan Formal untuk Email
+    'email.required' => 'Alamat email wajib diisi.',
+    'email.email'    => 'Format alamat email tidak valid.',
+    'email.unique'   => 'Alamat email tersebut sudah terdaftar dalam sistem.',
+
+    // Pesan Formal untuk Password
+    'password.required'  => 'Kata sandi wajib diisi.',
+    'password.min'       => 'Kata sandi minimal harus terdiri dari 8 karakter.',
+    'password.confirmed' => 'Konfirmasi kata sandi tidak sesuai dengan kata sandi utama.',
+
+    // Pesan Formal untuk Terms
+    'terms.accepted' => 'Anda wajib menyetujui syarat dan ketentuan yang berlaku.',
+]);
         // B. Normalize email (lowercase) untuk avoid duplicate case
         $email = strtolower($request->email);
 
         // C. Generate Username Otomatis
-        $username = explode('@', $email)[0] . rand(100, 999);
+        // Gunakan loop kecil untuk memastikan username benar-benar unik
+$baseUsername = explode('@', $email)[0];
+$username = $baseUsername . rand(100, 999);
 
+while (UserMagang::where('username', $username)->exists()) {
+    $username = $baseUsername . rand(1000, 9999);
+}
         // D. Simpan ke Database (User & Profile) dengan Transaction
         \Illuminate\Support\Facades\DB::transaction(function () use ($request, $email, $username) {
 

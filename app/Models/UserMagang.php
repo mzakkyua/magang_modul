@@ -16,6 +16,11 @@ class UserMagang extends Authenticatable
         'username', 'email', 'password_hash',
     ];
 
+    protected $hidden = [
+    'password_hash', 
+    'remember_token',
+];
+
     // Laravel minta 'password', tapi kita punya 'password_hash'
     // Kita harus mapping biar Auth jalan
     public function getAuthPassword()
