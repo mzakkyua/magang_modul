@@ -32,9 +32,10 @@ class ProfileMagangController extends Controller
             'phone_number' => 'required|string|max:20',
             'institution_name' => 'required|string|max:100', // Wajib diisi sekarang
             'nim_nisn' => 'required|string|max:20',
+            'education_level' => 'required|in:siswa_smk,mahasiswa',
             'major' => 'required|string|max:100',
             'address' => 'required|string',
-            
+            'full_name' => 'required|string|max:100',
             // Validasi File Upload
             // mimes:pdf = Wajib PDF
             // max:2048 = Maksimal 2MB
@@ -71,9 +72,11 @@ class ProfileMagangController extends Controller
         $profile->phone_number = $request->phone_number;
         $profile->nim_nisn = $request->nim_nisn;
         $profile->institution_name = $request->institution_name;
+        $profile->education_level = $request->education_level;
         $profile->major = $request->major;
         $profile->address = $request->address;
-        
+        $profile->full_name = $request->full_name;
+
         $profile->save(); // Simpan ke database
 
         return redirect()->route('landing.index')->with('success', 'Profil berhasil diperbarui! Sekarang Anda bisa melamar.');

@@ -6,11 +6,11 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Profil</title>
      <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
 </head>
 <body>
     @include('layouts.layoutlanding')
-
+   
 
 <div class="max-w-4xl mx-auto py-10">
 
@@ -52,15 +52,19 @@
     </div>
 
     <div>
-        <label>Jenjang</label>
-        <select name="education_level"
-        class="w-full border rounded px-3 py-2">
-            <option value="">Pilih</option>
-            <option value="SMA" @selected($profile->education_level=='SMA')>SMA</option>
-            <option value="SMK" @selected($profile->education_level=='SMK')>SMK</option>
-            <option value="D3" @selected($profile->education_level=='D3')>D3</option>
-            <option value="S1" @selected($profile->education_level=='S1')>S1</option>
-        </select>
+        <label id="edu_lvl">Jenjang</label>
+       <select name="education_level" id="education_level" class="border rounded px-3 py-2 w-full">
+    <option value="siswa_smk"
+        {{ old('education_level', $profile->education_level ?? '') == 'siswa_smk' ? 'selected' : '' }}>
+        Siswa SMK
+    </option>
+
+    <option value="mahasiswa"
+        {{ old('education_level', $profile->education_level ?? '') == 'mahasiswa' ? 'selected' : '' }}>
+        Mahasiswa
+    </option>
+</select>
+
     </div>
 
     <div>
@@ -113,4 +117,14 @@
 
 
 </body>
+<script>
+document.getElementById('education_level').addEventListener('change', function() {
+    let label = document.getElementById('label_major');
+    if(this.value === 'siswa_smk'){
+        label.innerText = 'Jurusan SMK';
+    } else {
+        label.innerText = 'Program Studi';
+    }
+});
+</script>
 </html>
