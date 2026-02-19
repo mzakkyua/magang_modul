@@ -1,3 +1,5 @@
+console.log("vacancy.js LOADED");
+console.log("checkDuration fired", startDate?.value, endDate?.value);
 import Swal from "sweetalert2";
 
 document.addEventListener("DOMContentLoaded", () => {

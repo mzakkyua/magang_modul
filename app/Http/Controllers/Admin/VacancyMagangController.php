@@ -9,11 +9,45 @@ use App\Models\MagangAccessRight;
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\DashboardCache;
 
+/**
+ * =========================================================
+ * CONTROLLER: VacancyMagangController
+ * =========================================================
+ * TANGGUNG JAWAB:
+ * - CRUD Lowongan Magang
+ * - Pengaturan kuota & mode pendaftaran
+ * - Pembatasan akses berdasarkan divisi
+ *
+ * ATURAN BISNIS UTAMA:
+ * - Admin divisi hanya boleh mengelola lowongan divisinya
+ * - Lowongan yang sudah memiliki pendaftar:
+ *   → Tidak boleh diubah mode & kuotanya
+ * - Mode individu selalu memiliki 1 anggota
+ *
+ * DAMPAK SISTEM:
+ * - Perubahan lowongan memengaruhi:
+ *   - Dashboard
+ *   - Proses pendaftaran
+ *
+ * POTENSI MIGRASI:
+ * - Hak akses → Policy / Middleware
+ * - Validasi bisnis → Service Layer
+ * =========================================================
+ */
 class VacancyMagangController extends Controller
 {
-    /* =========================================================
-     * HELPER: HAK AKSES
-     * ========================================================= */
+    /**
+     * =====================================================
+     * HELPER: getHakAkses()
+     * =====================================================
+     * TUJUAN:
+     * - Mengambil SK penunjukan admin magang
+     * - Digunakan di seluruh method controller
+     *
+     * SECURITY:
+     * - Menghentikan request jika admin tidak sah
+     * =====================================================
+     */
     private function getHakAkses()
     {
         $hakAkses = MagangAccessRight::where('user_id', Auth::id())->first();
@@ -25,9 +59,19 @@ class VacancyMagangController extends Controller
         return $hakAkses;
     }
 
-    /* =========================================================
-     * INDEX
-     * ========================================================= */
+    /**
+     * =====================================================
+     * METHOD: index()
+     * =====================================================
+     * TUJUAN:
+     * - Menampilkan daftar lowongan magang
+     *
+     * FITUR:
+     * - Superadmin → Semua divisi
+     * - Admin divisi → Hanya divisinya
+     * - Menampilkan jumlah pendaftar per lowongan
+     * =====================================================
+     */
     public function index()
     {
         $hakAkses = $this->getHakAkses();
@@ -45,18 +89,38 @@ class VacancyMagangController extends Controller
         return view('admin.vacancies.index', compact('vacancies'));
     }
 
-    /* =========================================================
-     * CREATE
-     * ========================================================= */
+    /**
+     * =====================================================
+     * METHOD: create()
+     * =====================================================
+     * TUJUAN:
+     * - Menampilkan form pembuatan lowongan baru
+     * =====================================================
+     */
     public function create()
     {
         return view('admin.vacancies.create');
     }
 
+    /**
+     * =====================================================
+     * METHOD: store()
+     * =====================================================
+     * TUJUAN:
+     * - Menyimpan lowongan magang baru
+     *
+     * ATURAN KHUSUS:
+     * - Admin divisi tidak bisa memilih divisi lain
+     * - Mode pendaftaran menentukan min/max anggota
+     * =====================================================
+     */
     public function store(Request $request)
     {
         $hakAkses = $this->getHakAkses();
 
+        /* =====================================================
+         * 1. VALIDASI INPUT
+         * ===================================================== */
         $request->validate([
             'title'             => 'required|string|max:200',
             'type'              => 'required|in:magang,penelitian',
@@ -69,16 +133,28 @@ class VacancyMagangController extends Controller
             'max_members'       => 'nullable|integer|min:1',
         ]);
 
+        /* =====================================================
+         * 2. TENTUKAN DIVISI LOWONGAN
+         * =====================================================
+         * - Superadmin → bebas memilih divisi
+         * - Admin divisi → otomatis sesuai SK
+         * ===================================================== */
         $division = $hakAkses->role === 'superadmin'
             ? $request->division_name
             : $hakAkses->division_name;
 
+        /* =====================================================
+         * 3. ATUR MIN / MAX ANGGOTA
+         * ===================================================== */
         [$min, $max] = $this->resolveMemberRange(
             $request->registration_mode,
             $request->min_members,
             $request->max_members
         );
 
+        /* =====================================================
+         * 4. SIMPAN LOWONGAN
+         * ===================================================== */
         VacancyMagang::create([
             'title'             => $request->title,
             'division_name'     => $division,
@@ -93,6 +169,7 @@ class VacancyMagangController extends Controller
             'status'            => 'open',
         ]);
 
+        // Bersihkan cache dashboard agar data konsisten
         DashboardCache::clear();
 
         return redirect()
@@ -100,13 +177,23 @@ class VacancyMagangController extends Controller
             ->with('success', 'Lowongan berhasil dibuat.');
     }
 
-    /* =========================================================
-     * EDIT
-     * ========================================================= */
+    /**
+     * =====================================================
+     * METHOD: edit()
+     * =====================================================
+     * TUJUAN:
+     * - Menampilkan form edit lowongan
+     *
+     * BATASAN:
+     * - Admin hanya boleh edit lowongan divisinya
+     * - Beberapa field dikunci jika sudah ada pendaftar
+     * =====================================================
+     */
     public function edit(VacancyMagang $vacancy)
     {
         $hakAkses = $this->getHakAkses();
 
+        // Cegah admin lintas divisi
         if (
             $hakAkses->role !== 'superadmin' &&
             $vacancy->division_name !== $hakAkses->division_name
@@ -114,19 +201,35 @@ class VacancyMagangController extends Controller
             abort(403, 'Anda tidak boleh mengedit lowongan divisi lain.');
         }
 
+        // Cek apakah sudah ada pendaftar
         $hasApplicant = $vacancy->applications()->exists();
 
-        return view('admin.vacancies.edit', compact('vacancy', 'hasApplicant', 'hakAkses'));
+        return view(
+            'admin.vacancies.edit',
+            compact('vacancy', 'hasApplicant', 'hakAkses')
+        );
     }
 
-    /* =========================================================
-     * UPDATE
-     * ========================================================= */
+    /**
+     * =====================================================
+     * METHOD: update()
+     * =====================================================
+     * TUJUAN:
+     * - Memperbarui data lowongan
+     *
+     * ATURAN:
+     * - Jika sudah ada pendaftar:
+     *   → mode & kuota tidak bisa diubah
+     * =====================================================
+     */
     public function update(Request $request, VacancyMagang $vacancy)
     {
         $hakAkses = $this->getHakAkses();
         $hasApplicant = $vacancy->applications()->exists();
 
+        /* =====================================================
+         * 1. VALIDASI DASAR
+         * ===================================================== */
         $request->validate([
             'title'       => 'required|string|max:200',
             'type'        => 'required|in:magang,penelitian',
@@ -135,23 +238,23 @@ class VacancyMagangController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        // ===============================
-        // DATA YANG SELALU BOLEH DIUBAH
-        // ===============================
+        /* =====================================================
+         * 2. DATA YANG SELALU BOLEH DIUBAH
+         * ===================================================== */
         $data = [
-            'title'       => $request->title,
-            'type'        => $request->type,
-            'description' => $request->description,
-            'start_date'  => $request->start_date,
-            'end_date'    => $request->end_date,
+            'title'         => $request->title,
+            'type'          => $request->type,
+            'description'   => $request->description,
+            'start_date'    => $request->start_date,
+            'end_date'      => $request->end_date,
             'division_name' => $hakAkses->role === 'superadmin'
                 ? $request->division_name
                 : $vacancy->division_name,
         ];
 
-        // ===============================
-        // JIKA BELUM ADA PENDAFTAR
-        // ===============================
+        /* =====================================================
+         * 3. DATA YANG HANYA BOLEH DIUBAH JIKA BELUM ADA PENDAFTAR
+         * ===================================================== */
         if (!$hasApplicant) {
             $request->validate([
                 'registration_mode' => 'required|in:individu,kelompok,hybrid',
@@ -175,6 +278,8 @@ class VacancyMagangController extends Controller
         }
 
         $vacancy->update($data);
+
+        // Bersihkan cache dashboard
         DashboardCache::clear();
 
         return redirect()
@@ -182,9 +287,14 @@ class VacancyMagangController extends Controller
             ->with('success', 'Lowongan berhasil diperbarui.');
     }
 
-    /* =========================================================
-     * TOGGLE STATUS
-     * ========================================================= */
+    /**
+     * =====================================================
+     * METHOD: toggleStatus()
+     * =====================================================
+     * TUJUAN:
+     * - Membuka / menutup lowongan
+     * =====================================================
+     */
     public function toggleStatus(VacancyMagang $vacancy)
     {
         $vacancy->update([
@@ -196,9 +306,17 @@ class VacancyMagangController extends Controller
         return back()->with('success', 'Status lowongan berhasil diubah.');
     }
 
-    /* =========================================================
-     * DELETE
-     * ========================================================= */
+    /**
+     * =====================================================
+     * METHOD: destroy()
+     * =====================================================
+     * TUJUAN:
+     * - Menghapus lowongan
+     *
+     * BATASAN:
+     * - Lowongan dengan pendaftar tidak boleh dihapus
+     * =====================================================
+     */
     public function destroy(VacancyMagang $vacancy)
     {
         if ($vacancy->applications()->exists()) {
@@ -208,6 +326,7 @@ class VacancyMagangController extends Controller
         }
 
         $vacancy->delete();
+
         DashboardCache::clear();
 
         return redirect()
@@ -215,9 +334,18 @@ class VacancyMagangController extends Controller
             ->with('success', 'Lowongan berhasil dihapus.');
     }
 
-    /* =========================================================
-     * HELPER: ATUR MIN / MAX ANGGOTA
-     * ========================================================= */
+    /**
+     * =====================================================
+     * HELPER: resolveMemberRange()
+     * =====================================================
+     * TUJUAN:
+     * - Menentukan min & max anggota berdasarkan mode
+     *
+     * ATURAN:
+     * - individu → min = max = 1
+     * - kelompok/hybrid → max ≥ min
+     * =====================================================
+     */
     private function resolveMemberRange($mode, $min, $max)
     {
         if ($mode === 'individu') {
