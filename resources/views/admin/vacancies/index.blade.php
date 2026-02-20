@@ -186,3 +186,7 @@
     </div>
 
 @endsection
+
+@push('scripts')
+    @vite(['resources/js/admin/delete-confirm.js'])
+@endpush

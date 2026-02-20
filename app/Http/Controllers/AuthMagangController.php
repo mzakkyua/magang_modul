@@ -5,79 +5,68 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use App\Models\UserMagang;
 use App\Models\ProfileMagang;
 
 class AuthMagangController extends Controller
 {
     // =================================================================
-    // 1. BAGIAN REGISTER (DAFTAR AKUN BARU)
+    // 1. BAGIAN REGISTER (DAFTAR AKUN)
     // =================================================================
 
     public function showRegisterForm()
     {
-        return view('auth.magang-register');
+        return view('auth.magang-register'); // Pastikan view ini nanti dibuat
     }
 
     public function register(Request $request)
     {
-        // A. Validasi Input Update 
+        // A. Validasi Input
+        // Pastikan email & username belum pernah dipakai orang lain
         $request->validate([
-    'nama_lengkap' => 'required|string|max:255',
-    'email'        => 'required|email|unique:users_magang,email',
-    'password'     => 'required|min:8|confirmed',
-    'terms'        => 'accepted',
-], [
-    // Pesan Formal untuk Nama
-    'nama_lengkap.required' => 'Kolom nama lengkap wajib diisi.',
+            'username' => 'required|string|max:50|unique:users_magang,username',
+            'email'    => 'required|email|max:100|unique:users_magang,email',
+            'password' => 'required|string|min:8|confirmed', // confirmed = harus ada field password_confirmation di form
 
-    // Pesan Formal untuk Email
-    'email.required' => 'Alamat email wajib diisi.',
-    'email.email'    => 'Format alamat email tidak valid.',
-    'email.unique'   => 'Alamat email tersebut sudah terdaftar dalam sistem.',
+            // Validasi Data Profil Awal (Bisa ditambah sesuai form register)
+            // 'full_name' => 'required|string|max:150',
+            // 'nim_nisn'  => 'required|string|max:50',
+            // 'education_level' => 'required|in:siswa_smk,mahasiswa', // Penanda SMK/Mahasiswa
+        ]);
 
-    // Pesan Formal untuk Password
-    'password.required'  => 'Kata sandi wajib diisi.',
-    'password.min'       => 'Kata sandi minimal harus terdiri dari 8 karakter.',
-    'password.confirmed' => 'Konfirmasi kata sandi tidak sesuai dengan kata sandi utama.',
+        // B. Proses Simpan (Pakai Transaction lagi biar aman)
+        // Kita harus simpan ke 2 Tabel: users_magang DAN profiles_magang
+        DB::transaction(function () use ($request) {
 
-    // Pesan Formal untuk Terms
-    'terms.accepted' => 'Anda wajib menyetujui syarat dan ketentuan yang berlaku.',
-]);
-        // B. Normalize email (lowercase) untuk avoid duplicate case
-        $email = strtolower($request->email);
-
-        // C. Generate Username Otomatis
-        // Gunakan loop kecil untuk memastikan username benar-benar unik
-$baseUsername = explode('@', $email)[0];
-$username = $baseUsername . rand(100, 999);
-
-while (UserMagang::where('username', $username)->exists()) {
-    $username = $baseUsername . rand(1000, 9999);
-}
-        // D. Simpan ke Database (User & Profile) dengan Transaction
-        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $email, $username) {
-
-            // 1. Buat User Login (Tabel users_magang)
+            // 1. Buat Akun Login
             $user = UserMagang::create([
-                'username'      => $username,
-                'email'         => $email, // Sudah lowercase
-                'password_hash' => Hash::make($request->password),
+                'username' => $request->username,
+                'email'    => $request->email,
+                'password_hash' => Hash::make($request->password), // Enkripsi Password!
             ]);
 
-            // 2. Buat Profile Dasar (Tabel profile_magang)
+            // 2. Buat Profil Biodata
+            // Profil otomatis dibuat saat register, sisanya bisa diedit nanti (update profile)
             ProfileMagang::create([
                 'user_id'   => $user->id,
-                'full_name' => $request->nama_lengkap,
-                'status'    => 'active',
+                'full_name' => $request->full_name,
+                'nim_nisn'  => $request->nim_nisn,
+                'education_level' => $request->education_level,
+
+                // Field lain kita kosongkan dulu (nullable di database),
+                // Nanti user disuruh "Lengkapi Profil" setelah login.
+                'institution_name' => '-',
+                'major' => '-',
+                'phone_number' => '-',
             ]);
 
-            // 3. Auto Login
+            // 3. Auto Login (Opsional)
+            // Begitu daftar, langsung masuk dashboard tanpa perlu login ulang
             Auth::guard('magang')->login($user);
         });
 
-        // D. Redirect ke Dashboard
-        return redirect()->route('dashboard')->with('success', 'Pendaftaran Berhasil! Silakan lengkapi biodata Anda.');
+        return redirect()->route('dashboard')->with('success', 'Akun berhasil dibuat! Silakan lengkapi profil Anda.');
     }
 
     // =================================================================
@@ -91,54 +80,45 @@ while (UserMagang::where('username', $username)->exists()) {
 
     public function login(Request $request)
     {
-        // A. Validasi Input
+        // 1. Validasi Input
         $credentials = $request->validate([
-            'email'    => ['required', 'email'],
+            'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
 
-        // B. Normalize email untuk konsistensi
-        $credentials['email'] = strtolower($credentials['email']);
-
-        // C. Cek Login: ADMIN / PEGAWAI (Guard: web)
+        // 2. CEK PERTAMA: Apakah ini ADMIN/PEGAWAI?
+        // Kita suruh cek ke Guard 'web' (tabel users)
         if (Auth::guard('web')->attempt($credentials)) {
             $request->session()->regenerate();
+            // Kalau ketemu, lempar ke Dashboard Admin
             return redirect()->intended(route('admin.dashboard'));
         }
 
-        // D. Cek Login: MAHASISWA / PESERTA (Guard: magang)
+        // 3. CEK KEDUA: Apakah ini MAHASISWA?
+        // Kita suruh cek ke Guard 'magang' (tabel users_magang)
         if (Auth::guard('magang')->attempt($credentials)) {
             $request->session()->regenerate();
-            // Redirect ke Dashboard Peserta
-            return redirect()->intended(route('landing.index'));
-            
+            // Kalau ketemu, lempar ke Dashboard Mahasiswa
+            return redirect()->intended(route('dashboard'));
         }
 
-        // E. Jika Gagal Login
+        // 4. Kalau Dua-duanya Gagal
         return back()->withErrors([
-            'email' => 'Email atau password salah.',
+            'email' => 'Email tidak terdaftar sebagai Pegawai maupun Peserta Magang.',
         ])->onlyInput('email');
     }
 
     // =================================================================
-    // 3. BAGIAN LOGOUT (KELUAR) - UNIVERSAL
+    // 3. BAGIAN LOGOUT (KELUAR)
     // =================================================================
 
     public function logout(Request $request)
     {
-        // Cek siapa yang sedang login, lalu logout sesuai guard-nya
+        Auth::guard('magang')->logout(); // Logout cuma yang magang
 
-        if (Auth::guard('web')->check()) {
-            Auth::guard('web')->logout();       // Logout Admin
-        } elseif (Auth::guard('magang')->check()) {
-            Auth::guard('magang')->logout();    // Logout Mahasiswa
-        }
-
-        // Bersihkan Sesi Browser
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        // Lempar kembali ke Halaman Depan (Landing Page)
         return redirect('/');
     }
 }

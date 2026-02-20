@@ -8,9 +8,20 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // 1. Tabel User Magang (Akun Login)
+        /*
+        |=====================================================
+        | 1. TABEL USERS_MAGANG (AKUN PESERTA)
+        |=====================================================
+        | Menyimpan data autentikasi peserta magang
+        | Catatan:
+        | - Password disimpan di kolom `password_hash`
+        | - Timestamp dibuat manual agar konsisten & eksplisit
+        |=====================================================
+        */
         Schema::create('users_magang', function (Blueprint $table) {
             $table->id();
+
+            // Kredensial akun
             $table->string('username', 50)->unique();
             $table->string('email', 100)->unique();
             $table->string('password_hash');
@@ -20,7 +31,15 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // 2. Tabel Profil Magang (Biodata)
+        /*
+        |=====================================================
+        | 2. TABEL PROFILES_MAGANG (BIODATA PESERTA)
+        |=====================================================
+        | Menyimpan detail profil peserta magang
+        | Relasi:
+        | - profiles_magang.user_id → users_magang.id
+        |=====================================================
+        */
         Schema::create('profiles_magang', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users_magang')->onDelete('cascade');
@@ -36,6 +55,8 @@ return new class extends Migration
             $table->string('major', 100)->nullable();            // Boleh kosong dulu
             $table->string('phone_number', 20)->nullable();      // Boleh kosong dulu
             $table->text('address')->nullable();
+
+            // Dokumen pendukung
             $table->string('cv_file_path')->nullable();
             $table->string('proposal_file_path')->nullable();
 
