@@ -22,51 +22,75 @@ class AuthMagangController extends Controller
 
     public function register(Request $request)
     {
-        // A. Validasi Input
-        // Pastikan email & username belum pernah dipakai orang lain
+        /*
+    |=====================================================
+    | A. VALIDASI INPUT REGISTER
+    |=====================================================
+    | Catatan:
+    | - education_level sengaja TIDAK diwajibkan di form
+    | - Akan di-set default otomatis di backend
+    |=====================================================
+    */
         $request->validate([
             'username' => 'required|string|max:50|unique:users_magang,username',
             'email'    => 'required|email|max:100|unique:users_magang,email',
-            'password' => 'required|string|min:8|confirmed', // confirmed = harus ada field password_confirmation di form
-
-            // Validasi Data Profil Awal (Bisa ditambah sesuai form register)
-            'full_name' => 'required|string|max:150',
-            'nim_nisn'  => 'required|string|max:50',
-            'education_level' => 'required|in:siswa_smk,mahasiswa', // Penanda SMK/Mahasiswa
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
-        // B. Proses Simpan (Pakai Transaction lagi biar aman)
-        // Kita harus simpan ke 2 Tabel: users_magang DAN profiles_magang
+        /*
+    |=====================================================
+    | B. PROSES SIMPAN DATA (TRANSACTION)
+    |=====================================================
+    | Alasan:
+    | - User & Profile harus konsisten
+    | - Jika salah satu gagal → rollback
+    |=====================================================
+    */
         DB::transaction(function () use ($request) {
 
-            // 1. Buat Akun Login
+            /*
+        |---------------------------------
+        | 1. BUAT AKUN LOGIN PESERTA
+        |---------------------------------
+        */
             $user = UserMagang::create([
-                'username' => $request->username,
-                'email'    => $request->email,
-                'password_hash' => Hash::make($request->password), // Enkripsi Password!
+                'username'      => $request->username,
+                'email'         => $request->email,
+                'password_hash' => Hash::make($request->password),
             ]);
 
-            // 2. Buat Profil Biodata
-            // Profil otomatis dibuat saat register, sisanya bisa diedit nanti (update profile)
+            /*
+        |---------------------------------
+        | 2. BUAT PROFIL AWAL PESERTA
+        |---------------------------------
+        | Catatan Penting:
+        | - education_level WAJIB ADA
+        | - Jika tidak dikirim form → default 'mahasiswa'
+        |---------------------------------
+        */
             ProfileMagang::create([
-                'user_id'   => $user->id,
-                'full_name' => $request->full_name,
-                'nim_nisn'  => $request->nim_nisn,
-                'education_level' => $request->education_level,
+                'user_id'          => $user->id,
+                'education_level'  => $request->education_level ?? 'mahasiswa',
 
-                // Field lain kita kosongkan dulu (nullable di database),
-                // Nanti user disuruh "Lengkapi Profil" setelah login.
+                // Data opsional (boleh null / placeholder)
+                'full_name'        => $request->full_name,
+                'nim_nisn'         => $request->nim_nisn,
                 'institution_name' => '-',
-                'major' => '-',
-                'phone_number' => '-',
+                'major'            => '-',
+                'phone_number'     => '-',
             ]);
 
-            // 3. Auto Login (Opsional)
-            // Begitu daftar, langsung masuk dashboard tanpa perlu login ulang
+            /*
+        |---------------------------------
+        | 3. AUTO LOGIN PESERTA
+        |---------------------------------
+        */
             Auth::guard('magang')->login($user);
         });
 
-        return redirect()->route('dashboard')->with('success', 'Akun berhasil dibuat! Silakan lengkapi profil Anda.');
+        return redirect()
+            ->route('dashboard')
+            ->with('success', 'Akun berhasil dibuat! Silakan lengkapi profil Anda.');
     }
 
     // =================================================================

@@ -8,31 +8,76 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // 1. Tabel User Magang (Akun)
+        /*
+        |=====================================================
+        | 1. TABEL USERS_MAGANG (AKUN PESERTA)
+        |=====================================================
+        | Menyimpan data autentikasi peserta magang
+        | Catatan:
+        | - Password disimpan di kolom `password_hash`
+        | - Timestamp dibuat manual agar konsisten & eksplisit
+        |=====================================================
+        */
         Schema::create('users_magang', function (Blueprint $table) {
             $table->id();
+
+            // Kredensial akun
             $table->string('username', 50)->unique();
             $table->string('email', 100)->unique();
-            $table->string('password_hash'); // Nanti di Model harus di-map ke 'password'
-            $table->timestamp('created_at')->useCurrent();
+            $table->string('password_hash');
+
+            // Timestamp manual
+            $table->timestamp('created_at')
+                ->useCurrent()
+                ->comment('Waktu akun dibuat');
+
+            $table->timestamp('updated_at')
+                ->useCurrent()
+                ->useCurrentOnUpdate()
+                ->comment('Waktu terakhir akun diperbarui');
         });
 
-        // 2. Tabel Profil Magang (Biodata)
+        /*
+        |=====================================================
+        | 2. TABEL PROFILES_MAGANG (BIODATA PESERTA)
+        |=====================================================
+        | Menyimpan detail profil peserta magang
+        | Relasi:
+        | - profiles_magang.user_id → users_magang.id
+        |=====================================================
+        */
         Schema::create('profiles_magang', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users_magang')->onDelete('cascade');
-            $table->enum('education_level', ['siswa_smk', 'mahasiswa'])->default('mahasiswa');
-            $table->string('full_name', 150);
-            $table->string('nim_nisn', 50);
-            $table->string('institution_name', 100);
-            $table->string('major', 100);
-            $table->string('phone_number', 20);
+
+            // Relasi ke akun peserta
+            $table->foreignId('user_id')
+                ->constrained('users_magang')
+                ->onDelete('cascade');
+
+            // Data pendidikan & identitas
+            $table->enum('education_level', ['siswa_smk', 'mahasiswa'])
+                ->default('mahasiswa');
+
+            $table->string('full_name', 150)->nullable();
+            $table->string('nim_nisn', 50)->nullable();
+            $table->string('institution_name', 100)->nullable();
+            $table->string('major', 100)->nullable();
+            $table->string('phone_number', 20)->nullable();
             $table->text('address')->nullable();
+
+            // Dokumen pendukung
             $table->string('cv_file_path')->nullable();
             $table->string('proposal_file_path')->nullable();
-            
-            // updated_at otomatis update current timestamp
-            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate(); 
+
+            // Timestamp manual
+            $table->timestamp('created_at')
+                ->useCurrent()
+                ->comment('Waktu profil dibuat');
+
+            $table->timestamp('updated_at')
+                ->useCurrent()
+                ->useCurrentOnUpdate()
+                ->comment('Waktu terakhir profil diperbarui');
         });
     }
 
