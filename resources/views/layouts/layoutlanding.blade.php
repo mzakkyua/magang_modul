@@ -46,7 +46,7 @@
                         {{-- CEK 3: JIKA BELUM LOGIN (TAMU) --}}
                     @else
                         <a href="{{ route('login') }}"
-                            class="text-gray-700 hover:text-blue-600 font-medium px-3 py-2">Masuk</a>
+                            class="bg-blue-600 text-white px-5 py-2 rounded-full font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-600/30"">Masuk</a>
                         <a href="{{ route('register') }}"
                             class="bg-blue-600 text-white px-5 py-2 rounded-full font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-600/30">
                             Daftar Sekarang

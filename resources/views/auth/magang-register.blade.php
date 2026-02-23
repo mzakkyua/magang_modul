@@ -90,11 +90,11 @@
             <p class="text-gray-600">
                 Sudah punya akun?
                 <a href="{{ route('login') }}" class="text-blue-600 font-bold hover:underline">
-                    Masuk di sini
+                 Login Akun
                 </a>
             </p>
-            <a href="{{ route('landing.index') }}" class="text-gray-400 text-xs hover:underline">
-                ← Kembali ke Beranda
+            <a href="{{ route('landing.index') }}" class="text-gray-500 text-xs hover:underline">
+                 Kembali ke Beranda
             </a>
         </div>
 

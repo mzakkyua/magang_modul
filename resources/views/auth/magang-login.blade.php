@@ -63,7 +63,7 @@
         <div class="mt-6 text-center text-sm">
             <p class="text-gray-600">Belum punya akun? <a href="{{ route('register') }}"
                     class="text-blue-600 font-bold hover:underline">Daftar Magang</a></p>
-            <p class="mt-2 text-gray-500 text-xs">Atau <a href="{{ route('landing.index') }}"
+            <p class="mt-2 text-gray-500 text-xs"> atau <a href="{{ route('landing.index') }}"
                     class="hover:underline">Kembali ke Beranda</a></p>
         </div>
     </div>
