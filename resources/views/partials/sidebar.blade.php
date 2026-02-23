@@ -124,10 +124,15 @@
 
     {{-- LOGOUT --}}
     <div class="border-t border-slate-200 p-4">
-        <form action="{{ route('logout') }}" method="POST">
+        <form action="{{ route('logout') }}" method="POST" onsubmit="this.querySelector('button').disabled = true;">
             @csrf
+
             <button type="submit"
-                class="flex items-center w-full px-4 py-2 text-sm font-medium text-red-600 rounded-md hover:bg-red-50 transition">
+                class="flex items-center w-full px-4 py-2 text-sm font-medium
+                text-red-600 rounded-md
+                hover:bg-red-50 hover:text-red-700
+                transition cursor-pointer
+                disabled:opacity-60 disabled:cursor-not-allowed">
                 <i class="bi bi-box-arrow-right mr-3"></i>
                 Keluar
             </button>
