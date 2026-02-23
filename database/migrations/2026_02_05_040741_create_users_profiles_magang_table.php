@@ -8,38 +8,48 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // 1. Tabel User Magang (Akun Login)
+        // ================================
+        // 1. TABEL USERS MAGANG (LOGIN)
+        // ================================
         Schema::create('users_magang', function (Blueprint $table) {
             $table->id();
+
             $table->string('username', 50)->unique();
             $table->string('email', 100)->unique();
+
+            // Simpan hash password
             $table->string('password_hash');
 
-            // PERBAIKAN 1: Gunakan timestamps() bawaan Laravel
-            // Ini otomatis bikin kolom 'created_at' DAN 'updated_at' sekaligus.
+            // created_at & updated_at
             $table->timestamps();
         });
 
-        // 2. Tabel Profil Magang (Biodata)
+        // ================================
+        // 2. TABEL PROFILES MAGANG (BIODATA)
+        // ================================
         Schema::create('profiles_magang', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users_magang')->onDelete('cascade');
 
-            // Data Wajib saat Register (Hanya Nama)
+            // Relasi ke users_magang
+            $table->foreignId('user_id')
+                ->constrained('users_magang')
+                ->cascadeOnDelete();
+
+            // Data wajib
             $table->string('full_name', 150);
 
-            // PERBAIKAN 2: Semua data detail SAYA BUAT NULLABLE
-            // Supaya bisa Register dulu, baru lengkapi data nanti di dashboard.    
-            $table->enum('education_level', ['siswa_smk', 'mahasiswa'])->nullable(); // Boleh kosong dulu
-            $table->string('nim_nisn', 50)->nullable();      // Boleh kosong dulu
-            $table->string('institution_name', 100)->nullable(); // Boleh kosong dulu
-            $table->string('major', 100)->nullable();            // Boleh kosong dulu
-            $table->string('phone_number', 20)->nullable();      // Boleh kosong dulu
+            // UBAH ENUM → VARCHAR (lebih fleksibel)
+            $table->string('education_level', 50)->nullable();
+
+            // Data opsional (bisa dilengkapi setelah login)
+            $table->string('nim_nisn', 50)->nullable();
+            $table->string('institution_name', 100)->nullable();
+            $table->string('major', 100)->nullable();
+            $table->string('phone_number', 20)->nullable();
             $table->text('address')->nullable();
             $table->string('cv_file_path')->nullable();
             $table->string('proposal_file_path')->nullable();
 
-            // Timestamps standar
             $table->timestamps();
         });
     }
