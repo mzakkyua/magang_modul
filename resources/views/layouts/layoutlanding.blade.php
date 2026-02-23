@@ -19,37 +19,73 @@
     <div class="flex items-center gap-6">
         
         {{-- Sapaan User --}}
-        <div class="flex items-center gap-2 text-gray-600">
-            <i class="bi bi-person-circle text-lg text-blue-600"></i>
-            <span class="text-sm">Halo, <strong>{{ Auth::guard('magang')->user()->nama_peserta }}</strong></span>
-        </div>
+        
 
         {{-- Menu Navigasi --}}
-        <ul class="flex gap-6 items-center font-semibold text-xs uppercase tracking-widest text-[#37517e]">
-            <li><a href="/" class="hover:text-blue-600 transition">Home</a></li>
-            <li><a href="#about" class="hover:text-blue-600 transition">Tentang Kami</a></li>
-            <li><a href="#services" class="hover:text-blue-600 transition">Status</a></li>
-            <li><a href="#statistik" class="hover:text-blue-600 transition">Sertifikat</a></li>
-            <li><a href="{{ route('profile.edit') }}" class="hover:text-blue-600 transition">Profil</a></li>
-        </ul>
+           <ul class="flex gap-8 items-center font-bold text-sm uppercase tracking-wide text-blue-600">
+                <li>
+                    <a href="/" class="{{ request()->is('/') ? 'text-blue-600 border-b-2 border-blue-600' : '' }} hover:text-blue-600 transition pb-1"> Home
+                    </a>
+                </li>
+            <li>
+                    <a href="/tentang-kami" class="{{ request()->is('tentang-kami') ? 'text-blue-600 border-b-2 border-blue-600' : '' }} hover:text-blue-600 transition pb-1"> Tentang Kami
+                    </a>
+                </li>
+            <li>
+                    <a href="/status" class="{{ request()->is('status') ? 'text-blue-600 border-b-2 border-blue-600' : '' }} hover:text-blue-600 transition pb-1"> Status
+                    </a>
+                </li>
+            <li>
+                    <a href="/sertifikat" class="{{ request()->is('sertifikat') ? 'text-blue-600 border-b-2 border-blue-600' : '' }} hover:text-blue-600 transition pb-1"> Sertifikat
+                    </a>
+                </li>
+            </ul>
 
-        {{-- Tombol Logout Baru --}}
-        <form action="{{ route('logout') }}" method="POST" class="inline">
-            @csrf
-            <button type="submit" 
-                class="px-4 py-1.5 border border-red-200 text-red-500 text-[10px] font-bold uppercase tracking-tighter rounded-md hover:bg-red-50 hover:text-red-700 hover:border-red-500 transition-all duration-200 shadow-sm">
-                <i class="bi bi-box-arrow-right mr-1"></i> Logout
-            </button>
-        </form>
-    </div>
+                {{-- Profile Dropdown --}}
+        <div class="relative group"> {{-- Tambahkan ml-4 untuk jarak dari menu --}}
+            
+                {{-- Tombol Pemicu --}}
+            <div class="flex items-center gap-3 text-[#37517e] cursor-pointer px-3 py-1.5 rounded-lg transition-all duration-200 hover:bg-gray-50">
+                <div class="bg-blue-100 p-1.5 rounded-full flex items-center justify-center shrink-0">
+                    <i class="bi bi-person-circle text-lg text-blue-600"></i>
+                </div>
+                <div class="text-left leading-none shrink-0"> {{-- shrink-0 agar tidak gepeng --}}
+                    <p class="text-[13px] font-bold">
+                        {{ Auth::guard('magang')->user()->nama_peserta }}
+                    </p>
+                    <p class="text-[10px] text-gray-400 uppercase tracking-tighter mt-0.5">Peserta Magang</p>
+                </div>
+                <i class="bi bi-chevron-down text-[10px] transition-transform duration-200 group-hover:rotate-180 ml-1"></i>
+            </div>
+
+                {{-- Isi Menu Dropdown --}}
+                {{-- w-44 adalah lebar tetap agar tidak stretch --}}
+            <div class="absolute right-0 hidden group-hover:block pt-2 w-44 z-50">
+                <div class="bg-white border border-gray-100 rounded-xl shadow-xl py-1.5 overflow-hidden">
+                    <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 px-4 py-2 text-[13px] text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
+                        <i class="bi bi-person-vcard text-base text-gray-400"></i> Profil Saya
+                    </a>
+
+                    <div class="border-t border-gray-50 my-1"></div>
+
+                    <form action="{{ route('logout') }}" method="POST" class="w-full">
+                        @csrf
+                        <button type="submit" class="flex items-center gap-3 w-full px-4 py-2 text-[13px] text-red-600 hover:bg-red-50 transition text-left font-semibold">
+                            <i class="bi bi-box-arrow-right text-base text-red-400"></i> Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
 
                         {{-- CEK 3: JIKA BELUM LOGIN (TAMU) --}}
                     @else
                         <a href="{{ route('login') }}"
-                            class="text-gray-700 hover:text-blue-600 font-medium px-3 py-2">Masuk</a>
+                            class="text-xl bg-white text-gray-700 px-5 py-2 rounded-3xl font-bold hover:bg-blue-600 hover:text-white transition">Masuk</a>
                         <a href="{{ route('register') }}"
-                            class="bg-blue-600 text-white px-5 py-2 rounded-full font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-600/30">
-                            Daftar Sekarang
+                            class="text-xl bg-white text-gray-700 px-5 py-2 rounded-3xl font-bold hover:bg-blue-600 hover:text-white transition">
+                            Daftar
                         </a>
                     @endif
                 </div>

@@ -6,7 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SINAKERTRANS - Cari Magang</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+<meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 
 <body class="bg-gray-50 font-sans text-gray-800">
@@ -260,6 +262,38 @@
         @endif
     </div>
 
+<section class="bg-gray-100 py-16">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+
+            <!-- kiri -->
+            <div class="max-w-lg">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">
+                    Timeline Magang
+                </h2>
+
+                <p class="text-gray-600 text-lg leading-relaxed">
+                    Berikut jadwal kegiatan program magang.  
+                    Peserta dapat melihat periode aktif, 
+                    tanggal mulai hingga selesai, dan aktivitas penting.
+                </p>
+
+                <div class="mt-4 text-sm text-gray-500">
+                    • Blok warna menunjukkan periode magang  
+                    • Klik event untuk detail (admin)  
+                </div>
+            </div>
+
+            <!-- kanan kalender -->
+            <div class="bg-white rounded-xl shadow-md p-4">
+                <div id="calendar"></div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+
 <!-- gallery -->
 <section class="text-gray-700 body-font" id="gallery">
     <div class="flex justify-center text-3xl font-bold text-gray-800 text-center py-10">
@@ -303,6 +337,27 @@
 
         <!-- Repeat this div for each image -->
     </div>
+
+    <script>
+document.addEventListener('DOMContentLoaded', function () {
+
+let calendarEl = document.getElementById('calendar');
+if(!calendarEl) return;
+
+let calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'dayGridMonth',
+    locale: 'id',
+    height: 420,
+
+    events: '{{ route("calendar.events") }}',
+
+    eventDisplay: 'block'
+});
+
+calendar.render();
+
+});
+</script>
 
 </section>
 @include('layouts.footer')

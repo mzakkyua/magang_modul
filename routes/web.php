@@ -15,6 +15,7 @@ use App\Http\Controllers\DashboardMagangController;
 use App\Http\Controllers\ProfileMagangController;
 use App\Http\Controllers\ApplicationMagangController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\CalendarController;
 
 // ---------------------
 // ADMIN DINAS
@@ -113,8 +114,9 @@ Route::middleware('guest:magang')->group(function () {
 Route::middleware('auth:magang')->group(function () {
 
 
-    Route::get('/dashboard', [DashboardMagangController::class, 'index'])
-        ->name('dashboard');
+  Route::get('/home', function () {
+    return redirect()->route('landing.index');
+});
 
     Route::get('/profile', [ProfileMagangController::class, 'edit'])
         ->name('profile.edit');
@@ -207,3 +209,15 @@ Route::prefix('admin')
             [AdminProfileController::class, 'update']
         )->name('profile.update');
     });
+
+    //event kalender
+    Route::get('/calendar', [CalendarController::class, 'index'])
+    ->name('calendar');
+
+Route::get('/calendar/events', [CalendarController::class, 'fetch'])
+    ->name('calendar.events');  
+Route::middleware('auth:admin')->group(function () {
+    Route::post('/calendar', [CalendarController::class, 'store']);
+    Route::put('/calendar/{event}', [CalendarController::class, 'update']);
+    Route::delete('/calendar/{event}', [CalendarController::class, 'destroy']);
+});
