@@ -12,8 +12,21 @@
     {{-- USER INFO --}}
     <div class="p-4 border-b border-slate-200">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                <i class="bi bi-person-fill text-lg"></i>
+            <div class="relative w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
+
+                {{-- FOTO PROFIL --}}
+                @if ($user->profile_photo_path)
+                    <img src="{{ asset('storage/' . $user->profile_photo_path) }}" alt="Foto Profil"
+                        class="absolute inset-0 w-full h-full object-cover rounded-full">
+                @else
+                    {{-- ICON DEFAULT --}}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-600" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                @endif
+
             </div>
             <div>
                 <p class="text-sm font-semibold text-slate-800">
