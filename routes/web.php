@@ -42,8 +42,8 @@ Route::post('/logout', function () {
         Auth::guard('magang')->logout();
     }
 
-    if (Auth::check()) {
-        Auth::logout();
+    if (Auth::guard('web')->check()) {
+        Auth::guard('web')->logout();
     }
 
     request()->session()->invalidate();
@@ -107,7 +107,7 @@ Route::middleware('auth:magang')->group(function () {
 */
 Route::prefix('admin')
     ->name('admin.')
-    ->middleware(['auth', 'adminOnly'])
+    ->middleware(['auth:web', 'adminOnly'])
     ->group(function () {
 
         // Dashboard Admin

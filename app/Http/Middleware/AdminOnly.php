@@ -9,22 +9,16 @@ use Illuminate\Support\Facades\Auth;
 
 class AdminOnly
 {
-  /**
-   * Handle an incoming request.
-   *
-   * @param  \Illuminate\Http\Request  $request
-   * @param  \Closure  $next
-   * @return mixed
-   */
   public function handle(Request $request, Closure $next)
   {
-    // Cek apakah user sudah login
-    if (!Auth::check()) {
-      return redirect('/login');
+    // Paksa cek guard web (admin)
+    if (!Auth::guard('web')->check()) {
+      return redirect()->route('login');
     }
 
-    // Cek apakah user memiliki hak akses admin di tabel MagangAccessRight
-    $hakAkses = MagangAccessRight::where('user_id', Auth::id())->first();
+    $admin = Auth::guard('web')->user();
+
+    $hakAkses = MagangAccessRight::where('user_id', $admin->id)->first();
 
     if (!$hakAkses) {
       abort(403, 'Akses Ditolak: Anda tidak terdaftar sebagai admin magang.');
