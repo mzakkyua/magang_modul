@@ -25,6 +25,10 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AssessmentController;
 use App\Http\Controllers\Admin\AdminProfileController;
 
+// Auth Reset Password
+use App\Http\Controllers\Auth\ForgotPasswordMagangController;
+use App\Http\Controllers\Auth\ResetPasswordMagangController;
+
 /*
 |--------------------------------------------------------------------------
 | WEB ROUTES
@@ -35,6 +39,21 @@ use App\Http\Controllers\Admin\AdminProfileController;
 |--------------------------------------------------------------------------
 */
 
+
+Route::prefix('password')->group(function () {
+
+    Route::get('/forgot', [ForgotPasswordMagangController::class, 'showLinkRequestForm'])
+        ->name('password.request');
+
+    Route::post('/email', [ForgotPasswordMagangController::class, 'sendResetLinkEmail'])
+        ->name('password.email');
+
+    Route::get('/reset/{token}', [ResetPasswordMagangController::class, 'showResetForm'])
+        ->name('password.reset');
+
+    Route::post('/reset', [ResetPasswordMagangController::class, 'reset'])
+        ->name('password.update');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -53,9 +72,8 @@ Route::post('/logout', function () {
         Auth::guard('magang')->logout();
     }
 
-    // Logout admin (guard default)
-    if (Auth::check()) {
-        Auth::logout();
+    if (Auth::guard('web')->check()) {
+        Auth::guard('web')->logout();
     }
 
     request()->session()->invalidate();
@@ -139,7 +157,7 @@ Route::middleware('auth:magang')->group(function () {
 */
 Route::prefix('admin')
     ->name('admin.')
-    ->middleware(['auth', 'admin.magang'])
+    ->middleware(['auth:web', 'adminOnly'])
     ->group(function () {
 
         // ---------------------
