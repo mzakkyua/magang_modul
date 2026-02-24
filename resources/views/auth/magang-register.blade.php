@@ -6,29 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar Akun - SINAKERTRANS</title>
 
-<<<<<<< HEAD
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-=======
-    {{-- Tailwind CDN (Production nanti sebaiknya pakai build Vite) --}}
-    <script src="https://cdn.tailwindcss.com"></script>
-
-    {{-- Bootstrap Icons --}}
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
->>>>>>> feature/auth
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/auth.js'])
 </head>
 
 <body class="bg-gray-100 flex items-center justify-center min-h-screen py-10">
 
     <div class="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
 
-<<<<<<< HEAD
-        <div class="text-center mb-6">
-            <h2 class="text-2xl font-bold text-blue-600">Buat Akun Baru</h2>
-            <p class="text-gray-500 text-sm">Daftar sebagai peserta magang / penelitian.</p>
-        </div>
-
-        {{-- ERROR MESSAGE --}}
-=======
         {{-- ================= HEADER ================= --}}
         <div class="text-center mb-8">
             <h1 class="text-3xl font-bold text-blue-600 mb-2">SINAKERTRANS</h1>
@@ -37,7 +21,6 @@
         </div>
 
         {{-- ================= GLOBAL ERROR ALERT ================= --}}
->>>>>>> feature/auth
         @if ($errors->any())
             <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                 <ul class="list-disc list-inside text-sm">
@@ -52,156 +35,142 @@
         <form action="{{ route('register.post') }}" method="POST" id="registerForm">
             @csrf
 
-<<<<<<< HEAD
-            {{-- USERNAME --}}
-            <div class="mb-4">
-                <label class="block text-sm font-bold mb-2">Nama Lengkap</label>
-                <input type="text" name="username" value="{{ old('username') }}"
-                    class="w-full px-3 py-2 border rounded-lg focus:ring focus:border-blue-300"
-                    placeholder="Sesuai KTP / KTM" required>
-            </div>
-
-            {{-- EMAIL --}}
-            <div class="mb-4">
-                <label class="block text-sm font-bold mb-2">Email Aktif</label>
-                <input type="email" name="email" value="{{ old('email') }}"
-                    class="w-full px-3 py-2 border rounded-lg focus:ring focus:border-blue-300"
-                    placeholder="nama@email.com" required>
-            </div>
-
-            {{-- PASSWORD --}}
-            <div class="mb-4">
-                <label class="block text-sm font-bold mb-2">Password</label>
-                <input type="password" name="password"
-                    class="w-full px-3 py-2 border rounded-lg focus:ring focus:border-blue-300"
-                    placeholder="Minimal 8 karakter" required>
-            </div>
-
-            {{-- PASSWORD CONFIRM --}}
-            <div class="mb-4">
-                <label class="block text-sm font-bold mb-2">Ulangi Password</label>
-                <input type="password" name="password_confirmation"
-                    class="w-full px-3 py-2 border rounded-lg focus:ring focus:border-blue-300"
-                    placeholder="Ketik ulang password" required>
-            </div>
-
-            {{-- PASSWORD STRENGTH --}}
-=======
             {{-- ================= NAMA LENGKAP ================= --}}
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2">Nama Lengkap</label>
-
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i class="bi bi-person text-gray-400"></i>
-                    </div>
-
-                    <input type="text" name="nama_lengkap" value="{{ old('nama_lengkap') }}"
-                        class="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 @error('nama_lengkap') border-red-500 @enderror"
-                        placeholder="Sesuai KTP/KTM" required autofocus>
-                </div>
-
-                @error('nama_lengkap')
-                    <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
-                @enderror
-            </div>
+            <x-input-field name="nama_lengkap" label="Nama Lengkap" placeholder="Nama sesuai KTP">
+                <x-slot:icon>
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd"
+                            d="M8.25 9a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0M12 6.75a2.25 2.25 0 1 0 0 4.5 2.25 2.25 0 0 0 0-4.5"
+                            clip-rule="evenodd" />
+                        <path fill-rule="evenodd"
+                            d="M1.25 12a10.75 10.75 0 1 1 21.5 0 10.75 10.75 0 0 1-21.5 0ZM12 2.75a9.25 9.25 0 0 0-6.56 15.77c.18-.97.54-1.89 1.25-2.62 1.06-1.1 2.76-1.65 5.31-1.65s4.25.54 5.31 1.65c.71.73 1.07 1.65 1.25 2.62A9.25 9.25 0 0 0 12 2.75m5.2 16.9c-.1-1.2-.37-2.1-.97-2.71-.65-.68-1.85-1.19-4.23-1.19s-3.58.51-4.23 1.19c-.6.62-.86 1.5-.96 2.72a9.2 9.2 0 0 0 10.38 0"
+                            clip-rule="evenodd" />
+                    </svg>
+                </x-slot:icon>
+            </x-input-field>
 
             {{-- ================= EMAIL ================= --}}
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2">Email Aktif</label>
-
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i class="bi bi-envelope text-gray-400"></i>
-                    </div>
-
-                    <input type="email" name="email" value="{{ old('email') }}"
-                        class="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 @error('email') border-red-500 @enderror"
-                        placeholder="nama@email.com" required>
-                </div>
-
-                @error('email')
-                    <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
-                @enderror
-            </div>
+            <x-input-field name="email" label="Email Aktif" placeholder="nama@email.com">
+                <x-slot:icon>
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
+                        <path
+                            d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
+                    </svg>
+                </x-slot:icon>
+            </x-input-field>
 
             {{-- ================= EDUCATION LEVEL (WAJIB SESUAI CONTROLLER) ================= --}}
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2">Jenjang Pendidikan</label>
+            <x-select-field name="education_level" label="Jenjang Pendidikan">
 
-                <select name="education_level"
-                    class="w-full py-2 px-3 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 @error('education_level') border-red-500 @enderror"
-                    required>
+                {{-- Slot Ikon Topi Wisuda --}}
+                <x-slot:icon>
+                    <svg class="w-11 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M36.078 7.173 19.876.346c-.865-.365-1.858-.365-2.728 0L.922 7.183C.362 7.42.009 7.944 0 8.554c-.009.607.329 1.143.881 1.394l1.709.782c-.052.079-.09.168-.09.27v9c0 .005.003.01.003.016-1.172.207-2.066 1.226-2.066 2.456 0 1.111.733 2.043 1.736 2.368L.375 29.004c-.271.629-.206 1.326.18 1.912C1.002 31.595 1.787 32 2.656 32l.289-.014c.813-.066 1.539-.481 1.941-1.111.344-.537.418-1.182.203-1.767L3.541 24.89c1.086-.272 1.896-1.248 1.896-2.418 0-1.188-.833-2.18-1.945-2.433.001-.014.008-.025.008-.039v-8.853l4 1.833V20h.01c.103 2.257 5.827 3.439 11.49 3.439S30.387 22.257 30.49 20h.01v-7.551l5.607-2.507c.557-.248.899-.782.893-1.393-.007-.611-.359-1.139-.922-1.376M4.045 30.336c-.235.368-.677.613-1.186.654l-.203.01c-.531 0-1.005-.236-1.266-.634-.2-.304-.234-.647-.097-.966l1.533-3.552 1.323 3.604c.11.294.072.609-.104.884m.393-7.864c0 .827-.673 1.5-1.5 1.5s-1.5-.673-1.5-1.5.673-1.5 1.5-1.5 1.5.673 1.5 1.5M29.5 18.419c-1.898-1.305-6.219-1.98-10.5-1.98s-8.602.675-10.5 1.98v-7.278c0-1.097 3.185-2.641 10.266-2.641 7.004 0 10.734 1.57 10.734 2.703zM19 22.439c-6.409 0-10.5-1.48-10.5-2.5s4.091-2.5 10.5-2.5 10.5 1.48 10.5 2.5-4.091 2.5-10.5 2.5M35.699 9.03 30.5 11.354v-.151c0-2.181-4.825-3.703-11.734-3.703C11.922 7.5 7.5 8.929 7.5 11.141v.741L1.297 9.038c-.28-.127-.298-.392-.297-.471s.027-.343.311-.463l16.227-6.837c.619-.263 1.331-.261 1.95 0L35.69 8.094c.285.12.31.386.311.464 0 .08-.02.345-.302.472" />
+                    </svg>
+                </x-slot:icon>
 
-                    <option value="">-- Pilih Jenjang --</option>
-                    <option value="SMA/SMK" {{ old('education_level') == 'SMA/SMK' ? 'selected' : '' }}>SMA/SMK</option>
-                    <option value="D3" {{ old('education_level') == 'D3' ? 'selected' : '' }}>D3</option>
-                    <option value="S1" {{ old('education_level') == 'S1' ? 'selected' : '' }}>S1</option>
-                    <option value="S2" {{ old('education_level') == 'S2' ? 'selected' : '' }}>S2</option>
-                </select>
+                {{-- Opsi Dropdown --}}
+                <option value="SMA/SMK" {{ old('education_level') == 'SMA/SMK' ? 'selected' : '' }}>SMA/SMK</option>
+                <option value="D3" {{ old('education_level') == 'D3' ? 'selected' : '' }}>D3</option>
+                <option value="S1" {{ old('education_level') == 'S1' ? 'selected' : '' }}>S1</option>
+                <option value="S2" {{ old('education_level') == 'S2' ? 'selected' : '' }}>S2</option>
 
-                @error('education_level')
-                    <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
-                @enderror
-            </div>
+            </x-select-field>
 
             {{-- ================= PASSWORD ================= --}}
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2">Password</label>
+            <x-input-field name="password" label="Password" type="password" placeholder="Minimal 8 karakter"
+                minlength="8">
 
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i class="bi bi-lock text-gray-400"></i>
-                    </div>
+                {{-- Ikon Kiri (Gembok) --}}
+                <x-slot:icon>
+                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </x-slot:icon>
 
-                    <input type="password" id="password" name="password" minlength="8"
-                        class="w-full pl-10 pr-10 py-2 border rounded-lg focus:outline-none focus:ring focus:border-blue-300 @error('password') border-red-500 @enderror"
-                        placeholder="Minimal 8 karakter" required>
-
-                    {{-- Toggle Show / Hide Password --}}
+                {{-- Tombol Show/Hide (Append) --}}
+                <x-slot:append>
                     <button type="button" id="togglePassword"
-                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
-                        <i class="bi bi-eye-slash text-xl"></i>
+                        class="text-gray-400 hover:text-blue-500 focus:outline-none transition-colors">
+                        <svg id="eye-icon" class="hidden w-5 h-5" xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+                            <path fill-rule="evenodd"
+                                d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 0 1 0-1.113ZM17.25 12a5.25 5.25 0 1 1-10.5 0 5.25 5.25 0 0 1 10.5 0Z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        <svg id="eye-slash-icon" class="block w-5 h-5" xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M3.53 2.47a.75.75 0 0 0-1.06 1.06l18 18a.75.75 0 1 0 1.06-1.06l-18-18ZM22.676 12.553a11.249 11.249 0 0 1-2.631 4.31l-3.099-3.099a5.25 5.25 0 0 0-6.71-6.71L7.759 4.577a11.217 11.217 0 0 1 4.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113Z" />
+                            <path
+                                d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0 1 15.75 12ZM12.53 15.713l-4.243-4.244a3.75 3.75 0 0 0 4.243 4.243Z" />
+                            <path
+                                d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 0 0-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 0 1 6.75 12Z" />
+                        </svg>
                     </button>
-                </div>
+                </x-slot:append>
+            </x-input-field>
 
-                @error('password')
-                    <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
-                @enderror
-            </div>
 
             {{-- ================= KONFIRMASI PASSWORD ================= --}}
-            <div class="mb-6">
-                <label class="block text-gray-700 text-sm font-bold mb-2">Ulangi Password</label>
+            <x-input-field name="password_confirmation" label="Ulangi Password" type="password"
+                placeholder="Ketik ulang password" minlength="8" required>
 
-                <input type="password" name="password_confirmation" minlength="8"
-                    class="w-full py-2 px-3 border rounded-lg focus:outline-none focus:ring focus:border-blue-300"
-                    placeholder="Ketik ulang password" required>
-            </div>
+                {{-- Ikon Kiri (Gembok - Sama seperti di atas) --}}
+                <x-slot:icon>
+                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </x-slot:icon>
+
+                {{-- Tombol Kanan (Perhatikan ID-nya ditambahkan kata '-confirm') --}}
+                <x-slot:append>
+                    <button type="button" id="togglePasswordConfirm"
+                        class="text-gray-400 hover:text-blue-500 focus:outline-none transition-colors">
+
+                        <svg id="eye-icon-confirm" class="hidden w-5 h-5" xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+                            <path fill-rule="evenodd"
+                                d="M1.323 11.447C2.811 6.976 7.028 3.75 12.001 3.75c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113-1.487 4.471-5.705 7.697-10.677 7.697-4.97 0-9.186-3.223-10.675-7.69a1.762 1.762 0 0 1 0-1.113ZM17.25 12a5.25 5.25 0 1 1-10.5 0 5.25 5.25 0 0 1 10.5 0Z"
+                                clip-rule="evenodd" />
+                        </svg>
+
+                        <svg id="eye-slash-icon-confirm" class="block w-5 h-5" xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M3.53 2.47a.75.75 0 0 0-1.06 1.06l18 18a.75.75 0 1 0 1.06-1.06l-18-18ZM22.676 12.553a11.249 11.249 0 0 1-2.631 4.31l-3.099-3.099a5.25 5.25 0 0 0-6.71-6.71L7.759 4.577a11.217 11.217 0 0 1 4.242-.827c4.97 0 9.185 3.223 10.675 7.69.12.362.12.752 0 1.113Z" />
+                            <path
+                                d="M15.75 12c0 .18-.013.357-.037.53l-4.244-4.243A3.75 3.75 0 0 1 15.75 12ZM12.53 15.713l-4.243-4.244a3.75 3.75 0 0 0 4.243 4.243Z" />
+                            <path
+                                d="M6.75 12c0-.619.107-1.213.304-1.764l-3.1-3.1a11.25 11.25 0 0 0-2.63 4.31c-.12.362-.12.752 0 1.114 1.489 4.467 5.704 7.69 10.675 7.69 1.5 0 2.933-.294 4.242-.827l-2.477-2.477A5.25 5.25 0 0 1 6.75 12Z" />
+                        </svg>
+                    </button>
+                </x-slot:append>
+
+            </x-input-field>
 
             {{-- ================= PASSWORD STRENGTH ================= --}}
->>>>>>> feature/auth
-            <div id="strengthBar" class="mb-2 h-2 bg-gray-200 rounded overflow-hidden hidden">
-                <div id="fill" class="w-0 h-full bg-red-500 transition-all duration-300"></div>
+            <div id="strengthBar" class="hidden -mt-2 mb-4">
+                <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden mt-1">
+                    <div id="fill" class="h-full transition-all duration-300 w-0 bg-red-500"></div>
+                </div>
+                <p id="strength" class="text-xs mt-1 text-red-600"></p>
             </div>
-            <p id="strength" class="text-xs text-gray-500 mb-4"></p>
 
-<<<<<<< HEAD
-            {{-- TERMS
-            <div class="mb-6">
-                <label class="flex items-center text-sm">
-                    <input type="checkbox" name="terms" class="mr-2" required>
-                    <span>Saya setuju dengan <a href="#" class="text-blue-600 font-semibold">Syarat &
-                            Ketentuan</a></span>
-                </label>
-            </div> --}}
-
-            {{-- SUBMIT --}}
-=======
             {{-- ================= TERMS & CONDITION ================= --}}
             <div class="mb-6">
                 <label class="flex items-center text-sm text-gray-700">
-                    <input type="checkbox" name="terms" class="mr-2 rounded @error('terms') border-red-500 @enderror"
+                    <input type="checkbox" name="terms"
+                        class="mr-2 rounded @error('terms') border-red-500 @enderror"
                         {{ old('terms') ? 'checked' : '' }} required>
                     <span>Saya setuju dengan <a href="#"
                             class="text-blue-600 hover:underline font-semibold">Syarat & Ketentuan</a></span>
@@ -213,7 +182,6 @@
             </div>
 
             {{-- ================= SUBMIT BUTTON ================= --}}
->>>>>>> feature/auth
             <button type="submit" id="submitBtn"
                 class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition">
                 Daftar
@@ -221,139 +189,23 @@
 
         </form>
 
-<<<<<<< HEAD
+        {{-- ================= FOOTER ================= --}}
         <div class="mt-6 text-center text-sm">
             <p class="text-gray-600">
                 Sudah punya akun?
                 <a href="{{ route('login') }}" class="text-blue-600 font-bold hover:underline">
-                    Masuk di sini
-=======
-        {{-- ================= FOOTER ================= --}}
-        <div class="mt-8 pt-6 border-t border-gray-100 text-center text-sm">
-            <p class="text-gray-600">Sudah punya akun?
-                <a href="{{ route('login') }}"
-                    class="text-blue-600 font-bold hover:text-blue-800 hover:underline transition">
                     Masuk disini
                 </a>
             </p>
 
-            <div class="mt-4">
-                <a href="{{ route('landing.index') }}"
-                    class="text-gray-400 hover:text-gray-600 text-xs flex items-center justify-center gap-1">
-                    <i class="bi bi-arrow-left"></i> Kembali ke Beranda
->>>>>>> feature/auth
+            <p class="mt-2 text-gray-500 text-xs">
+                Atau
+                <a href="{{ route('landing.index') }}" class="hover:underline">
+                    Kembali ke Beranda
                 </a>
             </p>
-            <a href="{{ route('landing.index') }}" class="text-gray-400 text-xs hover:underline">
-                ← Kembali ke Beranda
-            </a>
         </div>
-
     </div>
-
-    {{-- ================= SCRIPT AREA ================= --}}
-    <script>
-<<<<<<< HEAD
-        /* =============================
-            PASSWORD STRENGTH INDICATOR
-           ============================= */
-        const passwordField = document.querySelector('input[name="password"]');
-=======
-        // ================= PASSWORD TOGGLE =================
-        const togglePassword = document.getElementById('togglePassword');
-        const passwordInput = document.getElementById('password');
-
-        togglePassword?.addEventListener('click', function(e) {
-            e.preventDefault();
-            const type = passwordInput.type === 'password' ? 'text' : 'password';
-            passwordInput.type = type;
-            this.innerHTML = type === 'password' ?
-                '<i class="bi bi-eye-slash text-xl"></i>' :
-                '<i class="bi bi-eye text-xl"></i>';
-        });
-
-        // ================= PASSWORD STRENGTH CHECK =================
->>>>>>> feature/auth
-        const strengthBar = document.getElementById('strengthBar');
-        const fill = document.getElementById('fill');
-        const strength = document.getElementById('strength');
-
-        passwordInput?.addEventListener('input', function(e) {
-
-            const pwd = e.target.value;
-<<<<<<< HEAD
-            if (!pwd.length) {
-=======
-
-            if (pwd.length === 0) {
->>>>>>> feature/auth
-                strengthBar.classList.add('hidden');
-                strength.textContent = '';
-                return;
-            }
-
-            const result = calculateStrength(pwd);
-            strengthBar.classList.remove('hidden');
-<<<<<<< HEAD
-            fill.style.width = result.percent + '%';
-            fill.className = `h-full bg-${result.color}-500 transition-all`;
-            strength.textContent = result.text;
-            strength.className = `text-xs text-${result.color}-600 mb-4`;
-        });
-
-        function calculateStrength(pwd) {
-            let percent = 25,
-                color = 'red',
-                text = 'Lemah';
-            if (pwd.length >= 12) percent = 50, color = 'yellow', text = 'Sedang';
-            if (/[A-Z]/.test(pwd) && /[0-9]/.test(pwd)) percent = 75, color = 'blue', text = 'Kuat';
-            if (/[@!#$%^&*]/.test(pwd)) percent = 100, color = 'green', text = 'Sangat Kuat';
-            return {
-                percent,
-                color,
-                text
-            };
-        }
-
-        /* =============================
-            SUBMIT LOADING STATE
-           ============================= */
-=======
-
-            let percent = 0;
-            let text = 'Lemah';
-            let color = 'red';
-
-            if (pwd.length >= 8) percent = 25;
-            if (pwd.length >= 12) percent = 50;
-            if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) percent = 60;
-            if (/[0-9]/.test(pwd)) percent = 75;
-            if (/[@!#$%^&*]/.test(pwd)) percent = 100;
-
-            if (percent >= 75) {
-                text = 'Kuat';
-                color = 'blue';
-            }
-
-            if (percent === 100) {
-                text = 'Sangat Kuat';
-                color = 'green';
-            }
-
-            fill.style.width = percent + '%';
-            fill.className = `h-full transition-all duration-300 bg-${color}-500`;
-            strength.textContent = text;
-            strength.className = `text-xs text-${color}-600 mb-4`;
-        });
-
-        // ================= LOADING STATE =================
->>>>>>> feature/auth
-        document.getElementById('registerForm')?.addEventListener('submit', function() {
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.textContent = 'Mendaftarkan...';
-        });
-    </script>
 
 </body>
 

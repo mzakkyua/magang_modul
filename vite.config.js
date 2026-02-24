@@ -12,6 +12,7 @@ export default defineConfig({
                 "resources/js/admin/delete-confirm.js",
                 "resources/js/admin/assessment-create.js",
                 "resources/js/admin/profile.js",
+                "resources/js/auth.js",
             ],
             refresh: true,
         }),
