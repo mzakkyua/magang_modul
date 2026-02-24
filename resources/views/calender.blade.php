@@ -21,9 +21,9 @@ if(!calendarEl) return;
 let calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: 'dayGridMonth',
     locale: 'id',
-    height: 420,
+    height: 360,
 
-    events: '{{ route("calendar") }}'
+    events: '{{ route("calendar.events") }}'
 });
 
 calendar.render();
