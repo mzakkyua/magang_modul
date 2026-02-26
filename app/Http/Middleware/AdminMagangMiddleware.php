@@ -11,28 +11,30 @@ class AdminMagangMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        // 1. Pastikan user sudah login
-        if (!Auth::check()) {
-            abort(401, 'Silakan login terlebih dahulu.');
+        // 1. Karena di route kita sudah pakai 'auth:web', 
+        // kita tinggal pastikan mengambil data user dari guard yang benar.
+        $admin = Auth::guard('web')->user();
+
+        // 2. Jika entah kenapa lolos tapi belum login di guard web, lempar ke halaman login
+        if (!$admin) {
+            return redirect()->route('login')->withErrors(['email' => 'Sesi admin telah habis, silakan login kembali.']);
         }
 
-        // 2. Cek apakah user punya SK admin magang
-        $hakAkses = MagangAccessRight::where('user_id', Auth::id())->first();
+        // 3. Cek apakah admin instansi ini punya hak akses untuk modul magang
+        $hakAkses = MagangAccessRight::where('user_id', $admin->id)->first();
 
         if (!$hakAkses) {
-            abort(403, 'Anda bukan Admin Magang.');
+            abort(403, 'Akses Ditolak: Akun Anda tidak terdaftar sebagai Admin Magang.');
         }
 
         /**
          * PENTING:
          * - role = superadmin  → boleh semuanya
          * - role = admin       → tetap boleh masuk
-         *
-         * Middleware TIDAK membedakan divisi.
-         * Divisi tetap dicek di controller.
+         * Middleware TIDAK membedakan divisi. Divisi tetap dicek di controller.
          */
 
-        // 3. Kalau lolos semua → lanjut ke controller
+        // 4. Kalau lolos semua → lanjut ke controller
         return $next($request);
     }
 }

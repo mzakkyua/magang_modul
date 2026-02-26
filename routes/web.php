@@ -159,7 +159,7 @@ Route::middleware('auth:magang')->group(function () {
 */
 Route::prefix('admin')
     ->name('admin.')
-    ->middleware(['auth:web', 'adminOnly'])
+    ->middleware(['auth:web', 'admin.magang'])
     ->group(function () {
 
         // ---------------------
