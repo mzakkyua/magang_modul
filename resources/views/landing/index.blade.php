@@ -139,7 +139,7 @@
                     perlindungan hak tenaga kerja, dan pengelolaan transmigrasi berkelanjutan untuk kesejahteraan masyarakat.</p>
             </div>
             <div class="mt-12 md:mt-0">
-                <img src="https://scontent.fcgk6-2.fna.fbcdn.net/v/t39.30808-6/470135193_993433886144297_8821151376106934837_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=101&ccb=1-7&_nc_sid=cc71e4&_nc_eui2=AeFTSm6vIuoAft1LuwZ5982u4cU_dTHek4PhxT91Md6Tg4ZNZ9eDuyWloqtDMutED2zwtqHGZb3XgYAwUtDv8k8n&_nc_ohc=Ve4Qu1EQQOkQ7kNvwEGdtZu&_nc_oc=Adn_YowWPQWIrSQqLOcNXs3NrAavHTTXTAEfECZKbip4BmCsIqF7aclIf0aQmM1Ns4A&_nc_zt=23&_nc_ht=scontent.fcgk6-2.fna&_nc_gid=qeo18flWANNy_4rvGuxrUQ&oh=00_AfsfHhZ23cvtZQs3JfDLUVmreB73COFQpqnMQD0R7o9mPw&oe=6991F9C3" alt="About Us Image" class="object-cover rounded-lg shadow-md">
+                <img src="https://kilasjatim.com/wp-content/uploads/2025/04/100-e1744800110750.webp" alt="About Us Image" class="object-cover rounded-lg shadow-md">
             </div>
         </div>
     </div>
@@ -263,14 +263,14 @@
 <!-- gallery -->
 <section class="text-gray-700 body-font" id="gallery">
     <div class="flex justify-center text-3xl font-bold text-gray-800 text-center py-10">
-        Gallery
+        Dokumentasi Magang
     </div>
 
     <div class="grid grid-cols-1 place-items-center sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
 
         <div class="group relative">
             <img
-      src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NzEyNjZ8MHwxfHNlYXJjaHw1fHxuYXR1cmV8ZW58MHwwfHx8MTY5NDA5OTcyOXww&ixlib=rb-4.0.3&q=80&w=1080"
+      src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-1.jpeg"
       alt="Image 1"
       class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105"
     />
@@ -278,7 +278,7 @@
 
         <div class="group relative">
             <img
-      src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NzEyNjZ8MHwxfHNlYXJjaHw1fHxuYXR1cmV8ZW58MHwwfHx8MTY5NDA5OTcyOXww&ixlib=rb-4.0.3&q=80&w=1080"
+      src="https://www.suarasurabaya.net/wp-content/uploads/2023/01/Kegiatan-Uji-Kompetensi-Kejuruan-HMI-Berbasis-PLC-yang-dilakukan-UPT-Balai-Latihan-Kerja-Surabaya-735x493.jpg.webp"
       alt="Image 1"
       class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105"
     />
@@ -286,21 +286,20 @@
 
         <div class="group relative">
             <img
-      src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NzEyNjZ8MHwxfHNlYXJjaHw1fHxuYXR1cmV8ZW58MHwwfHx8MTY5NDA5OTcyOXww&ixlib=rb-4.0.3&q=80&w=1080"
+      src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-2.jpeg"
       alt="Image 1"
       class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105"
     />
         </div>
         <div class="group relative">
             <img
-      src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w0NzEyNjZ8MHwxfHNlYXJjaHw1fHxuYXR1cmV8ZW58MHwwfHx8MTY5NDA5OTcyOXww&ixlib=rb-4.0.3&q=80&w=1080"
+      src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-3.jpeg"
       alt="Image 1"
       class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105"
     />
         </div>
 
-
-
+        
         <!-- Repeat this div for each image -->
     </div>
 

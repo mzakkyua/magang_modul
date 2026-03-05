@@ -26,7 +26,7 @@ class LandingController extends Controller
 
     public function show($id)
     {
-        $vacancy = VacancyMagang::findOrFail($id);
-        return view('landing.show', compact('vacancy')); // Nanti kita buat file ini juga
+        $vacancies = VacancyMagang::findOrFail($id);
+        return view('landing.show', compact('vacancies')); // Nanti kita buat file ini juga
     }
 }

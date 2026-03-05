@@ -15,6 +15,7 @@ use App\Http\Controllers\DashboardMagangController;
 use App\Http\Controllers\ProfileMagangController;
 use App\Http\Controllers\ApplicationMagangController;
 use App\Http\Controllers\LandingController;
+use App\Http\Controllers\StatusMagangController;
 
 // ---------------------
 // ADMIN DINAS
@@ -113,7 +114,7 @@ Route::middleware('guest:magang')->group(function () {
 Route::middleware('auth:magang')->group(function () {
 
 
-    Route::get('/dashboard', [DashboardMagangController::class, 'index'])
+    Route::get('/dashboard', [LandingController::class, 'index'])
         ->name('dashboard');
 
     Route::get('/profile', [ProfileMagangController::class, 'edit'])
@@ -124,6 +125,9 @@ Route::middleware('auth:magang')->group(function () {
 
     Route::post('/applications', [ApplicationMagangController::class, 'store'])
         ->name('applications.store');
+    
+    Route::get('/status', [StatusMagangController::class, 'index'])
+    ->name('status');    
 });
 
 
