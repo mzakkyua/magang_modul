@@ -1,0 +1,36 @@
+.body{
+    @apply bg-gray-50 font-sans text-gray-800
+}
+
+#home h1{
+     @apply text-4xl lg:text-5xl font-bold mb-4
+}
+
+#home p{
+    @apply  text-xl mb-8 mt-4
+}
+
+#services h2{
+    @apply text-3xl font-bold
+}
+
+#services h3{
+    @apply text-xl font-semibold mb-2
+}
+
+#services p{
+    @apply text-gray-700 text-base
+}
+
+.grid{
+    @apply sm:grid-cols-2 lg:grid-cols-3 gap-8
+}
+
+@layer componnets{
+.grid-hover{
+  @apply transition duration-300 rounded-xl shadow-sm overflow-hidden
+}
+
+.grid-hover:hover {
+  transform: scale(1.05);
+}}
