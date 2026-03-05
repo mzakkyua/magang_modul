@@ -8,12 +8,30 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use App\Models\UserMagang;
 use App\Models\ProfileMagang;
+use App\Http\Controllers\Controller;
+
+
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 
 class AuthMagangController extends Controller
 {
     // =================================================================
     // 1. BAGIAN REGISTER (DAFTAR AKUN)
     // =================================================================
+    /**
+     * Constructor
+     * Pastikan guest saja yang bisa akses login & register
+     */
+    public function __construct()
+    {
+        $this->middleware('guest:magang')->except('logout');
+        $this->middleware('guest:web')->except('logout');
+    }
+
+    // ==========================================================
+    // 1. REGISTER (PESERTA MAGANG)
+    // ==========================================================
 
     public function showRegisterForm()
     {
@@ -22,56 +40,72 @@ class AuthMagangController extends Controller
 
     public function register(Request $request)
     {
-        // A. Validasi Input
-        // Pastikan email & username belum pernah dipakai orang lain
+        // ===============================
+        // A. VALIDASI INPUT
+        // ===============================
         $request->validate([
-            'username' => 'required|string|max:50|unique:users_magang,username',
-            'email'    => 'required|email|max:100|unique:users_magang,email',
-            'password' => 'required|string|min:8|confirmed', // confirmed = harus ada field password_confirmation di form
-
-            // Validasi Data Profil Awal (Bisa ditambah sesuai form register)
-            // 'full_name' => 'required|string|max:150',
-            // 'nim_nisn'  => 'required|string|max:50',
-            // 'education_level' => 'required|in:siswa_smk,mahasiswa', // Penanda SMK/Mahasiswa
+            'nama_lengkap'     => 'required|string|max:255',
+            'email'            => 'required|email|unique:users_magang,email',
+            'password'         => 'required|string|min:8|confirmed',
+            'education_level'  => 'required|string|max:50',
+            'terms'            => 'accepted',
+        ], [
+            'terms.accepted' => 'Anda harus menyetujui syarat dan ketentuan.',
         ]);
 
-        // B. Proses Simpan (Pakai Transaction lagi biar aman)
-        // Kita harus simpan ke 2 Tabel: users_magang DAN profiles_magang
-        DB::transaction(function () use ($request) {
+        // ===============================
+        // B. NORMALISASI EMAIL
+        // ===============================
+        $email = strtolower($request->email);
 
-            // 1. Buat Akun Login
+        // ===============================
+        // C. GENERATE USERNAME UNIK
+        // ===============================
+        do {
+            $username = explode('@', $email)[0] . rand(100, 999);
+        } while (UserMagang::where('username', $username)->exists());
+
+        // ===============================
+        // D. TRANSACTION DATABASE
+        // ===============================
+        DB::transaction(function () use ($request, $email, $username) {
+
+            // 1️⃣ Buat akun login
             $user = UserMagang::create([
-                'username' => $request->username,
-                'email'    => $request->email,
-                'password_hash' => Hash::make($request->password), // Enkripsi Password!
+                'username'      => $username,
+                'email'         => $email,
+                'password_hash' => Hash::make($request->password),
             ]);
 
-            // 2. Buat Profil Biodata
-            // Profil otomatis dibuat saat register, sisanya bisa diedit nanti (update profile)
+            // 2️⃣ Buat profil dasar
             ProfileMagang::create([
-                'user_id'   => $user->id,
-                'full_name' => $request->full_name,
-                'nim_nisn'  => $request->nim_nisn,
-                'education_level' => $request->education_level,
-
-                // Field lain kita kosongkan dulu (nullable di database),
-                // Nanti user disuruh "Lengkapi Profil" setelah login.
+                'user_id'          => $user->id,
+                'full_name'        => $request->nama_lengkap,
+                'status'           => 'active',
+                'nim_nisn'         => $request->nim_nisn,
+                'education_level'  => $request->education_level,
                 'institution_name' => '-',
-                'major' => '-',
-                'phone_number' => '-',
+                'major'            => '-',
+                'phone_number'     => '-',
             ]);
 
-            // 3. Auto Login (Opsional)
-            // Begitu daftar, langsung masuk dashboard tanpa perlu login ulang
+            // 3️⃣ Auto login peserta
             Auth::guard('magang')->login($user);
         });
 
-        return redirect()->route('dashboard')->with('success', 'Akun berhasil dibuat! Silakan lengkapi profil Anda.');
+        // ===============================
+        // E. REGENERATE SESSION (ANTI SESSION FIXATION)
+        // ===============================
+        $request->session()->regenerate();
+
+        return redirect()
+            ->route('dashboard')
+            ->with('success', 'Pendaftaran berhasil! Silakan lengkapi biodata Anda.');
     }
 
-    // =================================================================
-    // 2. BAGIAN LOGIN (MASUK SISTEM)
-    // =================================================================
+    // ==========================================================
+    // 2. LOGIN (ADMIN & PESERTA)
+    // ==========================================================
 
     public function showLoginForm()
     {
@@ -80,42 +114,112 @@ class AuthMagangController extends Controller
 
     public function login(Request $request)
     {
-        // 1. Validasi Input
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
+        // ==========================================================
+        // 1️⃣ VALIDASI INPUT DASAR
+        // ==========================================================
+        // Pastikan email & password tidak kosong
+        // Laravel otomatis redirect balik jika gagal
+        $request->validate([
+            'email'    => ['required', 'email'],
+            'password' => ['required', 'string'],
         ]);
 
-        // 2. CEK PERTAMA: Apakah ini ADMIN/PEGAWAI?
-        // Kita suruh cek ke Guard 'web' (tabel users)
+        // ==========================================================
+        // 2️⃣ NORMALISASI EMAIL (ANTI CASE SENSITIVE ISSUE)
+        // ==========================================================
+        // Supaya Email@Gmail.com dan email@gmail.com dianggap sama
+        $email = strtolower($request->email);
+
+        // ==========================================================
+        // 3️⃣ BUAT UNIQUE KEY UNTUK RATE LIMITER
+        // ==========================================================
+        // Key dibuat dari kombinasi:
+        // - email
+        // - IP address user
+        //
+        // Tujuannya:
+        // Supaya satu IP tidak bisa brute force satu email terus-menerus
+        $key = strtolower($email) . '|' . $request->ip();
+
+        // ==========================================================
+        // 4️⃣ CEK APAKAH SUDAH TERLALU BANYAK PERCOBAAN LOGIN
+        // ==========================================================
+        // Maksimal 5 percobaan dalam 60 detik
+        if (RateLimiter::tooManyAttempts($key, 5)) {
+
+            // Ambil sisa waktu lock (detik)
+            $seconds = RateLimiter::availableIn($key);
+
+            return back()->withErrors([
+                'email' => "Terlalu banyak percobaan login. Coba lagi dalam {$seconds} detik."
+            ]);
+        }
+
+        // ==========================================================
+        // 5️⃣ SIAPKAN CREDENTIAL UNTUK AUTH
+        // ==========================================================
+        $credentials = [
+            'email' => $email,
+            'password' => $request->password
+        ];
+
+        // ==========================================================
+        // 6️⃣ COBA LOGIN SEBAGAI ADMIN (GUARD: web)
+        // ==========================================================
         if (Auth::guard('web')->attempt($credentials)) {
+
+            // Jika berhasil, hapus hit rate limiter
+            RateLimiter::clear($key);
+
+            // Regenerate session (anti session fixation attack)
             $request->session()->regenerate();
-            // Kalau ketemu, lempar ke Dashboard Admin
+
             return redirect()->intended(route('admin.dashboard'));
         }
 
-        // 3. CEK KEDUA: Apakah ini MAHASISWA?
-        // Kita suruh cek ke Guard 'magang' (tabel users_magang)
+        // ==========================================================
+        // 7️⃣ COBA LOGIN SEBAGAI PESERTA MAGANG (GUARD: magang)
+        // ==========================================================
         if (Auth::guard('magang')->attempt($credentials)) {
+
+            // Jika berhasil, hapus hit rate limiter
+            RateLimiter::clear($key);
+
+            // Regenerate session untuk keamanan
             $request->session()->regenerate();
-            // Kalau ketemu, lempar ke Dashboard Mahasiswa
+
             return redirect()->intended(route('dashboard'));
         }
 
-        // 4. Kalau Dua-duanya Gagal
+        // ==========================================================
+        // 8️⃣ JIKA LOGIN GAGAL
+        // ==========================================================
+        // Tambahkan 1 hit percobaan login gagal
+        // Dan set durasi blokir selama 60 detik
+        RateLimiter::hit($key, 60);
+
         return back()->withErrors([
             'email' => 'Email tidak terdaftar sebagai Pegawai maupun Peserta Magang.',
         ])->onlyInput('email');
     }
 
-    // =================================================================
-    // 3. BAGIAN LOGOUT (KELUAR)
-    // =================================================================
+    // ==========================================================
+    // 3. LOGOUT (UNIVERSAL)
+    // ==========================================================
 
     public function logout(Request $request)
     {
-        Auth::guard('magang')->logout(); // Logout cuma yang magang
+        // Logout admin jika sedang login
+        if (Auth::guard('web')->check()) {
+            Auth::guard('web')->logout();
+        }
 
+        // Logout peserta jika sedang login
+        if (Auth::guard('magang')->check()) {
+            Auth::guard('magang')->logout();
+        }
+
+        // Hapus session
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

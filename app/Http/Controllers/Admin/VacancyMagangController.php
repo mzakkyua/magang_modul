@@ -32,23 +32,15 @@ use App\Helpers\DashboardCache;
 
 class VacancyMagangController extends Controller
 {
-    use AuthorizesRequests;
-    /**
-     * =====================================================
-     * HELPER: getHakAkses()
-     * =====================================================
-     * TUJUAN:
-     * - Mengambil SK penunjukan admin magang
-     *
-     * CATATAN:
-     * - Masih dipakai untuk kebutuhan NON-policy
-     *   (misal: menentukan divisi default)
-     * =====================================================
-     */
+    /* =========================================================
+     * HELPER: AMBIL HAK AKSES ADMIN
+     * ========================================================= */
     private function getHakAkses()
     {
+        // Ambil hak akses berdasarkan user admin yang sedang login (guard web)
         $hakAkses = MagangAccessRight::where('user_id', Auth::id())->first();
 
+        // Jika tidak terdaftar di tabel access_right → tolak akses
         if (!$hakAkses) {
             abort(403, 'Anda tidak memiliki akses ke Modul Magang.');
         }
@@ -56,17 +48,32 @@ class VacancyMagangController extends Controller
         return $hakAkses;
     }
 
-    /**
-     * =====================================================
-     * INDEX
-     * =====================================================
-     */
+    /* =========================================================
+     * HELPER: PROTEKSI AKSES BERDASARKAN DIVISION
+     * ========================================================= */
+    private function authorizeDivision(VacancyMagang $vacancy)
+    {
+        $hakAkses = $this->getHakAkses();
+
+        // Jika bukan superadmin dan mencoba akses divisi lain → tolak
+        if (
+            $hakAkses->role !== 'superadmin' &&
+            $vacancy->division_name !== $hakAkses->division_name
+        ) {
+            abort(403, 'Anda tidak memiliki akses ke divisi ini.');
+        }
+    }
+
+    /* =========================================================
+     * INDEX - LIST LOWONGAN
+     * ========================================================= */
     public function index()
     {
         $hakAkses = $this->getHakAkses();
 
         $query = VacancyMagang::withCount('applications');
 
+        // Jika bukan superadmin → hanya lihat divisi sendiri
         if ($hakAkses->role !== 'superadmin') {
             $query->where('division_name', $hakAkses->division_name);
         }
@@ -88,16 +95,16 @@ class VacancyMagangController extends Controller
         return view('admin.vacancies.create');
     }
 
-    /**
-     * =====================================================
-     * STORE
-     * =====================================================
-     */
+    /* =========================================================
+     * STORE - BUAT LOWONGAN
+     * ========================================================= */
     public function store(Request $request)
     {
         $hakAkses = $this->getHakAkses();
 
-        // Validasi dasar
+        // ===============================
+        // VALIDASI DASAR
+        // ===============================
         $baseRules = [
             'title'             => 'required|string|max:200',
             'type'              => 'required|in:magang,penelitian',
@@ -108,7 +115,12 @@ class VacancyMagangController extends Controller
             'description'       => 'nullable|string',
         ];
 
-        // Jika bukan individu, wajibkan min/max members
+        // Jika superadmin → wajib pilih division
+        if ($hakAkses->role === 'superadmin') {
+            $baseRules['division_name'] = 'required|string|max:100';
+        }
+
+        // Jika bukan individu → wajib min/max anggota
         if ($request->registration_mode !== 'individu') {
             $baseRules['min_members'] = 'required|integer|min:1';
             $baseRules['max_members'] = 'required|integer|min:1|gte:min_members';
@@ -119,7 +131,7 @@ class VacancyMagangController extends Controller
 
         $request->validate($baseRules);
 
-        // Superadmin boleh pilih divisi, admin bidang terkunci
+        // Tentukan division berdasarkan role
         $division = $hakAkses->role === 'superadmin'
             ? $request->division_name
             : $hakAkses->division_name;
@@ -158,23 +170,11 @@ class VacancyMagangController extends Controller
      */
     public function edit(VacancyMagang $vacancy)
     {
-        /**
-         * POLICY CHECK
-         * ---------------------------------------------
-         * Aturan:
-         * - Superadmin → boleh edit semua
-         * - Admin bidang → hanya divisinya
-         *
-         * Jika tidak lolos → otomatis 403
-         */
-        $this->authorize('update', $vacancy);
+        $this->authorizeDivision($vacancy);
 
         $hasApplicant = $vacancy->applications()->exists();
 
-        return view(
-            'admin.vacancies.edit',
-            compact('vacancy', 'hasApplicant')
-        );
+        return view('admin.vacancies.edit', compact('vacancy', 'hasApplicant'));
     }
 
     /**
@@ -184,17 +184,11 @@ class VacancyMagangController extends Controller
      */
     public function update(Request $request, VacancyMagang $vacancy)
     {
-        /**
-         * POLICY CHECK ULANG
-         * ---------------------------------------------
-         * Penting untuk mencegah update via POST / API
-         */
-        $this->authorize('update', $vacancy);
+        $this->authorizeDivision($vacancy);
 
         $hakAkses = $this->getHakAkses();
         $hasApplicant = $vacancy->applications()->exists();
 
-        // Validasi dasar (selalu ada)
         $baseRules = [
             'title'       => 'required|string|max:200',
             'type'        => 'required|in:magang,penelitian',
@@ -202,6 +196,10 @@ class VacancyMagangController extends Controller
             'end_date'    => 'required|date|after_or_equal:start_date',
             'description' => 'nullable|string',
         ];
+
+        if ($hakAkses->role === 'superadmin') {
+            $baseRules['division_name'] = 'required|string|max:100';
+        }
 
         $request->validate($baseRules);
 
@@ -216,19 +214,17 @@ class VacancyMagangController extends Controller
                 : $vacancy->division_name,
         ];
 
+        // Jika belum ada pendaftar → boleh ubah kuota dan mode
         if (!$hasApplicant) {
+
             $extraRules = [
                 'registration_mode' => 'required|in:individu,kelompok,hybrid',
                 'quota_slots'       => 'required|integer|min:1',
             ];
 
-            // Jika bukan individu, wajibkan min/max members
             if ($request->registration_mode !== 'individu') {
                 $extraRules['min_members'] = 'required|integer|min:1';
                 $extraRules['max_members'] = 'required|integer|min:1|gte:min_members';
-            } else {
-                $extraRules['min_members'] = 'nullable|integer|min:1';
-                $extraRules['max_members'] = 'nullable|integer|min:1';
             }
 
             $request->validate($extraRules);
@@ -262,7 +258,7 @@ class VacancyMagangController extends Controller
      */
     public function toggleStatus(VacancyMagang $vacancy)
     {
-        $this->authorize('update', $vacancy);
+        $this->authorizeDivision($vacancy);
 
         $vacancy->update([
             'status' => $vacancy->status === 'open' ? 'closed' : 'open',
@@ -280,7 +276,7 @@ class VacancyMagangController extends Controller
      */
     public function destroy(VacancyMagang $vacancy)
     {
-        $this->authorize('update', $vacancy);
+        $this->authorizeDivision($vacancy);
 
         if ($vacancy->applications()->exists()) {
             return back()->withErrors([
@@ -296,18 +292,15 @@ class VacancyMagangController extends Controller
             ->with('success', 'Lowongan berhasil dihapus.');
     }
 
-    /**
-     * =====================================================
-     * HELPER: resolveMemberRange()
-     * =====================================================
-     */
+    /* =========================================================
+     * HELPER: ATUR RANGE ANGGOTA
+     * ========================================================= */
     private function resolveMemberRange($mode, $min, $max)
     {
         if ($mode === 'individu') {
             return [1, 1];
         }
 
-        // Validasi sudah ditangani di request->validate() dengan gte rule
         return [$min, $max];
     }
 }
