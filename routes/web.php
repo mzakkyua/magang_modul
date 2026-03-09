@@ -135,8 +135,8 @@ Route::middleware('guest:magang')->group(function () {
 Route::middleware('auth:magang')->group(function () {
 
 
-    Route::get('/dashboard', [LandingController::class, 'index'])
-        ->name('dashboard');
+    Route::get('/dashboard', [DashboardMagangController::class, 'index'])
+        ->name('dashboard.index');
 
     Route::get('/profile', [ProfileMagangController::class, 'edit'])
         ->name('profile.edit');

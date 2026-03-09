@@ -188,7 +188,7 @@ class AuthMagangController extends Controller
             // Regenerate session untuk keamanan
             $request->session()->regenerate();
 
-            return redirect()->intended(route('dashboard'));
+            return redirect()->route('dashboard.index');
         }
 
         // ==========================================================
