@@ -14,117 +14,89 @@
     @include('layouts.layoutlanding')
     
 
-    <!-- hero seciton -->
-<div class="relative w-full h-80" id="home">
-    <div class="absolute inset-0 opacity-70">
-        <img src="https://image1.jdomni.in/banner/13062021/0A/52/CC/1AF5FC422867D96E06C4B7BD69_1623557926542.png" alt="Background Image" class="object-cover object-center w-full h-full" />
+    <!-- hero section -->
+<div class="relative w-full h-80 md:h-[380px] overflow-hidden" id="home">
+    <div class="absolute inset-0">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b2/New_office.jpg" alt="Background Image" class="object-cover object-center w-full h-full" />
+
+    {{-- Lapisan Hitam Transparan (Overlay) --}}
+        <div class="absolute inset-0 bg-black/50"></div> 
+    </div>
 
     </div>
-    <div class="absolute inset-9 flex flex-col md:flex-row items-center justify-between">
+    <div class="absolute inset-0 flex items-center px-9">
         <div class="md:w-1/2 mb-4 md:mb-0">
-            <h1 class="text-grey-700 font-medium text-3xl md:text-4xl leading-tight mb-2">Temukan Tempat Magang Impianmu</h1>
-            <p class="font-regular text-xl mb-8 mt-4">Bergabunglah dengan Dinas Tenaga Kerja untuk pengalaman magang yang nyata</p>
-            
+            <h1 class="text-white font-black text-3xl md:text-5xl leading-tight mb-4 drop-shadow-lg">Temukan Tempat Magang Impianmu</h1>
+            <p class="text-gray-100 text-lg md:text-xl font-medium max-w-xl leading-relaxed">Bergabunglah dengan Dinas Tenaga Kerja untuk pengalaman magang yang nyata</p>          
         </div>
     </div>
 </div>
 
-
-    <!-- our services section -->
-<section class="py-10" id="services">
-    <div class="container mx-auto px-4">
-        <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Program Magang</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <img src="https://image3.jdomni.in/banner/13062021/42/5C/B1/45AC18B7F8EE562BC3DDB95D34_1623559815667.png?output-format=webp" alt="wheat flour grinding"
-                    class="w-full h-64 object-cover">
-                <div class="p-6 text-center">
-                    <h3 class="text-xl font-medium text-gray-800 mb-2">Wheat Flour Grinding</h3>
-                    <p class="text-gray-700 text-base">Our wheat flour grinding service provides fresh, high-quality
-                        flour to businesses and individuals in the area. We use state-of-the-art equipment to grind
-                        wheat into flour, and we offer a variety of flours to meet the needs of our customers.</p>
-                </div>
-            </div>
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1606854428728-5fe3eea23475?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Z3JhbSUyMGZsb3VyfGVufDB8fDB8fHww" alt="Coffee"
-                    class="w-full h-64 object-cover">
-                <div class="p-6 text-center">
-                    <h3 class="text-xl font-medium text-gray-800 mb-2">Gram Flour Grinding</h3>
-                    <p class="text-gray-700 text-base">Our gram flour is perfect for a variety of uses, including
-                        baking, cooking, and making snacks. It is also a good source of protein and fiber.Our gram flour
-                        grinding service is a convenient and affordable way to get the freshest gram flour possible.</p>
-                </div>
-            </div>
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <img src="https://image2.jdomni.in/banner/13062021/D2/99/0D/48D7F4AFC48C041DC8D80432E9_1623562146900.png?output-format=webp" alt="Coffee"
-                    class="w-full h-64 object-cover">
-                <div class="p-6 text-center">
-                    <h3 class="text-xl font-medium text-gray-800 mb-2">Jowar Flour Grinding</h3>
-                    <p class="text-gray-700 text-base">Our jowar grinding service is a convenient and affordable way to
-                        get fresh, high-quality jowar flour. We use state-of-the-art equipment to grind jowar into a
-                        fine powder, which is perfect for making roti, bread, and other dishes.
-                    <details>
-                        <summary>Read More</summary>
-                        <p>Our jowar flour is also
-                            a good source of protein and fiber, making it a healthy choice for your family.</p>
-                    </details>
-                    </p>
-
-                </div>
-            </div>
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1607672632458-9eb56696346b?q=80&w=1914&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Coffee"
-                    class="w-full h-64 object-cover">
-                <div class="p-6 text-center">
-                    <h3 class="text-xl font-medium text-gray-800 mb-2">Chilli pounding</h3>
-                    <p class="text-gray-700 text-base">We specializes in the production of high-quality chili powder.
-                        Our chili powder is made from the finest, freshest chilies, and we use traditional pounding
-                        methods to ensure that our chili powder retains its full flavor and aroma.
-                    <details>
-                        <summary>Read More</summary>
-                        <p> We offer a variety of chili powder products, including mild, medium, and hot. We also offer
-                            custom blends to meet the specific needs of our customers.</p>
-                    </details>
-                    </p>
-                </div>
-            </div>
-            <!-- special card -->
-            <div
-                class="bg-white rounded-lg bg-linear-to-tr from-pink-300 to-blue-300 p-0.5 shadow-lg overflow-hidden min-h-full">
-                <div class="text-center text-white font-medium">Special product</div>
-                <img src="https://images.unsplash.com/photo-1556910110-a5a63dfd393c?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8cmF3JTIwc3BhZ2hldHRpfGVufDB8fDB8fHww" alt="Coffee"
-                    class="w-full h-64 object-cover rounded-t-lg">
-                <div class="p-6 bg-white text-center rounded-b-lg md:min-h-full">
-                    <h3 class="text-xl font-medium text-gray-800 mb-2">Flavoured Spaghetti</h3>
-                    <p class="text-gray-700 text-base"><span class="font-medium underline">Our speciality is</span>
-                        Bappa Flour Mill offers a variety of flavored spaghetti dishes that are sure to tantalize your
-                        taste
-                        buds. We use only the freshest ingredients Our
-                        flavors include: Mango, spinach
-                    </p>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                <img src="https://media.istockphoto.com/id/1265641298/photo/fried-papad.jpg?s=612x612&w=0&k=20&c=e_iEy4CTvU6Thn02zGgKt_TiSYAheCKmgfTF5j52ovU=" alt="papad"
-                    class="w-full h-64 object-cover">
-                <div class="p-6 text-center">
-                    <h3 class="text-xl font-medium text-gray-800 mb-2">Rice Papad</h3>
-                    <p class="text-gray-700 text-base">Our company produces high-quality rice papad that is made with
-                        the finest ingredients. We use traditional methods to make our papad, which gives it a unique
-                        flavor and texture. Our papad is also gluten-free and vegan.
-                    <details>
-                        <summary>Read More</summary>
-                        <p> We offer a variety of rice papad flavors, including plain, salted, spicy, and flavored. We
-                            also
-                            offer a variety of sizes and shapes to choose from. Our papad is available in bulk or in
-                            individual packages.</p>
-                    </details>
-                    </p>
-                </div>
-            </div>
-
+    <!-- service section -->
+  <section class="py-16 bg-gray-50" id="services">
+    <div class="container mx-auto px-4 max-w-7xl">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl md:text-4xl font-extrabold text-[#37517e] mb-4">Program Magang</h2>
+            <p class="text-gray-600 max-w-2xl mx-auto italic">Pilih divisi yang sesuai dengan bidang keahlian dan minat akademik Anda.</p>
         </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+                <div class="relative h-56 overflow-hidden">
+                    <img src="https://www.sos.co.id/assets/images/news/1751275811.webp" 
+                         alt="Administrasi" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    <div class="absolute top-4 left-4">
+                        <span class="bg-blue-600 text-white text-[10px] font-bold uppercase px-3 py-1 rounded-full shadow-lg">Administrasi</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3 group-hover:text-blue-600 transition">Administrasi Umum & Perkantoran</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed mb-4">Mempelajari tata kelola dokumen dinas, surat-menyurat formal, dan manajemen kearsipan digital di lingkungan pemerintahan.</p>
+                    <div class="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-wider">
+                        <span>Detail Program</span>
+                        <i class="bi bi-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
+                <div class="relative h-56 overflow-hidden">
+                    <img src="https://www.score.org/sites/default/files/styles/responsive_16_9_500w/public/d7_migration/42/AdobeStock_377657914%20%281%29.jpg?itok=32he_-io" 
+                         alt="Hubungan Industrial" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    <div class="absolute top-4 left-4">
+                        <span class="bg-indigo-600 text-white text-[10px] font-bold uppercase px-3 py-1 rounded-full shadow-lg">Hubungan Kerja</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3 group-hover:text-indigo-600 transition">Hubungan Industrial</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed mb-4">Terlibat dalam proses mediasi hubungan kerja, pemantauan kesejahteraan pekerja, dan sosialisasi peraturan ketenagakerjaan.</p>
+                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider">
+                        <span>Detail Program</span>
+                        <i class="bi bi-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-blue-100 ring-2 ring-blue-50">
+                <div class="relative h-56 overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&auto=format&fit=crop" 
+                         alt="IT Support" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    <div class="absolute top-4 left-4">
+                        <span class="bg-cyan-600 text-white text-[10px] font-bold uppercase px-3 py-1 rounded-full shadow-lg">IT & Sistem Informasi</span>
+                    </div>
+                    <div class="absolute inset-0 bg-blue-600/10 group-hover:bg-transparent transition-colors"></div>
+                </div>
+                <div class="p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3 group-hover:text-blue-600 transition">Pengembangan Web & IT Support</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed mb-4">Membantu pengelolaan website dinas, pemeliharaan server, dan pengembangan aplikasi pelayanan publik digital (e-government).</p>
+                    <div class="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-wider">
+                        <span>Detail Program</span>
+                        <i class="bi bi-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+
+            </div>
     </div>
 </section>
 

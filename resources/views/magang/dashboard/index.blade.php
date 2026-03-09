@@ -10,7 +10,7 @@
     <!-- hero seciton -->
 <div class="relative w-full h-80" id="home">
     <div class="absolute inset-0 opacity-70">
-        <img src="https://image1.jdomni.in/banner/13062021/0A/52/CC/1AF5FC422867D96E06C4B7BD69_1623557926542.png" alt="Background Image" class="object-cover object-center w-full h-full" />
+        <img src="https://www.freepik.com/free-vector/gradient-smooth-blue-lines-background_14063419.htm#fromView=keyword&page=1&position=14&uuid=443f2888-c7b6-4c82-b02d-7c5308791890&query=Blue+background" alt="Background Image" class="object-cover object-center w-full h-full" />
 
     </div>
     <div class="absolute inset-9 flex flex-col md:flex-row items-center justify-between">
