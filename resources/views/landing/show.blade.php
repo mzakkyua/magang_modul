@@ -5,8 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $vacancies->title }} - SINAKERTRANS</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/admin/delete-confirm.js'])
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.5/flowbite.min.js"></script>
 </head>
 
@@ -14,8 +15,7 @@
 
     <nav class="bg-white shadow-sm sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-            <a href="{{ route('landing.index') }}"
-                class="flex items-center text-gray-600 hover:text-blue-600 transition">
+            <a href="{{ route('landing.index') }}" class="flex items-center text-gray-600 hover:text-blue-600 transition">
                 <i class="bi bi-arrow-left mr-2"></i> Kembali ke Daftar
             </a>
             <span class="font-bold text-blue-600 text-xl">SINAKERTRANS</span>
@@ -118,12 +118,13 @@
 
                         <form action="{{ route('applications.store') }}" method="POST">
                             @csrf
-                            <input type="hidden" name="vacancies_id" value="{{ $vacancies->id }}">
+                            <input type="hidden" name="vacancy_id" value="{{ $vacancies->id }}">
 
                             <div class="mb-4">
-                                <label class="block mb-2 text-sm font-medium text-gray-900">Catatan Singkat
+                                <label for="notes" class="block mb-2 text-sm font-medium text-gray-900">Catatan
+                                    Singkat
                                     (Opsional)</label>
-                                <textarea name="notes" rows="3"
+                                <textarea id="notes" name="notes" rows="3"
                                     class="block w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                                     placeholder="Kenapa Anda tertarik?"></textarea>
                             </div>
