@@ -1,3 +1,14 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@yield('title','SINAKERTRANS - Cari Magang')</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body  class="bg-gray-50 font-sans text-gray-800">
 <nav class="bg-white shadow-sm sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -62,13 +73,12 @@
                                     class="bi bi-chevron-down text-xs transition-transform duration-200 group-hover:rotate-180"></i>
                             </div>
 
-                            {{-- Isi Menu Dropdown (Muncul saat group di-hover) --}}
-                            <div class="absolute right-0 hidden group-hover:block pt-2 w-48 z-9999">
-                                <div class="bg-white border border-gray-100 rounded-xl shadow-xl py-2">
-                                    <a href="{{ route('profile.edit') }}"
-                                        class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
-                                        <i class="bi bi-person-vcard text-base"></i> Profil Saya
-                                    </a>
+    {{-- Isi Menu Dropdown (Muncul saat group di-hover) --}}
+    <div class="absolute right-0 hidden group-hover:block pt-2 w-48 z-9999">
+        <div class="bg-white border border-gray-100 rounded-xl shadow-xl py-2">
+            <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
+                <i class="bi bi-person-vcard text-base"></i> Profil Saya
+            </a>
 
                                     <div class="border-t border-gray-100 my-1"></div>
 
@@ -93,5 +103,78 @@
                 @endif
             </div>
         </div>
-    </div>
-</nav>
+    </nav>
+
+@yield('content')
+
+
+ <footer id="footer" class="bg-gray-800 text-white pt-16 pb-8 text-sm">
+        
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+                
+                <div>
+                    <a href="/" class="flex items-center mb-4">
+                        <span class="text-2xl font-bold tracking-wider">KEPEGAWAIAN</span>
+                    </a>
+                    <div class="text-gray-400 space-y-2">
+                        <p>Jln. Dukuh Menanggal 124 - 126, Gayungan</p>
+                        <p>Surabaya 60234, Jawa Timur</p>
+                        <p class="mt-4"><strong class="text-white">Phone:</strong> (031) 8290005</p>
+                        <p><strong class="text-white">Email:</strong> disnakertrans@jatimprov.go.id</p>
+                    </div>
+                    <div class="flex gap-4 mt-6">
+                        <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-[#37517e] transition duration-300 border border-slate-700 hover:border-blue-400">
+                            <i class="fa-brands fa-twitter text-white"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-[#37517e] transition duration-300 border border-slate-700 hover:border-blue-400">
+                            <i class="fa-brands fa-facebook-f text-white"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-[#37517e] transition duration-300 border border-slate-700 hover:border-blue-400">
+                            <i class="fa-brands fa-instagram text-white"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-lg font-bold mb-4 border-b-2 border-blue-500 inline-block pb-1">Useful Links</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-blue-400 transition">Home</a></li>
+                        <li><a href="#about" class="hover:text-blue-400 transition">Tentang Kami</a></li>
+                        <li><a href="#services" class="hover:text-blue-400 transition">Layanan</a></li>
+                        <li><a href="#" class="hover:text-blue-400 transition">Terms of service</a></li>
+                        <li><a href="#" class="hover:text-blue-400 transition">Privacy policy</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-lg font-bold mb-4 border-b-2 border-blue-500 inline-block pb-1">Layanan Kami</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-blue-400 transition">Usulan Kepegawaian</a></li>
+                        <li><a href="#" class="hover:text-blue-400 transition">Dokumen Digital</a></li>
+                        <li><a href="#" class="hover:text-blue-400 transition">Simulasi Kredit</a></li>
+                        <li><a href="#" class="hover:text-blue-400 transition">Arsip & Surat</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-lg font-bold mb-4 border-b-2 border-blue-500 inline-block pb-1">Newsletter</h4>
+                    <p class="text-gray-400 mb-4">Berlangganan untuk mendapatkan informasi terbaru seputar kepegawaian.</p>
+                    <form action="#" class="flex">
+                        <input type="email" placeholder="Email Anda" class="w-full px-4 py-2 rounded-l-md bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500">
+                        <button type="submit" class="bg-blue-600 px-4 py-2 rounded-r-md hover:bg-blue-700 transition">Sub</button>
+                    </form>
+                </div>
+
+            </div>
+            
+            <div class="border-t border-slate-800 pt-8 text-center text-gray-400">
+                <p>&copy; Copyright <strong>KEPEGAWAIAN</strong> {{ date('Y') }} Dinas Tenaga Kerja. Sistem Manajemen Magang.</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+
+</html>
+

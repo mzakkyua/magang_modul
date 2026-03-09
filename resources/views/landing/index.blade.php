@@ -1,20 +1,7 @@
-<!DOCTYPE html>
-<html lang="id">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SINAKERTRANS - Cari Magang</title>
-
-    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/admin/delete-confirm.js'])
-
-</head>
-
-<body class="bg-gray-50 font-sans text-gray-800">
-
-    @include('layouts.layoutlanding')
-
-
+@extends('layouts.layoutlanding')
+@section('title','homepage')
+@section('content')
+    
     <!-- hero seciton -->
     <div class="relative w-full h-80" id="home">
         <div class="absolute inset-0 opacity-70">
@@ -33,6 +20,75 @@
         </div>
     </div>
 
+<section class="px-10 py-10"id="lowongan">
+<div class="max-w-xl mx-auto px-4">
+            <form action="{{ route('landing.index') }}" method="GET"
+                class="flex gap-2 bg-white p-2 rounded-lg shadow-lg">
+                <input type="text" name="search" placeholder="Cari posisi magang..."
+                    class="flex-1 px-4 py-2 text-gray-800 outline-none rounded-md">
+                <button type="submit"
+                    class="bg-blue-800 hover:bg-blue-900 text-white px-6 py-2 rounded-md font-semibold transition">
+                    Cari
+                </button>
+            </form>
+        </div>
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6 border-l-4 border-blue-600 pl-4">Lowongan Terbaru</h2>
+
+        @if ($vacancies->count() > 0)
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach ($vacancies as $job)
+                    <div
+                        class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 border border-gray-100">
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="text-xl font-bold text-gray-900">{{ $job->title }}</h3>
+                                    <span class="text-sm text-blue-600 font-semibold bg-blue-50 px-2 py-1 rounded">
+                                        Divisi {{ $job->division_name }}
+                                    </span>
+                                </div>
+                                <span
+                                    class="text-xs font-bold px-2 py-1 rounded {{ $job->type == 'magang' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700' }}">
+                                    {{ strtoupper($job->type) }}
+                                </span>
+                            </div>
+
+                            <p class="text-gray-600 text-sm mb-4 line-clamp-3">
+                                {{ Str::limit($job->description, 100) }}
+                            </p>
+
+                            <div class="flex items-center gap-4 text-xs text-gray-500 mb-6">
+                                <span class="flex items-center gap-1"><i class="bi bi-people"></i> Kuota:
+                                    {{ $job->quota_slots }}</span>
+                                <span class="flex items-center gap-1"><i class="bi bi-calendar"></i>
+                                    {{ \Carbon\Carbon::parse($job->start_date)->format('d M') }} -
+                                    {{ \Carbon\Carbon::parse($job->end_date)->format('d M Y') }}
+                                </span>
+                            </div>
+
+                            <a href="{{ route('landing.show', $job->id) }}"
+                                class="block w-full text-center bg-gray-900 hover:bg-gray-800 text-white py-2 rounded-lg font-medium transition">
+                                Lihat Detail
+                            </a>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <div class="mt-8">
+                {{ $vacancies->links() }}
+            </div>
+        @else
+            <div class="text-center py-12 bg-white rounded-lg border border-dashed border-gray-300">
+                <i class="bi bi-emoji-frown text-4xl text-gray-400 mb-3 block"></i>
+                <h3 class="text-lg font-medium text-gray-900">Belum ada lowongan dibuka</h3>
+                <p class="text-gray-500">Silahkan kembali lagi nanti untuk info terbaru.</p>
+            </div>
+        @endif
+    </div>
+<section>
 
     <!-- our services section -->
     <section class="py-10" id="services">
@@ -161,194 +217,37 @@
         </div>
     </section>
 
-    <!-- why us  -->
-    <section class="text-gray-700 body-font mt-10">
-        <div class="flex justify-center text-3xl font-bold text-gray-800 text-center">
-            Why Us?
-        </div>
-        <div class="container px-5 py-12 mx-auto">
-            <div class="flex flex-wrap text-center justify-center">
-                <div class="p-4 md:w-1/4 sm:w-1/2">
-                    <div class="px-4 py-6 transform transition duration-500 hover:scale-110">
-                        <div class="flex justify-center">
-                            <img src="https://image3.jdomni.in/banner/13062021/58/97/7C/E53960D1295621EFCB5B13F335_1623567851299.png?output-format=webp"
-                                class="w-32 mb-3">
-                        </div>
-                        <h2 class="title-font font-regular text-2xl text-gray-900">Latest Milling Machinery</h2>
-                    </div>
-                </div>
-
-                <div class="p-4 md:w-1/4 sm:w-1/2">
-                    <div class="px-4 py-6 transform transition duration-500 hover:scale-110">
-                        <div class="flex justify-center">
-                            <img src="https://image2.jdomni.in/banner/13062021/3E/57/E8/1D6E23DD7E12571705CAC761E7_1623567977295.png?output-format=webp"
-                                class="w-32 mb-3">
-                        </div>
-                        <h2 class="title-font font-regular text-2xl text-gray-900">Reasonable Rates</h2>
-                    </div>
-                </div>
-
-                <div class="p-4 md:w-1/4 sm:w-1/2">
-                    <div class="px-4 py-6 transform transition duration-500 hover:scale-110">
-                        <div class="flex justify-center">
-                            <img src="https://image3.jdomni.in/banner/13062021/16/7E/7E/5A9920439E52EF309F27B43EEB_1623568010437.png?output-format=webp"
-                                class="w-32 mb-3">
-                        </div>
-                        <h2 class="title-font font-regular text-2xl text-gray-900">Time Efficiency</h2>
-                    </div>
-                </div>
-
-                <div class="p-4 md:w-1/4 sm:w-1/2">
-                    <div class="px-4 py-6 transform transition duration-500 hover:scale-110">
-                        <div class="flex justify-center">
-                            <img src="https://image3.jdomni.in/banner/13062021/EB/99/EE/8B46027500E987A5142ECC1CE1_1623567959360.png?output-format=webp"
-                                class="w-32 mb-3">
-                        </div>
-                        <h2 class="title-font font-regular text-2xl text-gray-900">Expertise in Industry</h2>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </section>
-
-    <div class="max-w-xl mx-auto px-4">
-        <form action="{{ route('landing.index') }}" method="GET"
-            class="flex gap-2 bg-white p-2 rounded-lg shadow-lg">
-            <input type="text" name="search" placeholder="Cari posisi magang..."
-                class="flex-1 px-4 py-2 text-gray-800 outline-none rounded-md">
-            <button type="submit"
-                class="bg-blue-800 hover:bg-blue-900 text-white px-6 py-2 rounded-md font-semibold transition">
-                Cari
-            </button>
-        </form>
-    </div>
-
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h2 class="text-3xl font-bold text-gray-800 mb-6 border-l-4 border-blue-600 pl-4">Lowongan Terbaru</h2>
-
-        @if ($vacancies->count() > 0)
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @foreach ($vacancies as $job)
-                    <div
-                        class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 border border-gray-100">
-                        <div class="p-6">
-                            <div class="flex justify-between items-start mb-4">
-                                <div>
-                                    <h3 class="text-xl font-bold text-gray-900">{{ $job->title }}</h3>
-                                    <span class="text-sm text-blue-600 font-semibold bg-blue-50 px-2 py-1 rounded">
-                                        Divisi {{ $job->division_name }}
-                                    </span>
-                                </div>
-                                <span
-                                    class="text-xs font-bold px-2 py-1 rounded {{ $job->type == 'magang' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700' }}">
-                                    {{ strtoupper($job->type) }}
-                                </span>
-                            </div>
-
-                            <p class="text-gray-600 text-sm mb-4 line-clamp-3">
-                                {{ Str::limit($job->description, 100) }}
-                            </p>
-
-                            <div class="flex items-center gap-4 text-xs text-gray-500 mb-6">
-                                <span class="flex items-center gap-1"><i class="bi bi-people"></i> Kuota:
-                                    {{ $job->quota_slots }}</span>
-                                <span class="flex items-center gap-1"><i class="bi bi-calendar"></i>
-                                    {{ \Carbon\Carbon::parse($job->start_date)->format('d M') }} -
-                                    {{ \Carbon\Carbon::parse($job->end_date)->format('d M Y') }}
-                                </span>
-                            </div>
-
-                            <a href="{{ route('landing.show', $job->id) }}"
-                                class="block w-full text-center bg-gray-900 hover:bg-gray-800 text-white py-2 rounded-lg font-medium transition">
-                                Lihat Detail
-                            </a>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-
-            <div class="mt-8">
-                {{ $vacancies->links() }}
-            </div>
-        @else
-            <div class="text-center py-12 bg-white rounded-lg border border-dashed border-gray-300">
-                <i class="bi bi-emoji-frown text-4xl text-gray-400 mb-3 block"></i>
-                <h3 class="text-lg font-medium text-gray-900">Belum ada lowongan dibuka</h3>
-                <p class="text-gray-500">Silahkan kembali lagi nanti untuk info terbaru.</p>
-            </div>
-        @endif
-    </div>
-
-
-    <section class="bg-gray-100 py-16">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-
-                <!-- kiri -->
-                <div class="max-w-lg">
-                    <h2 class="text-3xl font-bold text-gray-800 mb-6">
-                        Timeline Magang
-                    </h2>
-
-                    <p class="text-gray-600 text-lg leading-relaxed">
-                        Berikut jadwal kegiatan program magang.
-                        Peserta dapat melihat periode aktif,
-                        tanggal mulai hingga selesai, dan aktivitas penting.
-                    </p>
-
-                    <div class="mt-4 text-sm text-gray-500">
-                        • Blok warna menunjukkan periode magang
-                        • Klik event untuk detail (admin)
-                    </div>
-                </div>
-
-                <!-- kanan kalender -->
-                <div class="bg-white rounded-xl shadow-md p-4">
-                    @include('calendar')
-                </div>
-
-            </div>
-        </div>
-    </section>
-
-    <!-- gallery -->
-    <section class="text-gray-700 body-font" id="gallery">
-        <div class="flex justify-center text-3xl font-bold text-gray-800 text-center py-10">
-            Dokumentasi Magang
-        </div>
-
-        <div class="grid grid-cols-1 place-items-center sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-
-            <div class="group relative">
-                <img src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-1.jpeg"
-                    alt="Image 1"
-                    class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105" />
-            </div>
-
-            <div class="group relative">
-                <img src="https://www.suarasurabaya.net/wp-content/uploads/2023/01/Kegiatan-Uji-Kompetensi-Kejuruan-HMI-Berbasis-PLC-yang-dilakukan-UPT-Balai-Latihan-Kerja-Surabaya-735x493.jpg.webp"
-                    alt="Image 1"
-                    class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105" />
-            </div>
-
-            <div class="group relative">
-                <img src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-2.jpeg"
-                    alt="Image 1"
-                    class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105" />
-            </div>
-            <div class="group relative">
-                <img src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-3.jpeg"
-                    alt="Image 1"
-                    class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105" />
-            </div>
 
 
             <!-- Repeat this div for each image -->
         </div>
 
-    </section>
-    @include('layouts.footer')
-</body>
+        <div class="group relative">
+            <img
+      src="https://www.suarasurabaya.net/wp-content/uploads/2023/01/Kegiatan-Uji-Kompetensi-Kejuruan-HMI-Berbasis-PLC-yang-dilakukan-UPT-Balai-Latihan-Kerja-Surabaya-735x493.jpg.webp"
+      alt="Image 1"
+      class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105"
+    />
+        </div>
 
-</html>
+        <div class="group relative">
+            <img
+      src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-2.jpeg"
+      alt="Image 1"
+      class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105"
+    />
+        </div>
+        <div class="group relative">
+            <img
+      src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-3.jpeg"
+      alt="Image 1"
+      class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105"
+    />
+        </div>
+
+        
+        <!-- Repeat this div for each image -->
+    </div>
+
+</section>
+@endsection

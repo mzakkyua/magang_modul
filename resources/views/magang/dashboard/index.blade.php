@@ -1,12 +1,7 @@
-@extends('layouts.magang')
-
-@section('title' . 'Dashboard User')
-
+@extends('layouts.layoutlanding')
+@section('title','homepage')
 @section('content')
-    <!--Under Maintenance -->
-
-
-
+    
     <!-- hero seciton -->
 <div class="relative w-full h-80" id="home">
     <div class="absolute inset-0 opacity-70">
@@ -22,7 +17,75 @@
     </div>
 </div>
 
+<section class="px-10 py-10" id="section">
+    <div class="max-w-xl mx-auto px-4">
+            <form action="{{ route('landing.index') }}" method="GET"
+                class="flex gap-2 bg-white p-2 rounded-lg shadow-lg">
+                <input type="text" name="search" placeholder="Cari posisi magang..."
+                    class="flex-1 px-4 py-2 text-gray-800 outline-none rounded-md">
+                <button type="submit"
+                    class="bg-blue-800 hover:bg-blue-900 text-white px-6 py-2 rounded-md font-semibold transition">
+                    Cari
+                </button>
+            </form>
+        </div>
+    
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6 border-l-4 border-blue-600 pl-4">Lowongan Terbaru</h2>
 
+        @if ($vacancies->count() > 0)
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach ($vacancies as $job)
+                    <div
+                        class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 border border-gray-100">
+                        <div class="p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h3 class="text-xl font-bold text-gray-900">{{ $job->title }}</h3>
+                                    <span class="text-sm text-blue-600 font-semibold bg-blue-50 px-2 py-1 rounded">
+                                        Divisi {{ $job->division_name }}
+                                    </span>
+                                </div>
+                                <span
+                                    class="text-xs font-bold px-2 py-1 rounded {{ $job->type == 'magang' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700' }}">
+                                    {{ strtoupper($job->type) }}
+                                </span>
+                            </div>
+
+                            <p class="text-gray-600 text-sm mb-4 line-clamp-3">
+                                {{ Str::limit($job->description, 100) }}
+                            </p>
+
+                            <div class="flex items-center gap-4 text-xs text-gray-500 mb-6">
+                                <span class="flex items-center gap-1"><i class="bi bi-people"></i> Kuota:
+                                    {{ $job->quota_slots }}</span>
+                                <span class="flex items-center gap-1"><i class="bi bi-calendar"></i>
+                                    {{ \Carbon\Carbon::parse($job->start_date)->format('d M') }} -
+                                    {{ \Carbon\Carbon::parse($job->end_date)->format('d M Y') }}
+                                </span>
+                            </div>
+
+                            <a href="{{ route('landing.show', $job->id) }}"
+                                class="block w-full text-center bg-gray-900 hover:bg-gray-800 text-white py-2 rounded-lg font-medium transition">
+                                Lihat Detail
+                            </a>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <div class="mt-8">
+                {{ $vacancies->links() }}
+            </div>
+        @else
+            <div class="text-center py-12 bg-white rounded-lg border border-dashed border-gray-300">
+                <i class="bi bi-emoji-frown text-4xl text-gray-400 mb-3 block"></i>
+                <h3 class="text-lg font-medium text-gray-900">Belum ada lowongan dibuka</h3>
+                <p class="text-gray-500">Silahkan kembali lagi nanti untuk info terbaru.</p>
+            </div>
+        @endif
+    </div>
+</section>
     <!-- our services section -->
 <section class="py-10" id="services">
     <div class="container mx-auto px-4">
@@ -185,73 +248,39 @@
     </div>
 </section>
 
-<div class="max-w-xl mx-auto px-4">
-            <form action="{{ route('landing.index') }}" method="GET"
-                class="flex gap-2 bg-white p-2 rounded-lg shadow-lg">
-                <input type="text" name="search" placeholder="Cari posisi magang..."
-                    class="flex-1 px-4 py-2 text-gray-800 outline-none rounded-md">
-                <button type="submit"
-                    class="bg-blue-800 hover:bg-blue-900 text-white px-6 py-2 rounded-md font-semibold transition">
-                    Cari
-                </button>
-            </form>
+
+
+
+    <section class="bg-gray-100 py-16">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+
+            <!-- kiri -->
+            <div class="max-w-lg">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6">
+                    Timeline Magang
+                </h2>
+
+                <p class="text-gray-600 text-lg leading-relaxed">
+                    Berikut jadwal kegiatan program magang.  
+                    Peserta dapat melihat periode aktif, 
+                    tanggal mulai hingga selesai, dan aktivitas penting.
+                </p>
+
+                <div class="mt-4 text-sm text-gray-500">
+                    • Blok warna menunjukkan periode magang  
+                    • Klik event untuk detail (admin)  
+                </div>
+            </div>
+
+            <!-- kanan kalender -->
+            <div class="bg-white rounded-xl shadow-md p-4">
+                @include('calendar')
+            </div>
+
         </div>
-    
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <h2 class="text-3xl font-bold text-gray-800 mb-6 border-l-4 border-blue-600 pl-4">Lowongan Terbaru</h2>
-
-        @if ($vacancies->count() > 0)
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @foreach ($vacancies as $job)
-                    <div
-                        class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition duration-300 border border-gray-100">
-                        <div class="p-6">
-                            <div class="flex justify-between items-start mb-4">
-                                <div>
-                                    <h3 class="text-xl font-bold text-gray-900">{{ $job->title }}</h3>
-                                    <span class="text-sm text-blue-600 font-semibold bg-blue-50 px-2 py-1 rounded">
-                                        Divisi {{ $job->division_name }}
-                                    </span>
-                                </div>
-                                <span
-                                    class="text-xs font-bold px-2 py-1 rounded {{ $job->type == 'magang' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700' }}">
-                                    {{ strtoupper($job->type) }}
-                                </span>
-                            </div>
-
-                            <p class="text-gray-600 text-sm mb-4 line-clamp-3">
-                                {{ Str::limit($job->description, 100) }}
-                            </p>
-
-                            <div class="flex items-center gap-4 text-xs text-gray-500 mb-6">
-                                <span class="flex items-center gap-1"><i class="bi bi-people"></i> Kuota:
-                                    {{ $job->quota_slots }}</span>
-                                <span class="flex items-center gap-1"><i class="bi bi-calendar"></i>
-                                    {{ \Carbon\Carbon::parse($job->start_date)->format('d M') }} -
-                                    {{ \Carbon\Carbon::parse($job->end_date)->format('d M Y') }}
-                                </span>
-                            </div>
-
-                            <a href="{{ route('landing.show', $job->id) }}"
-                                class="block w-full text-center bg-gray-900 hover:bg-gray-800 text-white py-2 rounded-lg font-medium transition">
-                                Lihat Detail
-                            </a>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-
-            <div class="mt-8">
-                {{ $vacancies->links() }}
-            </div>
-        @else
-            <div class="text-center py-12 bg-white rounded-lg border border-dashed border-gray-300">
-                <i class="bi bi-emoji-frown text-4xl text-gray-400 mb-3 block"></i>
-                <h3 class="text-lg font-medium text-gray-900">Belum ada lowongan dibuka</h3>
-                <p class="text-gray-500">Silahkan kembali lagi nanti untuk info terbaru.</p>
-            </div>
-        @endif
     </div>
+</section>
 
 <!-- gallery -->
 <section class="text-gray-700 body-font" id="gallery">
@@ -296,8 +325,5 @@
         <!-- Repeat this div for each image -->
     </div>
 
-    </section>
-
-
-
+</section>
 @endsection

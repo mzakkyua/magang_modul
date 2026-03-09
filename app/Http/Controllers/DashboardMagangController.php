@@ -31,9 +31,9 @@ class DashboardMagangController extends Controller
 
         // Kirim 2 bungkusan data (Magang & Penelitian) ke View
         return view('magang.dashboard.index', [
-            'listMagang' => $lowonganMagang,
-            'listPenelitian' => $lowonganPenelitian,
-            'isSMK' => $isSMK // Biar di frontend bisa diatur tampilannya
+            'vacancies' => $lowonganMagang,
+            'vacancies' => $lowonganPenelitian,
+             // Biar di frontend bisa diatur tampilannya
         ]);
     }
 }
