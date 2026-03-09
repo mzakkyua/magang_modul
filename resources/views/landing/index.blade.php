@@ -219,7 +219,20 @@
 
 
 
-            <!-- Repeat this div for each image -->
+       <!-- gallery -->
+<section class="text-gray-700 body-font" id="gallery">
+    <div class="flex justify-center text-3xl font-bold text-gray-800 text-center py-10">
+        Dokumentasi Magang
+    </div>
+
+    <div class="grid grid-cols-1 place-items-center sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+
+        <div class="group relative">
+            <img
+      src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-1.jpeg"
+      alt="Image 1"
+      class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105"
+    />
         </div>
 
         <div class="group relative">
@@ -248,6 +261,4 @@
         
         <!-- Repeat this div for each image -->
     </div>
-
-</section>
 @endsection
