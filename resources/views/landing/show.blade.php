@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $vacancy->title }} - SINAKERTRANS</title>
+    <title>{{ $vacancies->title }} - SINAKERTRANS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.5/flowbite.min.js"></script>
@@ -27,26 +27,26 @@
         <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900">{{ $vacancy->title }}</h1>
+                    <h1 class="text-3xl font-bold text-gray-900">{{ $vacancies->title }}</h1>
                     <div class="flex gap-3 mt-2">
                         <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full">
-                            Divisi {{ $vacancy->division_name }}
+                            Divisi {{ $vacancies->division_name }}
                         </span>
                         <span class="bg-green-100 text-green-800 text-xs font-bold px-3 py-1 rounded-full">
-                            {{ strtoupper($vacancy->type) }}
+                            {{ strtoupper($vacancies->type) }}
                         </span>
                     </div>
                 </div>
                 <div class="text-right">
                     <p class="text-sm text-gray-500">Batas Lamaran</p>
-                    <p class="font-bold text-red-600">{{ \Carbon\Carbon::parse($vacancy->end_date)->format('d F Y') }}
+                    <p class="font-bold text-red-600">{{ \Carbon\Carbon::parse($vacancies->end_date)->format('d F Y') }}
                     </p>
                 </div>
             </div>
 
             <div class="prose max-w-none text-gray-600 border-t pt-6">
                 <h3 class="text-lg font-bold text-gray-800 mb-2">Deskripsi Pekerjaan</h3>
-                <p class="mb-6 whitespace-pre-line">{{ $vacancy->description }}</p>
+                <p class="mb-6 whitespace-pre-line">{{ $vacancies->description }}</p>
 
                 <h3 class="text-lg font-bold text-gray-800 mb-2">Kriteria / Persyaratan</h3>
                 <ul class="list-disc pl-5 mb-6">
@@ -112,13 +112,13 @@
                     </div>
                     <div class="p-6 space-y-6">
                         <p class="text-base leading-relaxed text-gray-500">
-                            Apakah Anda yakin ingin melamar untuk posisi <strong>{{ $vacancy->title }}</strong>?
+                            Apakah Anda yakin ingin melamar untuk posisi <strong>{{ $vacancies->title }}</strong>?
                             Pastikan profil dan CV Anda sudah diperbarui.
                         </p>
 
-                        <form action="{{ route('apply.store') }}" method="POST">
+                        <form action="{{ route('applications.store') }}" method="POST">
                             @csrf
-                            <input type="hidden" name="vacancy_id" value="{{ $vacancy->id }}">
+                            <input type="hidden" name="vacancies_id" value="{{ $vacancies->id }}">
 
                             <div class="mb-4">
                                 <label class="block mb-2 text-sm font-medium text-gray-900">Catatan Singkat
