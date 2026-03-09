@@ -16,6 +16,7 @@ use App\Http\Controllers\ProfileMagangController;
 use App\Http\Controllers\ApplicationMagangController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\StatusMagangController;
+use App\Http\Controllers\CalendarController;
 
 // ---------------------
 // ADMIN DINAS
@@ -231,3 +232,15 @@ Route::prefix('admin')
             [AdminProfileController::class, 'update']
         )->name('profile.update');
     });
+
+     //event kalender
+    Route::get('/calendar', [CalendarController::class, 'index'])
+    ->name('calendar');
+
+Route::get('/calendar/events', [CalendarController::class, 'fetch'])
+    ->name('calendar.events');  
+Route::middleware('auth:admin')->group(function () {
+    Route::post('/calendar', [CalendarController::class, 'store']);
+    Route::put('/calendar/{event}', [CalendarController::class, 'update']);
+    Route::delete('/calendar/{event}', [CalendarController::class, 'destroy']);
+});

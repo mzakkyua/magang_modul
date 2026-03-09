@@ -1,0 +1,82 @@
+.navbar {
+    @apply
+    bg-white
+    shadow-sm
+    sticky top-0
+    z-50
+}
+
+.nav-logo{
+    @apply text-2xl font-bold text-blue-600
+}
+
+.nav-admin {
+    @apply hidden md:flex items-center space-x-3
+}
+
+/* NAV UNDERLINE ANIMATION */
+.nav-underline {
+    position: relative;
+}
+
+.nav-underline a {
+    position: relative;
+    padding-bottom: 6px;
+}
+
+.nav-underline a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2px;
+    width: 0%;
+    background: #2563eb;
+    transition: width 0.3s ease;
+}
+
+.nav-underline a:hover::after {
+    width: 100%;
+}
+
+/* ACTIVE */
+.nav-underline a.active::after {
+    width: 100%;
+}
+
+.nav-link {
+    @apply 
+    text-blue-600 
+}
+
+.nav-link-active {
+    @apply hover:text-blue-600 transition pb-1
+}
+
+.dropdown {
+    @apply flex items-center gap-3 text-[#37517e] cursor-pointer px-3 py-1.5 rounded-lg transition-all duration-200 hover:bg-gray-50
+}
+
+.profil {
+    @apply flex items-center gap-3 px-4 py-2 text-[13px] text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition
+}
+
+.logout {
+    @apply flex items-center gap-3 w-full px-4 py-2 text-[13px] text-red-600 hover:bg-red-50 transition text-left font-semibold
+}
+
+.nav-button{
+    @apply text-xl bg-white text-gray-700 px-5 py-2 rounded-3xl font-bold hover:bg-blue-600 hover:text-white transition
+}
+
+.nav-toggle {
+    @apply md:hidden flex items-center justify-center p-2 rounded-lg text-blue-600;
+}
+
+.nav-mobile {
+    @apply md:hidden flex flex-col space-y-4 px-4 pb-4;
+}
+
+.nav-mobile-link {
+    @apply block text-sm font-bold uppercase tracking-wide text-blue-600;
+}
