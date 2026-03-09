@@ -12,6 +12,21 @@
     {{-- USER INFO --}}
     <div class="p-4 border-b border-slate-200">
         <div class="flex items-center gap-3">
+            <div>
+                <p class="text-sm font-semibold text-slate-800">
+                    {{ Auth::user()->name }}
+                </p>
+
+                @php
+                    $user = Auth::user();
+                    $hakAkses = \App\Models\MagangAccessRight::where('user_id', $user->id)->first();
+                @endphp
+
+                <p class="text-xs text-slate-500 uppercase">
+                    {{ $hakAkses->role === 'superadmin' ? 'Super Admin' : 'Admin ' . $hakAkses->division_name }}
+                </p>
+            </div>
+
             <div class="relative w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
 
                 {{-- FOTO PROFIL --}}
@@ -28,20 +43,7 @@
                 @endif
 
             </div>
-            <div>
-                <p class="text-sm font-semibold text-slate-800">
-                    {{ Auth::user()->name }}
-                </p>
 
-                @php
-                    $user = Auth::user();
-                    $hakAkses = \App\Models\MagangAccessRight::where('user_id', $user->id)->first();
-                @endphp
-
-                <p class="text-xs text-slate-500 uppercase">
-                    {{ $hakAkses->role === 'superadmin' ? 'Super Admin' : 'Admin ' . $hakAkses->division_name }}
-                </p>
-            </div>
         </div>
     </div>
 
