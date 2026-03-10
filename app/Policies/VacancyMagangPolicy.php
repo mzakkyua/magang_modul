@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\User;
 use App\Models\VacancyMagang;
-use App\Models\MagangAccessRight;
 
 class VacancyMagangPolicy
 {
@@ -17,20 +16,20 @@ class VacancyMagangPolicy
      * - Admin bidang → hanya divisinya
      * =====================================================
      */
-    public function update(User $user, VacancyMagang $vacancy)
+    public function update(User $user, VacancyMagang $vacancy): bool
     {
-        $hakAkses = MagangAccessRight::where('user_id', $user->id)->first();
+        $access = $user->magangAccessRight;
 
-        if (!$hakAkses) {
+        if (!$access) {
             return false;
         }
 
-        // Superadmin bebas
-        if ($hakAkses->role === 'superadmin') {
+        // Superadmin bebas edit semua
+        if ($access->role === 'superadmin') {
             return true;
         }
 
-        // Admin bidang hanya divisinya
-        return $hakAkses->division_name === $vacancy->division_name;
+        // Admin hanya boleh edit divisinya
+        return $access->division_name === $vacancy->division_name;
     }
 }
