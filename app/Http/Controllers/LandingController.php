@@ -9,24 +9,23 @@ class LandingController extends Controller
 {
     public function index(Request $request)
     {
-        // Ambil lowongan yang statusnya 'open'
         $query = VacancyMagang::where('status', 'open');
 
-        // Fitur Cari (Opsional)
-        if ($request->has('search')) {
+        // fitur search
+        if ($request->filled('search')) {
             $query->where('title', 'like', '%' . $request->search . '%');
         }
 
-        // Urutkan terbaru & pagination
-        $vacancies = $query->orderBy('created_at', 'desc')->paginate(9);
+        // ambil data lowongan terbaru
+        $vacancies = $query->latest()->get();
 
-        // PENTING: return view 'landing' (sesuai nama file landing.blade.php)
         return view('landing.index', compact('vacancies'));
     }
 
     public function show($id)
     {
-        $vacancies = VacancyMagang::findOrFail($id);
-        return view('landing.show', compact('vacancies')); // Nanti kita buat file ini juga
+        $vacancy = VacancyMagang::findOrFail($id);
+
+        return view('landing.show', compact('vacancy'));
     }
 }
