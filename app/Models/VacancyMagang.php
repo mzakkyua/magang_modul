@@ -8,6 +8,11 @@ class VacancyMagang extends Model
 {
     protected $table = 'vacancies_magang';
 
+    /**
+     * =====================================================
+     * MASS ASSIGNMENT
+     * =====================================================
+     */
     protected $fillable = [
         'title',
         'division_name',
@@ -22,15 +27,62 @@ class VacancyMagang extends Model
         'status'
     ];
 
-    // Cast tanggal otomatis ke Carbon instance
+    /**
+     * =====================================================
+     * CASTING
+     * =====================================================
+     */
     protected $casts = [
-        'start_date' => 'date',
-        'end_date' => 'date',
+        'start_date'  => 'date',
+        'end_date'    => 'date',
+        'quota_slots' => 'integer',
+        'min_members' => 'integer',
+        'max_members' => 'integer',
     ];
 
-    // Relasi: Satu lowongan punya banyak lamaran
+    /**
+     * =====================================================
+     * CONSTANT DOMAIN VALUE
+     * =====================================================
+     */
+    const TYPE_MAGANG = 'magang';
+    const TYPE_RESEARCH = 'penelitian';
+
+    const MODE_INDIVIDUAL = 'individu';
+    const MODE_GROUP = 'kelompok';
+    const MODE_HYBRID = 'hybrid';
+
+    const STATUS_OPEN = 'open';
+    const STATUS_CLOSED = 'closed';
+
+    /**
+     * =====================================================
+     * RELATION: APPLICATIONS
+     * =====================================================
+     */
     public function applications()
     {
         return $this->hasMany(ApplicationMagang::class, 'vacancy_id');
+    }
+
+    /**
+     * =====================================================
+     * HELPER METHODS
+     * =====================================================
+     */
+
+    public function isOpen()
+    {
+        return $this->status === self::STATUS_OPEN;
+    }
+
+    public function hasStarted()
+    {
+        return now()->gte($this->start_date);
+    }
+
+    public function hasEnded()
+    {
+        return now()->gt($this->end_date);
     }
 }
