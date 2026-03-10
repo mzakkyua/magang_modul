@@ -1,5 +1,5 @@
 @extends('layouts.layoutlanding')
-@section('title','homepage')
+@section('title','Cari Magang - SINAKERTRANS')
 @section('content')
     
     <!-- hero seciton -->

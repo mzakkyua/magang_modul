@@ -3,14 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profil Saya - SINAKERTRANS</title>
+    <title>SINAKERTRANS - Profil Saya</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 </head>
 <body class="bg-gray-50/50"> {{-- Background abu-abu sangat muda agar card lebih menonjol --}}
     
-    @include('layouts.layoutlanding')
-
     <div class="max-w-6xl mx-auto py-12 px-4">
     {{-- Header Tetap --}}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
@@ -137,3 +135,5 @@
         </div>
     </form>
 </div>
+
+    @include('layouts.layoutlanding')
