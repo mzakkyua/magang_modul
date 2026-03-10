@@ -99,7 +99,7 @@ class AuthMagangController extends Controller
         $request->session()->regenerate();
 
         return redirect()
-            ->route('dashboard')
+            ->route('dashboard.index')
             ->with('success', 'Pendaftaran berhasil! Silakan lengkapi biodata Anda.');
     }
 
