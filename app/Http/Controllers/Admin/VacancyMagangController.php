@@ -92,6 +92,13 @@ class VacancyMagangController extends Controller
      */
     public function create()
     {
+        /*
+    ==========================================================
+    VALIDASI ADMIN MEMILIKI HAK AKSES MODUL MAGANG
+    ==========================================================
+    */
+        $this->getHakAkses();
+
         return view('admin.vacancies.create');
     }
 

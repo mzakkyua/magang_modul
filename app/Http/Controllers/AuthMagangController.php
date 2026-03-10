@@ -6,22 +6,30 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
-use App\Models\UserMagang;
-use App\Models\ProfileMagang;
-use App\Http\Controllers\Controller;
-
-
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 
+use App\Models\UserMagang;
+use App\Models\ProfileMagang;
+
 class AuthMagangController extends Controller
 {
-    // =================================================================
-    // 1. BAGIAN REGISTER (DAFTAR AKUN)
-    // =================================================================
+
     /**
-     * Constructor
-     * Pastikan guest saja yang bisa akses login & register
+     * ===============================================================
+     * CONSTRUCTOR
+     * ===============================================================
+     *
+     * Membatasi akses halaman login & register hanya untuk user
+     * yang BELUM login.
+     *
+     * Guard yang digunakan:
+     *
+     * web    → admin / pegawai
+     * magang → peserta magang
+     *
+     * logout tetap bisa diakses user yang sudah login.
+     *
      */
     public function __construct()
     {
@@ -29,55 +37,109 @@ class AuthMagangController extends Controller
         $this->middleware('guest:web')->except('logout');
     }
 
-    // ==========================================================
-    // 1. REGISTER (PESERTA MAGANG)
-    // ==========================================================
 
+
+    /**
+     * ===============================================================
+     * SHOW REGISTER FORM
+     * ===============================================================
+     */
     public function showRegisterForm()
     {
-        return view('auth.magang-register'); // Pastikan view ini nanti dibuat
+        return view('auth.magang-register');
     }
 
+
+
+    /**
+     * ===============================================================
+     * REGISTER PESERTA MAGANG
+     * ===============================================================
+     *
+     * Flow:
+     *
+     * 1. Validasi input
+     * 2. Normalisasi email
+     * 3. Generate username unik
+     * 4. Simpan user + profile (transaction)
+     * 5. Auto login
+     *
+     */
     public function register(Request $request)
     {
-        // ===============================
-        // A. VALIDASI INPUT
-        // ===============================
+
+        /**
+         * ===========================================================
+         * STEP 1 — VALIDASI INPUT
+         * ===========================================================
+         */
+
         $request->validate([
             'nama_lengkap'     => 'required|string|max:255',
             'email'            => 'required|email|unique:users_magang,email',
             'password'         => 'required|string|min:8|confirmed',
             'education_level'  => 'required|string|max:50',
+            'nim_nisn'         => 'nullable|string|max:50',
             'terms'            => 'accepted',
         ], [
             'terms.accepted' => 'Anda harus menyetujui syarat dan ketentuan.',
         ]);
 
-        // ===============================
-        // B. NORMALISASI EMAIL
-        // ===============================
+
+
+        /**
+         * ===========================================================
+         * STEP 2 — NORMALISASI EMAIL
+         * ===========================================================
+         */
+
         $email = strtolower($request->email);
 
-        // ===============================
-        // C. GENERATE USERNAME UNIK
-        // ===============================
+
+
+        /**
+         * ===========================================================
+         * STEP 3 — GENERATE USERNAME UNIK
+         * ===========================================================
+         *
+         * Format:
+         * username + random number
+         *
+         */
+
         do {
+
             $username = explode('@', $email)[0] . rand(100, 999);
         } while (UserMagang::where('username', $username)->exists());
 
-        // ===============================
-        // D. TRANSACTION DATABASE
-        // ===============================
+
+
+        /**
+         * ===========================================================
+         * STEP 4 — DATABASE TRANSACTION
+         * ===========================================================
+         *
+         * Semua proses dibungkus transaction untuk mencegah
+         * data setengah tersimpan.
+         *
+         */
+
         DB::transaction(function () use ($request, $email, $username) {
 
-            // 1️⃣ Buat akun login
+            /**
+             * CREATE USER ACCOUNT
+             */
             $user = UserMagang::create([
                 'username'      => $username,
                 'email'         => $email,
                 'password_hash' => Hash::make($request->password),
             ]);
 
-            // 2️⃣ Buat profil dasar
+
+            /**
+             * CREATE BASIC PROFILE
+             */
+
             ProfileMagang::create([
                 'user_id'          => $user->id,
                 'full_name'        => $request->nama_lengkap,
@@ -89,65 +151,112 @@ class AuthMagangController extends Controller
                 'phone_number'     => '-',
             ]);
 
-            // 3️⃣ Auto login peserta
+
+            /**
+             * AUTO LOGIN USER
+             */
+
             Auth::guard('magang')->login($user);
         });
 
-        // ===============================
-        // E. REGENERATE SESSION (ANTI SESSION FIXATION)
-        // ===============================
+
+
+        /**
+         * ===========================================================
+         * STEP 5 — REGENERATE SESSION
+         * ===========================================================
+         *
+         * Mencegah session fixation attack
+         *
+         */
+
         $request->session()->regenerate();
+
+
 
         return redirect()
             ->route('dashboard.index')
             ->with('success', 'Pendaftaran berhasil! Silakan lengkapi biodata Anda.');
     }
 
-    // ==========================================================
-    // 2. LOGIN (ADMIN & PESERTA)
-    // ==========================================================
+
+
+    /**
+     * ===============================================================
+     * SHOW LOGIN FORM
+     * ===============================================================
+     */
 
     public function showLoginForm()
     {
         return view('auth.magang-login');
     }
 
+
+
+    /**
+     * ===============================================================
+     * LOGIN SYSTEM (ADMIN + PESERTA)
+     * ===============================================================
+     *
+     * Flow login:
+     *
+     * 1. Validasi input
+     * 2. Rate limiter check
+     * 3. Login admin
+     * 4. Login peserta
+     * 5. Tambah hit jika gagal
+     *
+     */
+
     public function login(Request $request)
     {
-        // ==========================================================
-        // 1️⃣ VALIDASI INPUT DASAR
-        // ==========================================================
-        // Pastikan email & password tidak kosong
-        // Laravel otomatis redirect balik jika gagal
+
+        /**
+         * ===========================================================
+         * STEP 1 — VALIDASI INPUT
+         * ===========================================================
+         */
+
         $request->validate([
             'email'    => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
 
-        // ==========================================================
-        // 2️⃣ NORMALISASI EMAIL (ANTI CASE SENSITIVE ISSUE)
-        // ==========================================================
-        // Supaya Email@Gmail.com dan email@gmail.com dianggap sama
+
+
+        /**
+         * ===========================================================
+         * STEP 2 — NORMALISASI EMAIL
+         * ===========================================================
+         */
+
         $email = strtolower($request->email);
 
-        // ==========================================================
-        // 3️⃣ BUAT UNIQUE KEY UNTUK RATE LIMITER
-        // ==========================================================
-        // Key dibuat dari kombinasi:
-        // - email
-        // - IP address user
-        //
-        // Tujuannya:
-        // Supaya satu IP tidak bisa brute force satu email terus-menerus
-        $key = strtolower($email) . '|' . $request->ip();
 
-        // ==========================================================
-        // 4️⃣ CEK APAKAH SUDAH TERLALU BANYAK PERCOBAAN LOGIN
-        // ==========================================================
-        // Maksimal 5 percobaan dalam 60 detik
+
+        /**
+         * ===========================================================
+         * STEP 3 — RATE LIMITER KEY
+         * ===========================================================
+         *
+         * Menggunakan kombinasi:
+         * email + ip address
+         *
+         */
+
+        $key = $email . '|' . $request->ip();
+
+
+
+        /**
+         * ===========================================================
+         * STEP 4 — CEK BRUTE FORCE
+         * ===========================================================
+         */
+
         if (RateLimiter::tooManyAttempts($key, 5)) {
 
-            // Ambil sisa waktu lock (detik)
             $seconds = RateLimiter::availableIn($key);
 
             return back()->withErrors([
@@ -155,71 +264,93 @@ class AuthMagangController extends Controller
             ]);
         }
 
-        // ==========================================================
-        // 5️⃣ SIAPKAN CREDENTIAL UNTUK AUTH
-        // ==========================================================
+
+
+        /**
+         * ===========================================================
+         * STEP 5 — PREPARE CREDENTIALS
+         * ===========================================================
+         */
+
         $credentials = [
             'email' => $email,
             'password' => $request->password
         ];
 
-        // ==========================================================
-        // 6️⃣ COBA LOGIN SEBAGAI ADMIN (GUARD: web)
-        // ==========================================================
+
+
+        /**
+         * ===========================================================
+         * STEP 6 — LOGIN ADMIN
+         * ===========================================================
+         */
+
         if (Auth::guard('web')->attempt($credentials)) {
 
-            // Jika berhasil, hapus hit rate limiter
             RateLimiter::clear($key);
 
-            // Regenerate session (anti session fixation attack)
             $request->session()->regenerate();
 
             return redirect()->intended(route('admin.dashboard'));
         }
 
-        // ==========================================================
-        // 7️⃣ COBA LOGIN SEBAGAI PESERTA MAGANG (GUARD: magang)
-        // ==========================================================
+
+
+        /**
+         * ===========================================================
+         * STEP 7 — LOGIN PESERTA
+         * ===========================================================
+         */
+
         if (Auth::guard('magang')->attempt($credentials)) {
 
-            // Jika berhasil, hapus hit rate limiter
             RateLimiter::clear($key);
 
-            // Regenerate session untuk keamanan
             $request->session()->regenerate();
 
             return redirect()->route('dashboard.index');
         }
 
-        // ==========================================================
-        // 8️⃣ JIKA LOGIN GAGAL
-        // ==========================================================
-        // Tambahkan 1 hit percobaan login gagal
-        // Dan set durasi blokir selama 60 detik
+
+
+        /**
+         * ===========================================================
+         * STEP 8 — LOGIN GAGAL
+         * ===========================================================
+         */
+
         RateLimiter::hit($key, 60);
 
         return back()->withErrors([
-            'email' => 'Email tidak terdaftar sebagai Pegawai maupun Peserta Magang.',
+            'email' => 'Email atau password salah.',
         ])->onlyInput('email');
     }
 
-    // ==========================================================
-    // 3. LOGOUT (UNIVERSAL)
-    // ==========================================================
+
+
+    /**
+     * ===============================================================
+     * LOGOUT SYSTEM
+     * ===============================================================
+     *
+     * Menghandle logout untuk:
+     *
+     * - admin
+     * - peserta magang
+     *
+     */
 
     public function logout(Request $request)
     {
-        // Logout admin jika sedang login
+
         if (Auth::guard('web')->check()) {
             Auth::guard('web')->logout();
         }
 
-        // Logout peserta jika sedang login
         if (Auth::guard('magang')->check()) {
             Auth::guard('magang')->logout();
         }
 
-        // Hapus session
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

@@ -8,22 +8,68 @@ use App\Models\ApplicationMagang;
 
 class StatusMagangController extends Controller
 {
+
     /**
-     * Menampilkan riwayat status lamaran peserta.
+     * ===============================================================
+     * RIWAYAT STATUS LAMARAN PESERTA
+     * ===============================================================
+     *
+     * Halaman ini menampilkan:
+     * - daftar lamaran yang pernah diajukan
+     * - status masing-masing lamaran
+     *
+     * Status yang mungkin:
+     * - pending
+     * - verified
+     * - interview
+     * - accepted
+     * - rejected
+     *
      */
+
     public function index()
     {
-        // 1. Ambil data user yang sedang login dengan guard magang
+
+        /**
+         * ===========================================================
+         * STEP 1 — AMBIL USER LOGIN
+         * ===========================================================
+         */
+
         $user = Auth::guard('magang')->user();
 
-        // 2. Ambil data lamaran milik user tersebut
-        // Kita gunakan 'with' untuk me-load data lowongan (vacancy) agar tidak berat (Eager Loading)
-        $applications = ApplicationMagang::where('leader_user_id', $user->id)
-            ->with('vacancy') 
-            ->orderBy('submission_date', 'desc')
-            ->get();
 
-        // 3. Kirim data ke view
+
+        /**
+         * ===========================================================
+         * STEP 2 — AMBIL DATA LAMARAN USER
+         * ===========================================================
+         *
+         * Filtering berdasarkan:
+         * leader_user_id
+         *
+         * Eager loading:
+         * vacancy
+         *
+         * Tujuannya untuk menghindari N+1 query
+         *
+         */
+
+        $applications = ApplicationMagang::query()
+            ->where('leader_user_id', $user->id)
+            ->with('vacancy')
+            ->orderBy('submission_date', 'desc')
+            ->orderBy('id', 'desc')
+            ->paginate(10); // lebih scalable dibanding get()
+
+
+
+        /**
+         * ===========================================================
+         * STEP 3 — RETURN VIEW
+         * ===========================================================
+         */
+
         return view('magang.status.index', compact('applications'));
     }
 }
