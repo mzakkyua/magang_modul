@@ -37,6 +37,11 @@ class UserMagang extends Authenticatable implements CanResetPasswordContract
         return $this->password_hash;
     }
 
+    public function magangAccessRight()
+    {
+        return $this->hasOne(\App\Models\MagangAccessRight::class, 'user_id');
+    }
+
     /**
      * Relasi ke tabel profile_magang
      */
