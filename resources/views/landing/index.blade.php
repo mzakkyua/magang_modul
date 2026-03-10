@@ -6,7 +6,7 @@
 
 
     <!-- hero section -->
-    <div class="relative w-full h-80 md:h-[380px] overflow-hidden" id="home">
+    <div class="relative w-full h-80 md:h-95 overflow-hidden" id="home">
         <div class="absolute inset-0">
             <img src="https://upload.wikimedia.org/wikipedia/commons/b/b2/New_office.jpg" alt="Background Image"
                 class="object-cover object-center w-full h-full" />
