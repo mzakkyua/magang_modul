@@ -110,25 +110,7 @@
             </div>
         </div>
     </section>
-    <!-- hero seciton -->
-    <div class="relative w-full h-80" id="home">
-        <div class="absolute inset-0 opacity-70">
-            <img src="https://image1.jdomni.in/banner/13062021/0A/52/CC/1AF5FC422867D96E06C4B7BD69_1623557926542.png"
-                class="w-full h-full object-cover object-center">
-        </div>
-
-        <div class="absolute inset-9 flex items-center">
-            <div class="md:w-1/2">
-                <h1 class="text-3xl md:text-4xl font-semibold text-gray-800">
-                    Temukan Tempat Magang Impianmu
-                </h1>
-
-                <p class="text-lg mt-4">
-                    Bergabunglah dengan Dinas Tenaga Kerja untuk pengalaman magang yang nyata
-                </p>
-            </div>
-        </div>
-        </section>
+   
 
 
         {{-- SEARCH --}}
@@ -228,48 +210,6 @@
         </section>
 
 
-
-        {{-- PROGRAM MAGANG --}}
-        <section class="py-10">
-
-            <div class="container mx-auto px-4">
-
-                <h2 class="text-3xl font-bold text-center mb-8">
-                    Program Magang
-                </h2>
-
-                <div class="grid md:grid-cols-3 gap-8">
-
-                    @for ($i = 1; $i <= 3; $i++)
-                        <div class="bg-white rounded-lg shadow overflow-hidden">
-
-                            <img src="https://images.unsplash.com/photo-1606854428728-5fe3eea23475"
-                                class="w-full h-64 object-cover">
-
-                            <div class="p-6 text-center">
-
-                                <h3 class="text-xl font-medium mb-2">
-                                    Program Magang {{ $i }}
-                                </h3>
-
-                                <p class="text-gray-600 text-sm">
-                                    Program pelatihan kerja untuk meningkatkan keterampilan peserta
-                                    magang agar siap menghadapi dunia kerja.
-                                </p>
-
-                            </div>
-
-                        </div>
-                    @endfor
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-
         {{-- ABOUT --}}
         <section class="bg-gray-100 py-16">
 
@@ -305,28 +245,46 @@
         </section>
 
 
+<!-- gallery -->
+<section class="text-gray-700 body-font" id="gallery">
+    <div class="flex justify-center text-3xl font-bold text-gray-800 text-center py-10">
+        Dokumentasi Magang
+    </div>
 
+    <div class="grid grid-cols-1 place-items-center sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+
+        <div class="group relative">
+            <img
+      src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-1.jpeg"
+      alt="Image 1"
+      class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105"
+    />
+        </div>
+
+        <div class="group relative">
+            <img
+      src="https://www.suarasurabaya.net/wp-content/uploads/2023/01/Kegiatan-Uji-Kompetensi-Kejuruan-HMI-Berbasis-PLC-yang-dilakukan-UPT-Balai-Latihan-Kerja-Surabaya-735x493.jpg.webp"
+      alt="Image 1"
+      class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105"
+    />
+        </div>
+
+        <div class="group relative">
+            <img
+      src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-2.jpeg"
+      alt="Image 1"
+      class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105"
+    />
+        </div>
+        <div class="group relative">
+            <img
+      src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-3.jpeg"
+      alt="Image 1"
+      class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105"
+    />
+        </div>
+
+        
         <!-- Repeat this div for each image -->
     </div>
-
-    <div class="group relative">
-        <img src="https://www.suarasurabaya.net/wp-content/uploads/2023/01/Kegiatan-Uji-Kompetensi-Kejuruan-HMI-Berbasis-PLC-yang-dilakukan-UPT-Balai-Latihan-Kerja-Surabaya-735x493.jpg.webp"
-            alt="Image 1"
-            class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105" />
-    </div>
-
-    <div class="group relative">
-        <img src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-2.jpeg" alt="Image 1"
-            class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105" />
-    </div>
-    <div class="group relative">
-        <img src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-3.jpeg" alt="Image 1"
-            class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105" />
-    </div>
-
-
-    <!-- Repeat this div for each image -->
-    </div>
-
-    </section>
 @endsection

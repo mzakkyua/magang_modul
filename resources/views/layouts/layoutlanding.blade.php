@@ -113,6 +113,8 @@
 
     @yield('content')
 
+@if (!isset($hideFooter))
+    
 
     <footer id="footer" class="bg-gray-800 text-white pt-16 pb-8 text-sm">
 
@@ -185,8 +187,10 @@
                     Manajemen Magang.</p>
             </div>
         </div>
-    </footer>
+    </footer> 
+    @endif
     @stack('script')
+    
 </body>
 
 </html>
