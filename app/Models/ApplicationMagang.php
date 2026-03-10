@@ -10,14 +10,22 @@ class ApplicationMagang extends Model
 
     // Matikan timestamp default (created_at/updated_at) 
     // karena di migration kita cuma buat 'submission_date' manual
-    public $timestamps = false; 
+    public $timestamps = false;
 
     protected $fillable = [
-        'vacancy_id', 'leader_user_id', 'research_title', 
+        'vacancy_id',
+        'leader_user_id',
+        'research_title',
         'research_abstract',
-        'submission_date', 'status', 'admin_feedback'
+        'submission_date',
+        'status',
+        'admin_feedback'
     ];
-    
+
+    protected $casts = [
+        'submission_date' => 'datetime',
+    ];
+
     // Agar submission_date otomatis terisi saat create
     protected static function boot()
     {
@@ -27,17 +35,25 @@ class ApplicationMagang extends Model
         });
     }
 
+    /**
+     * Relasi ke Lowongan
+     */
     public function vacancy()
     {
         return $this->belongsTo(VacancyMagang::class, 'vacancy_id');
     }
 
+    /**
+     * Ketua kelompok
+     */
     public function leader()
     {
         return $this->belongsTo(UserMagang::class, 'leader_user_id');
     }
 
-    // Relasi ke Anggota
+    /**
+     * Semua anggota
+     */
     public function members()
     {
         return $this->hasMany(ApplicationMemberMagang::class, 'application_id');

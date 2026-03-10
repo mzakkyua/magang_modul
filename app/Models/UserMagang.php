@@ -44,4 +44,14 @@ class UserMagang extends Authenticatable implements CanResetPasswordContract
     {
         return $this->hasOne(ProfileMagang::class, 'user_id');
     }
+
+    public function applications()
+    {
+        return $this->hasMany(ApplicationMagang::class, 'leader_user_id');
+    }
+
+    public function memberOf()
+    {
+        return $this->hasMany(ApplicationMemberMagang::class, 'user_id');
+    }
 }

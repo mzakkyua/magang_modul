@@ -162,8 +162,8 @@ class AdminDashboardController extends Controller
              * - Lowongan magang
              * =================================================== */
             $pendaftaranQuery = ApplicationMagang::with([
-                'leader.user:id,name',
-                'leader.user.profile:id,user_id,institution_name',
+                'leader:id,username,email',
+                'leader.profile:id,user_id,institution_name',
                 'vacancy:id,title,division_name'
             ])
                 ->orderByDesc('submission_date');
