@@ -8,43 +8,75 @@ class ApplicationMagang extends Model
 {
     protected $table = 'applications_magang';
 
-    // Matikan timestamp default (created_at/updated_at) 
-    // karena di migration kita cuma buat 'submission_date' manual
+    /**
+     * =====================================================
+     * TIMESTAMP
+     * =====================================================
+     * Tabel tidak menggunakan created_at / updated_at
+     * karena hanya menggunakan submission_date.
+     */
     public $timestamps = false;
 
+    /**
+     * =====================================================
+     * MASS ASSIGNMENT
+     * =====================================================
+     */
     protected $fillable = [
         'vacancy_id',
         'leader_user_id',
         'research_title',
         'research_abstract',
-        'submission_date',
         'status',
         'admin_feedback'
     ];
 
+    /**
+     * =====================================================
+     * CASTING
+     * =====================================================
+     */
     protected $casts = [
         'submission_date' => 'datetime',
     ];
 
-    // Agar submission_date otomatis terisi saat create
-    protected static function boot()
+    /**
+     * =====================================================
+     * STATUS CONSTANT
+     * =====================================================
+     */
+    const STATUS_PENDING = 'pending';
+    const STATUS_VERIFIED = 'verified';
+    const STATUS_INTERVIEW = 'interview';
+    const STATUS_ACCEPTED = 'accepted';
+    const STATUS_REJECTED = 'rejected';
+
+    /**
+     * =====================================================
+     * AUTO SET SUBMISSION DATE
+     * =====================================================
+     */
+    protected static function booted()
     {
-        parent::boot();
         static::creating(function ($model) {
             $model->submission_date = now();
         });
     }
 
     /**
-     * Relasi ke Lowongan
+     * =====================================================
+     * RELATION: VACANCY
+     * =====================================================
      */
     public function vacancy()
     {
-        return $this->belongsTo(VacancyMagang::class, 'vacancy_id');
+        return $this->belongsTo(VacancyMagang::class);
     }
 
     /**
-     * Ketua kelompok
+     * =====================================================
+     * RELATION: LEADER
+     * =====================================================
      */
     public function leader()
     {
@@ -52,7 +84,9 @@ class ApplicationMagang extends Model
     }
 
     /**
-     * Semua anggota
+     * =====================================================
+     * RELATION: MEMBERS
+     * =====================================================
      */
     public function members()
     {

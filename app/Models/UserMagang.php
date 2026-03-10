@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-// Trait & Contract untuk fitur reset password
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 
@@ -14,12 +13,16 @@ class UserMagang extends Authenticatable implements CanResetPasswordContract
     use Notifiable, CanResetPassword;
 
     /**
-     * Nama tabel khusus untuk peserta magang
+     * =====================================================
+     * TABLE NAME
+     * =====================================================
      */
     protected $table = 'users_magang';
 
     /**
-     * Field yang boleh diisi mass assignment
+     * =====================================================
+     * MASS ASSIGNMENT
+     * =====================================================
      */
     protected $fillable = [
         'username',
@@ -28,35 +31,70 @@ class UserMagang extends Authenticatable implements CanResetPasswordContract
     ];
 
     /**
-     * Mapping field password custom.
-     * Laravel default cari kolom 'password',
-     * tapi kita pakai 'password_hash'.
+     * =====================================================
+     * HIDDEN ATTRIBUTE
+     * =====================================================
+     */
+    protected $hidden = [
+        'password_hash',
+    ];
+
+    /**
+     * =====================================================
+     * ATTRIBUTE CASTING
+     * =====================================================
+     */
+    protected $casts = [
+        'password_hash' => 'hashed'
+    ];
+
+    /**
+     * =====================================================
+     * CUSTOM PASSWORD COLUMN
+     * =====================================================
      */
     public function getAuthPassword()
     {
         return $this->password_hash;
     }
 
-    public function magangAccessRight()
-    {
-        return $this->hasOne(\App\Models\MagangAccessRight::class, 'user_id');
-    }
-
     /**
-     * Relasi ke tabel profile_magang
+     * =====================================================
+     * RELATION: PROFILE
+     * =====================================================
      */
     public function profile()
     {
         return $this->hasOne(ProfileMagang::class, 'user_id');
     }
 
+    /**
+     * =====================================================
+     * RELATION: APPLICATION AS LEADER
+     * =====================================================
+     */
     public function applications()
     {
         return $this->hasMany(ApplicationMagang::class, 'leader_user_id');
     }
 
+    /**
+     * =====================================================
+     * RELATION: APPLICATION MEMBER
+     * =====================================================
+     */
     public function memberOf()
     {
         return $this->hasMany(ApplicationMemberMagang::class, 'user_id');
+    }
+
+    /**
+     * =====================================================
+     * HELPER: PROFILE COMPLETENESS
+     * =====================================================
+     */
+    public function hasCompleteProfile()
+    {
+        return $this->profile && $this->profile->isComplete();
     }
 }
