@@ -122,20 +122,20 @@ class AssessmentController extends Controller
      */
     public function create($member_id)
     {
-        // Validasi hak akses admin terhadap peserta ini
-        $this->checkAccess($member_id);
+        /*
+    ==============================================================
+    1. VALIDASI AKSES + AMBIL DATA PESERTA
+    ==============================================================
+    checkAccess sekarang mengembalikan object member
+    sehingga tidak perlu query ulang.
+    */
+        $member = $this->checkAccess($member_id);
 
-        /* =====================================================
-         * Ambil data peserta + lowongan
-         * ===================================================== */
-        $member = ApplicationMemberMagang::with([
-            'user.profile',
-            'application.vacancy'
-        ])->findOrFail($member_id);
-
-        /* =====================================================
-         * Cek apakah peserta sudah pernah dinilai
-         * ===================================================== */
+        /*
+    ==============================================================
+    2. CEK APAKAH PESERTA SUDAH PERNAH DINILAI
+    ==============================================================
+    */
         $existingAssessment = AssessmentMagang::where('member_id', $member_id)->first();
 
         return view(
@@ -161,12 +161,18 @@ class AssessmentController extends Controller
      */
     public function store(Request $request, $member_id)
     {
-        // Security check ulang (POST / API safe)
-        $this->checkAccess($member_id);
+        /*
+    ==============================================================
+    1. VALIDASI AKSES + AMBIL DATA PESERTA
+    ==============================================================
+    */
+        $member = $this->checkAccess($member_id);
 
-        /* =====================================================
-         * 1. VALIDASI INPUT NILAI
-         * ===================================================== */
+        /*
+    ==============================================================
+    2. VALIDASI INPUT NILAI
+    ==============================================================
+    */
         $request->validate([
             'score_behavior'    => 'required|numeric|min:0|max:100',
             'score_discipline'  => 'required|numeric|min:0|max:100',
@@ -175,29 +181,29 @@ class AssessmentController extends Controller
             'additional_notes'  => 'nullable|string',
         ]);
 
-        /* =====================================================
-         * 2. HITUNG SKOR AKHIR
-         * =====================================================
-         * Rumus:
-         * (Perilaku + Disiplin + Kinerja) / 3
-         * ===================================================== */
+        /*
+    ==============================================================
+    3. HITUNG SKOR AKHIR
+    ==============================================================
+    */
         $finalScore = (
             $request->score_behavior +
             $request->score_discipline +
             $request->score_performance
         ) / 3;
 
-        /* =====================================================
-         * 3. AMBIL NAMA PENILAI OTOMATIS
-         * ===================================================== */
+        /*
+    ==============================================================
+    4. AMBIL NAMA PENILAI
+    ==============================================================
+    */
         $namaPenilai = Auth::user()->name ?? 'Admin Magang';
 
-        /* =====================================================
-         * 4. SIMPAN NILAI (UPSERT)
-         * =====================================================
-         * - Jika sudah ada → UPDATE
-         * - Jika belum → CREATE
-         * ===================================================== */
+        /*
+    ==============================================================
+    5. SIMPAN NILAI (UPSERT)
+    ==============================================================
+    */
         AssessmentMagang::updateOrCreate(
             ['member_id' => $member_id],
             [
@@ -211,7 +217,6 @@ class AssessmentController extends Controller
             ]
         );
 
-        // Bersihkan cache dashboard agar statistik ter-update
         DashboardCache::clear();
 
         return redirect()
@@ -239,25 +244,62 @@ class AssessmentController extends Controller
      */
     private function checkAccess($memberId)
     {
+        /*
+    ==============================================================
+    1. AMBIL DATA ADMIN LOGIN
+    ==============================================================
+    */
         $userId = Auth::id();
+
         $hakAkses = MagangAccessRight::where('user_id', $userId)->first();
 
-        // Ambil data peserta target
-        $targetMember = ApplicationMemberMagang::with(
-            'application.vacancy'
-        )->findOrFail($memberId);
-
-        // Superadmin → bebas akses
-        if ($hakAkses->role === 'superadmin') {
-            return;
+        /*
+    ==============================================================
+    2. VALIDASI ADMIN MEMILIKI HAK AKSES
+    ==============================================================
+    */
+        if (!$hakAkses) {
+            abort(403, 'Anda tidak memiliki hak akses penilaian.');
         }
 
-        // Admin bidang → hanya divisi sendiri
+        /*
+    ==============================================================
+    3. AMBIL DATA PESERTA TARGET
+    ==============================================================
+    Eager loading digunakan untuk menghindari query tambahan
+    ketika mengakses divisi vacancy.
+    */
+        $targetMember = ApplicationMemberMagang::with([
+            'user.profile',
+            'application.vacancy'
+        ])->findOrFail($memberId);
+
+        /*
+    ==============================================================
+    4. SUPERADMIN → BEBAS AKSES
+    ==============================================================
+    */
+        if ($hakAkses->role === 'superadmin') {
+            return $targetMember;
+        }
+
+        /*
+    ==============================================================
+    5. VALIDASI DIVISI ADMIN
+    ==============================================================
+    */
         if ($hakAkses->division_name !== $targetMember->application->vacancy->division_name) {
             abort(
                 403,
                 'AKSES DITOLAK: Anda tidak berhak menilai peserta dari divisi lain.'
             );
         }
+
+        /*
+    ==============================================================
+    6. RETURN DATA PESERTA
+    ==============================================================
+    */
+        return $targetMember;
     }
 }
