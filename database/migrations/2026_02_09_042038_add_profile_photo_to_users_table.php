@@ -6,23 +6,32 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up()
     {
+        /**
+         * ======================================================
+         * TAMBAH FOTO PROFIL ADMIN
+         * ======================================================
+         *
+         * Kolom ini menyimpan path file foto profil
+         * admin/pegawai instansi.
+         *
+         * File disimpan di storage dan hanya path
+         * yang disimpan di database.
+         */
+
         Schema::table('users', function (Blueprint $table) {
-            // Kolom untuk menyimpan path/alamat gambar. Nullable karena awal daftar belum punya foto.
-            $table->string('profile_photo_path', 2048)->nullable()->after('email');
+
+            $table->string('profile_photo_path', 255)
+                ->nullable()
+                ->after('email');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down()
     {
         Schema::table('users', function (Blueprint $table) {
+
             $table->dropColumn('profile_photo_path');
         });
     }

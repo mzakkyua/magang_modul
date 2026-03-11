@@ -18,22 +18,31 @@ return new class extends Migration
             $table->text('research_abstract')->nullable(); // Abstrak (NEW)
             // --------------------------------
             $table->timestamp('submission_date')->useCurrent();
-            
+
             // Logic Kuota: Rejected = Restock
             $table->enum('status', ['pending', 'verified', 'interview', 'accepted', 'rejected', 'completed'])
                 ->default('pending');
-            
+
             $table->text('admin_feedback')->nullable();
         });
 
         // 2. Members (Detail Anggota)
         Schema::create('application_members_magang', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('application_id')->constrained('applications_magang')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('users_magang');
-            
-            // Dashboard Statistik
-            $table->enum('individual_status', ['active', 'dropped_out', 'finished'])->default('active');
+
+            $table->foreignId('application_id')
+                ->constrained('applications_magang')
+                ->cascadeOnDelete();
+
+            $table->foreignId('user_id')
+                ->constrained('users_magang')
+                ->cascadeOnDelete();
+
+            $table->enum('individual_status', ['active', 'dropped_out', 'finished'])
+                ->default('active');
+
+            // Prevent duplicate member
+            $table->unique(['application_id', 'user_id']);
         });
 
         // 3. Assessments (Penilaian)
@@ -41,20 +50,20 @@ return new class extends Migration
             $table->id();
             $table->foreignId('member_id')->constrained('application_members_magang')->onDelete('cascade');
             $table->string('assessor_name', 150);
-            
+
             $table->decimal('score_behavior', 5, 2)->default(0);
             $table->decimal('score_discipline', 5, 2)->default(0);
             $table->decimal('score_performance', 5, 2)->default(0);
-            
+
             // Final score dihitung di query/model accessor, 
             // tapi kita simpan kolomnya jika ingin generated column (MySQL 5.7+)
             // Note: Laravel migration support generated column via raw query, 
             // tapi agar aman di semua DB driver, kita pakai decimal biasa dulu, hitung di Controller.
-            $table->decimal('final_score', 5, 2)->default(0); 
-            
+            $table->decimal('final_score', 5, 2)->default(0);
+
             $table->text('evaluation_notes')->nullable(); // Catatan Resmi
             $table->text('additional_notes')->nullable(); // Catatan NB
-            
+
             $table->timestamp('created_at')->useCurrent();
         });
 
@@ -62,7 +71,7 @@ return new class extends Migration
         Schema::create('certificates_magang', function (Blueprint $table) {
             $table->id();
             $table->foreignId('member_id')->constrained('application_members_magang')->onDelete('cascade');
-            $table->string('certificate_number', 100); // Input Manual
+            $table->string('certificate_number', 100)->unique();
             $table->string('file_path'); // Upload Manual
             $table->timestamp('uploaded_at')->useCurrent();
         });
