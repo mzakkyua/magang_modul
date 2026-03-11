@@ -2,7 +2,7 @@
 @section('title', 'Dashboard Peserta')
 
 @section('content')
-  <!-- hero section -->
+    <!-- hero section -->
     <div class="relative w-full h-80 md:h-95 overflow-hidden" id="home">
         <div class="absolute inset-0">
             <img src="https://upload.wikimedia.org/wikipedia/commons/b/b2/New_office.jpg" alt="Background Image"
@@ -107,180 +107,143 @@
             </div>
         </div>
     </section>
-   
-
-
-            {{-- ================= SEARCH ================= --}}
-            <section class="px-10 py-10">
-
-                <div class="max-w-xl mx-auto">
-
-                    <form action="{{ route('landing.index') }}" method="GET"
-                        class="flex gap-2 bg-white p-2 rounded-lg shadow">
-
-                        <input type="text" name="search" placeholder="Cari posisi magang..."
-                            class="flex-1 px-4 py-2 outline-none rounded-md">
-
-                        <button type="submit" class="bg-blue-800 text-white px-6 py-2 rounded-md">
-
-                            Cari
-                        </button>
-
-                    </form>
-
-                </div>
 
 
 
-                {{-- ================= LOWONGAN ================= --}}
-                <div class="max-w-7xl mx-auto py-12">
+    {{-- ================= SEARCH ================= --}}
+    <section class="px-10 py-10">
 
-                    <h2 class="text-3xl font-bold mb-6 border-l-4 border-blue-600 pl-4">
-                        Lowongan Tersedia
-                    </h2>
+        <div class="max-w-xl mx-auto">
 
+            <form action="{{ route('dashboard.index') }}" method="GET" class="flex gap-2 bg-white p-2 rounded-lg shadow">
 
-                    {{-- ================= TAB NAVIGATION ================= --}}
-                    {{-- 
-Tab ini menggunakan JavaScript sederhana.
-Jika nanti ingin upgrade:
-- AlpineJS
-- Livewire
---}}
-                    <div class="flex gap-6 border-b mb-8">
+                <input type="text" name="search" placeholder="Cari posisi magang..."
+                    class="flex-1 px-4 py-2 outline-none rounded-md">
 
-                        <button onclick="showTab('semua')" id="btn-semua"
-                            class="border-b-2 border-blue-600 pb-2 font-semibold">
-                            Semua
-                        </button>
+                <button type="submit" class="bg-blue-800 text-white px-6 py-2 rounded-md">
 
-                        <button onclick="showTab('magang')" id="btn-magang" class="text-gray-500 pb-2">
-                            Magang
-                        </button>
+                    Cari
+                </button>
 
-                        <button onclick="showTab('penelitian')" id="btn-penelitian" class="text-gray-500 pb-2">
-                            Penelitian
-                        </button>
+            </form>
 
-                    </div>
-
-
-
-                    {{-- ================= TAB SEMUA ================= --}}
-                    <div id="tab-semua">
-
-                        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-                            {{-- tampilkan semua magang --}}
-                            @foreach ($vacanciesMagang as $job)
-                                <x-job-card :job="$job" />
-                            @endforeach
-
-
-                            {{-- tampilkan semua penelitian --}}
-                            @foreach ($vacanciesPenelitian as $job)
-                                <x-job-card :job="$job" />
-                            @endforeach
-
-                        </div>
-                    </div>
-                    </div>
-                </div>
         </div>
-        </section>
 
-      
+        {{-- ================= LOWONGAN ================= --}}
+        <div class="max-w-7xl mx-auto py-12">
+            <h2 class="text-3xl font-bold mb-6 border-l-4 border-blue-600 pl-4">Lowongan Tersedia</h2>
+
+            {{-- NAVIGATION TAB --}}
+            <div class="flex gap-6 border-b mb-8">
+
+    <button data-tab="semua" id="btn-semua"
+        class="tab-btn border-b-2 border-blue-600 pb-2 font-semibold">
+        Semua
+    </button>
+
+    <button data-tab="magang" id="btn-magang"
+        class="tab-btn pb-2 text-gray-500">
+        Magang
+    </button>
+
+    <button data-tab="penelitian" id="btn-penelitian"
+        class="tab-btn pb-2 text-gray-500">
+        Penelitian
+    </button>
+
+</div>
 
 
-        {{-- ================= TIMELINE ================= --}}
-        <section class="bg-gray-100 py-16">
+            {{-- ================= TAB SEMUA ================= --}}
+           <div id="tab-semua">
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @foreach ($vacanciesMagang as $job)
+            <x-job-card :job="$job" />
+        @endforeach
 
-            <div class="container mx-auto grid md:grid-cols-2 gap-8">
+        @foreach ($vacanciesPenelitian as $job)
+            <x-job-card :job="$job" />
+        @endforeach
+    </div>
+</div>
 
-                <div>
 
-                    <h2 class="text-3xl font-bold mb-4">
-                        Timeline Magang
-                    </h2>
+            {{-- ================= TAB MAGANG ================= --}}
+            <div id="tab-magang" class="hidden">
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @foreach ($vacanciesMagang as $job)
+            <x-job-card :job="$job" />
+        @endforeach
+    </div>
+</div>
 
-                    <p class="text-gray-600">
-                        Peserta dapat melihat periode kegiatan magang,
-                        tanggal mulai hingga selesai.
-                    </p>
 
-                </div>
+            {{-- ================= TAB PENELITIAN ================= --}}
+            <div id="tab-penelitian" class="hidden">
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        @foreach ($vacanciesPenelitian as $job)
+            <x-job-card :job="$job" />
+        @endforeach
+    </div>
+</div>
+    </section>
 
-                <div class="bg-white p-4 rounded-xl shadow">
 
-                    @include('calendar')
+    {{-- ================= TIMELINE ================= --}}
+    <section class="bg-gray-100 py-16">
 
-                </div>
+        <div class="container mx-auto grid md:grid-cols-2 gap-8">
+
+            <div>
+
+                <h2 class="text-3xl font-bold mb-4">
+                    Timeline Magang
+                </h2>
+
+                <p class="text-gray-600">
+                    Peserta dapat melihat periode kegiatan magang,
+                    tanggal mulai hingga selesai.
+                </p>
 
             </div>
 
-        </section>
-<!-- gallery -->
-<section class="text-gray-700 body-font" id="gallery">
-    <div class="flex justify-center text-3xl font-bold text-gray-800 text-center py-10">
-        Dokumentasi Magang
-    </div>
+            <div class="bg-white p-4 rounded-xl shadow">
 
-    <div class="grid grid-cols-1 place-items-center sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+                @include('calendar')
 
-        <div class="group relative">
-            <img
-      src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-1.jpeg"
-      alt="Image 1"
-      class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105"
-    />
+            </div>
+
         </div>
 
-        <div class="group relative">
-            <img
-      src="https://www.suarasurabaya.net/wp-content/uploads/2023/01/Kegiatan-Uji-Kompetensi-Kejuruan-HMI-Berbasis-PLC-yang-dilakukan-UPT-Balai-Latihan-Kerja-Surabaya-735x493.jpg.webp"
-      alt="Image 1"
-      class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105"
-    />
+    </section>
+    <!-- gallery -->
+    <section class="text-gray-700 body-font" id="gallery">
+        <div class="flex justify-center text-3xl font-bold text-gray-800 text-center py-10">
+            Dokumentasi Magang
         </div>
 
-        <div class="group relative">
-            <img
-      src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-2.jpeg"
-      alt="Image 1"
-      class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105"
-    />
+        <div class="grid grid-cols-1 place-items-center sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+
+            <div class="group relative">
+                <img src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-1.jpeg" alt="Image 1"
+                    class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105" />
+            </div>
+
+            <div class="group relative">
+                <img src="https://www.suarasurabaya.net/wp-content/uploads/2023/01/Kegiatan-Uji-Kompetensi-Kejuruan-HMI-Berbasis-PLC-yang-dilakukan-UPT-Balai-Latihan-Kerja-Surabaya-735x493.jpg.webp"
+                    alt="Image 1"
+                    class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105" />
+            </div>
+
+            <div class="group relative">
+                <img src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-2.jpeg"
+                    alt="Image 1"
+                    class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105" />
+            </div>
+            <div class="group relative">
+                <img src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-3.jpeg"
+                    alt="Image 1"
+                    class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105" />
+            </div>
         </div>
-        <div class="group relative">
-            <img
-      src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-3.jpeg"
-      alt="Image 1"
-      class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105"
-    />
-        </div>
-    </div>
-
-
-        {{-- ================= SCRIPT TAB ================= --}}
-        <script>
-            function showTab(tab) {
-
-                // sembunyikan semua tab
-                document.getElementById('tab-semua').classList.add('hidden');
-                document.getElementById('tab-magang').classList.add('hidden');
-                document.getElementById('tab-penelitian').classList.add('hidden');
-
-                // reset style tombol
-                document.getElementById('btn-semua').classList.remove('border-blue-600');
-                document.getElementById('btn-magang').classList.remove('border-blue-600');
-                document.getElementById('btn-penelitian').classList.remove('border-blue-600');
-
-                // tampilkan tab aktif
-                document.getElementById('tab-' + tab).classList.remove('hidden');
-
-                // highlight tombol aktif
-                document.getElementById('btn-' + tab).classList.add('border-blue-600');
-
-            }
-        </script>
-
     @endsection

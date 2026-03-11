@@ -19,7 +19,6 @@
                         <th class="px-6 py-4 font-bold uppercase text-xs">Posisi Magang</th>
                         <th class="px-6 py-4 font-bold uppercase text-xs text-center">Tanggal Pengajuan</th>
                         <th class="px-6 py-4 font-bold uppercase text-xs text-center">Status Pengajuan</th>
-                        <th class="px-6 py-4 font-bold uppercase text-xs text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -41,11 +40,6 @@
                             @else
                                 <span class="bg-amber-100 text-amber-600 px-4 py-1.5 rounded-full text-xs font-bold uppercase border border-amber-200">Menunggu Review</span>
                             @endif
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            <a href="#" class="bg-amber-400 hover:bg-amber-500 text-white px-4 py-2 rounded-lg text-xs font-bold transition shadow-sm">
-                                Buka
-                            </a>
                         </td>
                     </tr>
                     @empty

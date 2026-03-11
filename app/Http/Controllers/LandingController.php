@@ -24,6 +24,8 @@ class LandingController extends Controller
     public function index(Request $request)
     {
 
+
+    
         /**
          * ===========================================================
          * STEP 1 — BASE QUERY

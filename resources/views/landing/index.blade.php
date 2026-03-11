@@ -111,9 +111,7 @@
         </div>
     </section>
    
-
-
-        {{-- SEARCH --}}
+     {{-- SEARCH --}}
         <section class="px-10 py-10" id="lowongan">
 
             <div class="max-w-xl mx-auto">
@@ -208,7 +206,6 @@
             </div>
 
         </section>
-
 
         {{-- ABOUT --}}
         <section class="bg-gray-100 py-16">
