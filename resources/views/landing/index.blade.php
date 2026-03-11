@@ -111,101 +111,176 @@
         </div>
     </section>
    
-     {{-- SEARCH --}}
-        <section class="px-10 py-10" id="lowongan">
+    {{-- SEARCH --}}
+    <section class="px-10 py-10">
+<div class="max-w-2xl mx-auto mb-10">
 
-            <div class="max-w-xl mx-auto">
-                <form action="{{ route('landing.index') }}" method="GET"
-                    class="flex gap-2 bg-white p-2 rounded-lg shadow-lg">
+<form action="{{ route('landing.index') }}" method="GET"
+class="flex gap-2 bg-white p-2 rounded-lg shadow">
 
-                    <input type="text" name="search" placeholder="Cari posisi magang..."
-                        class="flex-1 px-4 py-2 outline-none rounded-md">
+<input
+type="text"
+name="search"
+value="{{ request('search') }}"
+placeholder="Cari posisi magang..."
+class="flex-1 px-4 py-2 outline-none rounded-md">
 
-                    <button type="submit"
-                        class="bg-blue-800 hover:bg-blue-900 text-white px-6 py-2 rounded-md font-semibold">
-                        Cari
-                    </button>
+<button
+class="bg-blue-700 text-white px-6 py-2 rounded-md">
+Cari
+</button>
 
-                </form>
-            </div>
+</form>
 
-
-
-            {{-- LOWONGAN --}}
-            <div class="max-w-7xl mx-auto py-12">
-
-                <h2 class="text-3xl font-bold mb-6 border-l-4 border-blue-600 pl-4">
-                    Lowongan Terbaru
-                </h2>
-
-
-                {{-- TAB BUTTON --}}
-                <div class="flex gap-6 border-b mb-8">
-
-                    <button onclick="showTab('semua')" id="btn-semua"
-                        class="tab-btn border-b-2 border-blue-600 pb-2 font-semibold">
-                        Semua
-                    </button>
-
-                    <button onclick="showTab('magang')" id="btn-magang" class="tab-btn pb-2 text-gray-500">
-                        Magang
-                    </button>
-
-                    <button onclick="showTab('penelitian')" id="btn-penelitian" class="tab-btn pb-2 text-gray-500">
-                        Penelitian
-                    </button>
-
-                </div>
+</div>
 
 
 
-                {{-- TAB SEMUA --}}
-                <div id="tab-semua">
+{{-- HASIL SEARCH --}}
+@if($search)
 
-                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+<div class="max-w-7xl mx-auto mb-6 text-gray-600">
 
-                        @foreach ($vacancies as $job)
-                            <x-job-card :job="$job" />
-                        @endforeach
+Hasil pencarian untuk :
+<span class="font-semibold text-blue-700">
+"{{ $search }}"
+</span>
 
-                    </div>
+<a href="{{ route('landing.index') }}"
+class="ml-2 text-blue-600 text-sm">
+Reset
+</a>
 
-                </div>
+</div>
 
-
-
-                {{-- TAB MAGANG --}}
-                <div id="tab-magang" class="hidden">
-
-                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-                        @foreach ($vacancies->where('type', 'magang') as $job)
-                            <x-job-card :job="$job" />
-                        @endforeach
-
-                    </div>
-
-                </div>
+@endif
 
 
 
-                {{-- TAB PENELITIAN --}}
-                <div id="tab-penelitian" class="hidden">
+{{-- LOWONGAN --}}
+<div class="max-w-7xl mx-auto">
 
-                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-                        @foreach ($vacancies->where('type', 'penelitian') as $job)
-                            <x-job-card :job="$job" />
-                        @endforeach
-
-                    </div>
-
-                </div>
+<h2 class="text-3xl font-bold mb-6 border-l-4 border-blue-600 pl-4">
+Lowongan Tersedia
+</h2>
 
 
-            </div>
 
-        </section>
+{{-- FILTER TAB --}}
+<div class="flex gap-6 border-b mb-8">
+
+<button data-tab="semua"
+id="btn-semua"
+class="tab-btn border-b-2 border-blue-600 pb-2 font-semibold">
+
+Semua
+
+</button>
+
+<button data-tab="magang"
+id="btn-magang"
+class="tab-btn pb-2 text-gray-500">
+
+Magang
+
+</button>
+
+<button data-tab="penelitian"
+id="btn-penelitian"
+class="tab-btn pb-2 text-gray-500">
+
+Penelitian
+
+</button>
+
+</div>
+
+
+
+{{-- TAB SEMUA --}}
+<div id="tab-semua">
+
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+@forelse ($vacanciesMagang as $job)
+
+<x-job-card :job="$job"/>
+
+@empty
+@endforelse
+
+
+@forelse ($vacanciesPenelitian as $job)
+
+<x-job-card :job="$job"/>
+
+@empty
+@endforelse
+
+
+@if($vacanciesMagang->isEmpty() && $vacanciesPenelitian->isEmpty())
+
+<div class="col-span-3 text-center py-20 text-gray-500">
+
+Maaf, lowongan tidak ditemukan
+
+</div>
+
+@endif
+
+</div>
+
+</div>
+
+
+
+{{-- TAB MAGANG --}}
+<div id="tab-magang" class="hidden">
+
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+@forelse ($vacanciesMagang as $job)
+
+<x-job-card :job="$job"/>
+
+@empty
+
+<div class="col-span-3 text-center py-20 text-gray-500">
+Maaf, lowongan magang tidak ditemukan
+</div>
+
+@endforelse
+
+</div>
+
+</div>
+
+
+
+{{-- TAB PENELITIAN --}}
+<div id="tab-penelitian" class="hidden">
+
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+@forelse ($vacanciesPenelitian as $job)
+
+<x-job-card :job="$job"/>
+
+@empty
+
+<div class="col-span-3 text-center py-20 text-gray-500">
+Maaf, lowongan penelitian tidak ditemukan
+</div>
+
+@endforelse
+
+</div>
+
+</div>
+
+</div>
+
+</section>
 
         {{-- ABOUT --}}
         <section class="bg-gray-100 py-16">

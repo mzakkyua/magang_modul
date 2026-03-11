@@ -108,86 +108,179 @@
         </div>
     </section>
 
+<section class="px-10 py-10">
 
+{{-- SEARCH --}}
+<div class="max-w-2xl mx-auto mb-10">
 
-    {{-- ================= SEARCH ================= --}}
-    <section class="px-10 py-10">
+<form action="{{ route('dashboard.index') }}" method="GET"
+class="flex gap-2 bg-white p-2 rounded-lg shadow">
 
-        <div class="max-w-xl mx-auto">
+<input
+type="text"
+name="search"
+value="{{ request('search') }}"
+placeholder="Cari posisi magang..."
+class="flex-1 px-4 py-2 outline-none rounded-md">
 
-            <form action="{{ route('dashboard.index') }}" method="GET" class="flex gap-2 bg-white p-2 rounded-lg shadow">
+<button
+class="bg-blue-700 text-white px-6 py-2 rounded-md">
+Cari
+</button>
 
-                <input type="text" name="search" placeholder="Cari posisi magang..."
-                    class="flex-1 px-4 py-2 outline-none rounded-md">
-
-                <button type="submit" class="bg-blue-800 text-white px-6 py-2 rounded-md">
-
-                    Cari
-                </button>
-
-            </form>
-
-        </div>
-
-        {{-- ================= LOWONGAN ================= --}}
-        <div class="max-w-7xl mx-auto py-12">
-            <h2 class="text-3xl font-bold mb-6 border-l-4 border-blue-600 pl-4">Lowongan Tersedia</h2>
-
-            {{-- NAVIGATION TAB --}}
-            <div class="flex gap-6 border-b mb-8">
-
-    <button data-tab="semua" id="btn-semua"
-        class="tab-btn border-b-2 border-blue-600 pb-2 font-semibold">
-        Semua
-    </button>
-
-    <button data-tab="magang" id="btn-magang"
-        class="tab-btn pb-2 text-gray-500">
-        Magang
-    </button>
-
-    <button data-tab="penelitian" id="btn-penelitian"
-        class="tab-btn pb-2 text-gray-500">
-        Penelitian
-    </button>
+</form>
 
 </div>
 
 
-            {{-- ================= TAB SEMUA ================= --}}
-           <div id="tab-semua">
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        @foreach ($vacanciesMagang as $job)
-            <x-job-card :job="$job" />
-        @endforeach
 
-        @foreach ($vacanciesPenelitian as $job)
-            <x-job-card :job="$job" />
-        @endforeach
-    </div>
+{{-- HASIL SEARCH --}}
+@if($search)
+
+<div class="max-w-7xl mx-auto mb-6 text-gray-600">
+
+Hasil pencarian untuk :
+<span class="font-semibold text-blue-700">
+"{{ $search }}"
+</span>
+
+<a href="{{ route('dashboard.index') }}"
+class="ml-2 text-blue-600 text-sm">
+Reset
+</a>
+
+</div>
+
+@endif
+
+
+
+{{-- LOWONGAN --}}
+<div class="max-w-7xl mx-auto">
+
+<h2 class="text-3xl font-bold mb-6 border-l-4 border-blue-600 pl-4">
+Lowongan Tersedia
+</h2>
+
+
+
+{{-- FILTER TAB --}}
+<div class="flex gap-6 border-b mb-8">
+
+<button data-tab="semua"
+id="btn-semua"
+class="tab-btn border-b-2 border-blue-600 pb-2 font-semibold">
+
+Semua
+
+</button>
+
+<button data-tab="magang"
+id="btn-magang"
+class="tab-btn pb-2 text-gray-500">
+
+Magang
+
+</button>
+
+<button data-tab="penelitian"
+id="btn-penelitian"
+class="tab-btn pb-2 text-gray-500">
+
+Penelitian
+
+</button>
+
 </div>
 
 
-            {{-- ================= TAB MAGANG ================= --}}
-            <div id="tab-magang" class="hidden">
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        @foreach ($vacanciesMagang as $job)
-            <x-job-card :job="$job" />
-        @endforeach
-    </div>
+
+{{-- TAB SEMUA --}}
+<div id="tab-semua">
+
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+@forelse ($vacanciesMagang as $job)
+
+<x-job-card :job="$job"/>
+
+@empty
+@endforelse
+
+
+@forelse ($vacanciesPenelitian as $job)
+
+<x-job-card :job="$job"/>
+
+@empty
+@endforelse
+
+
+@if($vacanciesMagang->isEmpty() && $vacanciesPenelitian->isEmpty())
+
+<div class="col-span-3 text-center py-20 text-gray-500">
+
+Maaf, lowongan tidak ditemukan
+
+</div>
+
+@endif
+
+</div>
+
 </div>
 
 
-            {{-- ================= TAB PENELITIAN ================= --}}
-            <div id="tab-penelitian" class="hidden">
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        @foreach ($vacanciesPenelitian as $job)
-            <x-job-card :job="$job" />
-        @endforeach
-    </div>
-</div>
-    </section>
 
+{{-- TAB MAGANG --}}
+<div id="tab-magang" class="hidden">
+
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+@forelse ($vacanciesMagang as $job)
+
+<x-job-card :job="$job"/>
+
+@empty
+
+<div class="col-span-3 text-center py-20 text-gray-500">
+Maaf, lowongan magang tidak ditemukan
+</div>
+
+@endforelse
+
+</div>
+
+</div>
+
+
+
+{{-- TAB PENELITIAN --}}
+<div id="tab-penelitian" class="hidden">
+
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+@forelse ($vacanciesPenelitian as $job)
+
+<x-job-card :job="$job"/>
+
+@empty
+
+<div class="col-span-3 text-center py-20 text-gray-500">
+Maaf, lowongan penelitian tidak ditemukan
+</div>
+
+@endforelse
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+   
 
     {{-- ================= TIMELINE ================= --}}
     <section class="bg-gray-100 py-16">

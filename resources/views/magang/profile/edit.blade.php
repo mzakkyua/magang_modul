@@ -1,4 +1,4 @@
-@extends('layouts.layoutlanding',['hideFooter'=>true])
+@extends('layouts.navprofile')
 @section('title','profile')
 @section('content')
     
@@ -54,7 +54,7 @@
             {{-- Input Looping --}}
             @foreach($fields as $index => $field)
                 <div class="{{ $field['span'] ?? '' }} space-y-2">
-                    <label class="text-[11px] font-black uppercase tracking-[0.1em] text-[#37517e] ml-1">{{ $field['label'] }}</label>
+                    <label class="text-[11px] font-black uppercase tracking-0.1em text-[#37517e] ml-1">{{ $field['label'] }}</label>
                     <input type="text" name="{{ $field['name'] }}" value="{{ old($field['name'], $field['val']) }}"
                         class="w-full bg-gray-50 border-2 border-gray-200 rounded-2xl px-5 py-4 text-sm focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none font-bold text-gray-800 placeholder:text-gray-300">
                 </div>
@@ -62,7 +62,7 @@
                 {{-- Sisipkan Kolom Jenjang setelah Asal Instansi (Index ke-2) --}}
                 @if($index == 2)
                 <div class="space-y-2">
-                    <label class="text-[11px] font-black uppercase tracking-[0.1em] text-[#37517e] ml-1">Jenjang Pendidikan</label>
+                    <label class="text-[11px] font-black uppercase tracking-0.1em text-[#37517e] ml-1">Jenjang Pendidikan</label>
                     <div class="relative">
                         <select name="education_level" 
                             class="w-full bg-gray-50 border-2 border-gray-200 rounded-2xl px-5 py-4 text-sm focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none font-bold text-gray-800 appearance-none">
@@ -79,7 +79,7 @@
             @endforeach
 
             <div class="md:col-span-2 space-y-2">
-                <label class="text-[11px] font-black uppercase tracking-[0.1em] text-[#37517e] ml-1">Alamat Lengkap</label>
+                <label class="text-[11px] font-black uppercase tracking-0.1em text-[#37517e] ml-1">Alamat Lengkap</label>
                 <textarea name="address" rows="3" 
                     class="w-full bg-gray-50 border-2 border-gray-200 rounded-2xl px-5 py-4 text-sm focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none font-bold text-gray-800">{{ $profile->address ?? '' }}</textarea>
             </div>
@@ -116,12 +116,12 @@
             </div>
 
             {{-- Button Simpan yang Lebih Tegas --}}
-            <button type="submit" class="w-full bg-blue-600 text-white p-5 rounded-[2rem] font-black uppercase tracking-widest text-xs hover:bg-blue-700 hover:scale-[1.02] active:scale-95 shadow-xl shadow-blue-200 transition-all duration-300 flex items-center justify-center gap-3">
+            <button type="submit" class="w-full bg-blue-600 text-white p-5 rounded-2rem font-black uppercase tracking-widest text-xs hover:bg-blue-700 hover:scale-[1.02] active:scale-95 shadow-xl shadow-blue-200 transition-all duration-300 flex items-center justify-center gap-3">
                 <i class="bi bi-cloud-arrow-up-fill text-lg"></i>
                 <span>Simpan Seluruh Perubahan</span>
             </button>
             
-            <div class="p-6 bg-amber-50 rounded-[2rem] border border-amber-100">
+            <div class="p-6 bg-amber-50 rounded-2rem border border-amber-100">
                  <p class="text-[11px] font-bold text-amber-800 leading-relaxed italic text-center">
                     "Pastikan data yang Anda masukkan sudah sesuai dengan identitas resmi untuk kelancaran sertifikasi."
                  </p>

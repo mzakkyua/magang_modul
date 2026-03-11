@@ -23,7 +23,7 @@ class LandingController extends Controller
 
     public function index(Request $request)
     {
-
+        $search = $request->search;
 
     
         /**
@@ -46,29 +46,43 @@ class LandingController extends Controller
          * ===========================================================
          */
 
-        if ($request->filled('search')) {
+        $vacanciesMagang = VacancyMagang::query()
+            ->where('status', 'open')
+            ->where('type', 'magang')
+            ->when($search, function ($query) use ($search) {
 
-            // bersihkan input search
-            $search = trim($request->search);
+                $query->where(function ($q) use ($search) {
 
-            $query->where('title', 'like', '%' . $search . '%');
-        }
+                    $q->where('title', 'LIKE', "%{$search}%")
+                        ->orWhere('division_name', 'LIKE', "%{$search}%")
+                        ->orWhere('description', 'LIKE', "%{$search}%");
 
+                });
 
-
-        /**
-         * ===========================================================
-         * STEP 3 — AMBIL DATA LOWONGAN
-         * ===========================================================
-         *
-         * latest() = urutkan berdasarkan created_at DESC
-         */
-
-        $vacancies = $query
+            })
             ->latest()
-            ->limit(20) // mencegah query terlalu besar
+            ->limit(20)
             ->get();
 
+            $vacanciesPenelitian = VacancyMagang::query()
+            ->where('status', 'open')
+            ->where('type', 'penelitian')
+            ->when($search, function ($query) use ($search) {
+
+                $query->where(function ($q) use ($search) {
+
+                    $q->where('title', 'LIKE', "%{$search}%")
+                        ->orWhere('division_name', 'LIKE', "%{$search}%")
+                        ->orWhere('description', 'LIKE', "%{$search}%");
+
+                });
+
+            })
+            ->latest()
+            ->get();
+
+
+       
 
 
         /**
@@ -77,43 +91,9 @@ class LandingController extends Controller
          * ===========================================================
          */
 
-        return view('landing.index', compact('vacancies'));
-    }
-
-
-
-    /**
-     * ===============================================================
-     * DETAIL LOWONGAN
-     * ===============================================================
-     *
-     * Menampilkan detail lowongan.
-     *
-     * Hanya lowongan dengan status OPEN yang boleh diakses.
-     *
-     */
-
-    public function show($id)
-    {
-
-        /**
-         * ===========================================================
-         * AMBIL DATA LOWONGAN
-         * ===========================================================
-         */
-
-        $vacancy = VacancyMagang::where('id', $id)
-            ->where('status', 'open')
-            ->firstOrFail();
-
-
-
-        /**
-         * ===========================================================
-         * RETURN VIEW DETAIL
-         * ===========================================================
-         */
-
-        return view('landing.show', compact('vacancy'));
-    }
-}
+         return view('landing.index', compact(
+            'vacanciesMagang',
+            'vacanciesPenelitian',
+            'search'
+        ));
+    }}

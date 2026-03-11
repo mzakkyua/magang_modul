@@ -9,95 +9,90 @@ use App\Models\VacancyMagang;
 class DashboardMagangController extends Controller
 {
 
-    /**
-     * ===============================================================
-     * DASHBOARD PESERTA MAGANG
-     * ===============================================================
-     *
-     * Menampilkan:
-     *
-     * - Lowongan Magang
-     * - Lowongan Penelitian
-     * - Status pendidikan user (SMK atau bukan)
-     *
-     * Data ini digunakan untuk:
-     * - tab filtering
-     * - conditional UI
-     *
-     */
-
-    public function index()
+    public function index(Request $request)
     {
 
         /**
-         * ===========================================================
-         * STEP 1 — AMBIL USER YANG SEDANG LOGIN
-         * ===========================================================
+         * ===============================
+         * USER LOGIN
+         * ===============================
          */
 
         $user = Auth::guard('magang')->user();
 
-
-
-        /**
-         * ===========================================================
-         * STEP 2 — CEK STATUS PENDIDIKAN USER
-         * ===========================================================
-         *
-         * optional() digunakan untuk menghindari error
-         * jika relasi profile belum tersedia.
-         *
-         */
-
         $isSMK = optional($user->profile)->education_level === 'siswa_smk';
 
 
+        /**
+         * ===============================
+         * SEARCH INPUT
+         * ===============================
+         */
+
+        $search = $request->search;
+
 
         /**
-         * ===========================================================
-         * STEP 3 — AMBIL LOWONGAN MAGANG
-         * ===========================================================
-         *
-         * Filter:
-         * - type = magang
-         * - status = open
-         *
+         * ===============================
+         * QUERY MAGANG
+         * ===============================
          */
 
         $vacanciesMagang = VacancyMagang::query()
-            ->where('type', 'magang')
             ->where('status', 'open')
+            ->where('type', 'magang')
+            ->when($search, function ($query) use ($search) {
+
+                $query->where(function ($q) use ($search) {
+
+                    $q->where('title', 'LIKE', "%{$search}%")
+                        ->orWhere('division_name', 'LIKE', "%{$search}%")
+                        ->orWhere('description', 'LIKE', "%{$search}%");
+
+                });
+
+            })
             ->latest()
-            ->limit(20) // prevent heavy query jika data banyak
             ->get();
 
 
 
         /**
-         * ===========================================================
-         * STEP 4 — AMBIL LOWONGAN PENELITIAN
-         * ===========================================================
+         * ===============================
+         * QUERY PENELITIAN
+         * ===============================
          */
 
         $vacanciesPenelitian = VacancyMagang::query()
-            ->where('type', 'penelitian')
             ->where('status', 'open')
+            ->where('type', 'penelitian')
+            ->when($search, function ($query) use ($search) {
+
+                $query->where(function ($q) use ($search) {
+
+                    $q->where('title', 'LIKE', "%{$search}%")
+                        ->orWhere('division_name', 'LIKE', "%{$search}%")
+                        ->orWhere('description', 'LIKE', "%{$search}%");
+
+                });
+
+            })
             ->latest()
-            ->limit(20)
             ->get();
 
 
 
         /**
-         * ===========================================================
-         * STEP 5 — RETURN VIEW DASHBOARD
-         * ===========================================================
+         * ===============================
+         * RETURN VIEW
+         * ===============================
          */
 
         return view('magang.dashboard.index', compact(
             'vacanciesMagang',
             'vacanciesPenelitian',
-            'isSMK'
+            'isSMK',
+            'search'
         ));
     }
 }

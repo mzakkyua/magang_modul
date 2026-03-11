@@ -34,7 +34,7 @@
                             <ul
                                 class="flex gap-8 items-center font-bold text-sm uppercase tracking-wider text-[#37517e]">
                                 <li>
-                                    <a href="/"
+                                    <a href="{{route('dashboard.index')}}"
                                         class="{{ request()->is('/') ? 'text-blue-600 border-b-2 border-blue-600' : '' }} hover:text-blue-600 transition pb-1">
                                         Home
                                     </a>
