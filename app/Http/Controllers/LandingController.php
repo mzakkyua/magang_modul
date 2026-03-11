@@ -46,6 +46,13 @@ class LandingController extends Controller
          * ===========================================================
          */
 
+
+         /**
+         * ===========================================================
+         * Magang
+         * ===========================================================
+         */
+
         $vacanciesMagang = VacancyMagang::query()
             ->where('status', 'open')
             ->where('type', 'magang')
@@ -63,6 +70,12 @@ class LandingController extends Controller
             ->latest()
             ->limit(20)
             ->get();
+
+             /**
+         * ===========================================================
+         * Penelitian
+         * ===========================================================
+         */
 
             $vacanciesPenelitian = VacancyMagang::query()
             ->where('status', 'open')
