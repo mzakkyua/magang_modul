@@ -12,11 +12,24 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('sessions', function (Blueprint $table) {
+
             $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
+
+            // ID user yang login (opsional)
+            $table->foreignId('user_id')
+                ->nullable()
+                ->index();
+
+            // IP address user
             $table->string('ip_address', 45)->nullable();
+
+            // Browser user
             $table->text('user_agent')->nullable();
+
+            // Data session
             $table->longText('payload');
+
+            // Timestamp aktivitas terakhir
             $table->integer('last_activity')->index();
         });
     }

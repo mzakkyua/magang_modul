@@ -8,53 +8,103 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // ================================
-        // 1. TABEL USERS MAGANG (LOGIN)
-        // ================================
+        /**
+         * ========================================================
+         * TABEL USERS MAGANG
+         * ========================================================
+         *
+         * Menyimpan akun login peserta magang.
+         */
+
         Schema::create('users_magang', function (Blueprint $table) {
+
             $table->id();
 
+            // Username unik untuk login
             $table->string('username', 50)->unique();
+
+            // Email unik
             $table->string('email', 100)->unique();
 
-            // Simpan hash password
+            // Password yang sudah di-hash
             $table->string('password_hash');
 
-            // created_at & updated_at
             $table->timestamps();
         });
 
-        // ================================
-        // 2. TABEL PROFILES MAGANG (BIODATA)
-        // ================================
+
+        /**
+         * ========================================================
+         * TABEL PROFILES MAGANG
+         * ========================================================
+         *
+         * Menyimpan biodata peserta magang.
+         */
+
         Schema::create('profiles_magang', function (Blueprint $table) {
+
             $table->id();
 
-            // Relasi ke users_magang
+            /**
+             * Relasi ke users_magang
+             *
+             * 1 user hanya memiliki 1 profile
+             */
+
             $table->foreignId('user_id')
+                ->unique()
                 ->constrained('users_magang')
                 ->cascadeOnDelete();
 
-            // Data wajib
+
+            /**
+             * Data utama
+             */
+
             $table->string('full_name', 150);
 
-            // UBAH ENUM → VARCHAR (lebih fleksibel)
-            $table->string('education_level', 50)->nullable();
+            /**
+             * Level pendidikan
+             *
+             * Contoh:
+             * - siswa_smk
+             * - mahasiswa
+             * - peneliti
+             */
 
-            // Data opsional (bisa dilengkapi setelah login)
+            $table->string('education_level', 50)
+                ->nullable()
+                ->index();
+
+
+            /**
+             * Data tambahan
+             */
+
             $table->string('nim_nisn', 50)->nullable();
+
             $table->string('institution_name', 100)->nullable();
+
             $table->string('major', 100)->nullable();
+
             $table->string('phone_number', 20)->nullable();
+
             $table->text('address')->nullable();
 
-            // Dokumen pendukung
-            $table->string('cv_file_path')->nullable();
-            $table->string('proposal_file_path')->nullable();
+
+            /**
+             * File dokumen
+             */
+
+            $table->string('cv_file_path', 255)->nullable();
+
+            $table->string('proposal_file_path', 255)->nullable();
+
 
             $table->timestamps();
         });
     }
+
 
     public function down(): void
     {
