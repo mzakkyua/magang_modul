@@ -34,7 +34,7 @@
                             <ul
                                 class="flex gap-8 items-center font-bold text-sm uppercase tracking-wider text-[#37517e]">
                                 <li>
-                                    <a href="{{ route('dashboard.index') }}"
+                                    <a href="{{route('dashboard.index')}}"
                                         class="{{ request()->is('/') ? 'text-blue-600 border-b-2 border-blue-600' : '' }} hover:text-blue-600 transition pb-1">
                                         Home
                                     </a>
@@ -64,9 +64,9 @@
                                 {{-- Tombol Pemicu --}}
                                 <div
                                     class="flex items-center gap-3 text-[#37517e] cursor-pointer px-3 py-2 rounded-lg transition-all duration-200">
-                                    <div class="bg-blue-100 p-1.5 rounded-full flex items-center justify-center">
-                                        <i class="bi bi-person-circle text-lg text-blue-600"></i>
-                                    </div>
+                                    <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center border-2 border-gray-100 group-hover:border-blue-500 group-hover:ring-4 group-hover:ring-blue-50 transition-all duration-300">
+    <i class="bi bi-person text-xl text-gray-500 group-hover:text-blue-600"></i>
+</div>
                                     <div class="text-left">
                                         <p class="text-[13px] font-bold leading-tight">
                                             {{ Auth::guard('magang')->user()->nama_peserta }}
@@ -111,108 +111,86 @@
             </div>
     </nav>
 
-    {{-- SCRIPT SWEETALERT2 UNTUK POP-UP NOTIFIKASI --}}
-    <script type="module">
-        @if (session('success'))
-            Swal.fire({
-                icon: 'success',
-                title: 'Berhasil!',
-                text: "{!! session('success') !!}",
-                confirmButtonColor: '#2563EB', // Warna biru dari Tailwind
-            });
-        @endif
-
-        @if (session('error'))
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: "{!! session('error') !!}",
-                confirmButtonColor: '#DC2626', // Warna merah dari Tailwind
-            });
-        @endif
-    </script>
-
     @yield('content')
 
-    @if (!isset($hideFooter))
-        <footer id="footer" class="bg-gray-800 text-white pt-16 pb-8 text-sm">
+@if (!isset($hideFooter))
+    
 
-            <div class="container mx-auto px-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+    <footer id="footer" class="bg-gray-800 text-white pt-16 pb-8 text-sm">
 
-                    <div>
-                        <a href="/" class="flex items-center mb-4">
-                            <span class="text-2xl font-bold tracking-wider">KEPEGAWAIAN</span>
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+
+                <div>
+                    <a href="/" class="flex items-center mb-4">
+                        <span class="text-2xl font-bold tracking-wider">KEPEGAWAIAN</span>
+                    </a>
+                    <div class="text-gray-400 space-y-2">
+                        <p>Jln. Dukuh Menanggal 124 - 126, Gayungan</p>
+                        <p>Surabaya 60234, Jawa Timur</p>
+                        <p class="mt-4"><strong class="text-white">Phone:</strong> (031) 8290005</p>
+                        <p><strong class="text-white">Email:</strong> disnakertrans@jatimprov.go.id</p>
+                    </div>
+                    <div class="flex gap-4 mt-6">
+                        <a href="#"
+                            class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-[#37517e] transition duration-300 border border-slate-700 hover:border-blue-400">
+                            <i class="fa-brands fa-twitter text-white"></i>
                         </a>
-                        <div class="text-gray-400 space-y-2">
-                            <p>Jln. Dukuh Menanggal 124 - 126, Gayungan</p>
-                            <p>Surabaya 60234, Jawa Timur</p>
-                            <p class="mt-4"><strong class="text-white">Phone:</strong> (031) 8290005</p>
-                            <p><strong class="text-white">Email:</strong> disnakertrans@jatimprov.go.id</p>
-                        </div>
-                        <div class="flex gap-4 mt-6">
-                            <a href="#"
-                                class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-[#37517e] transition duration-300 border border-slate-700 hover:border-blue-400">
-                                <i class="fa-brands fa-twitter text-white"></i>
-                            </a>
-                            <a href="#"
-                                class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-[#37517e] transition duration-300 border border-slate-700 hover:border-blue-400">
-                                <i class="fa-brands fa-facebook-f text-white"></i>
-                            </a>
-                            <a href="#"
-                                class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-[#37517e] transition duration-300 border border-slate-700 hover:border-blue-400">
-                                <i class="fa-brands fa-instagram text-white"></i>
-                            </a>
-                        </div>
+                        <a href="#"
+                            class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-[#37517e] transition duration-300 border border-slate-700 hover:border-blue-400">
+                            <i class="fa-brands fa-facebook-f text-white"></i>
+                        </a>
+                        <a href="#"
+                            class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-[#37517e] transition duration-300 border border-slate-700 hover:border-blue-400">
+                            <i class="fa-brands fa-instagram text-white"></i>
+                        </a>
                     </div>
-
-                    <div>
-                        <h4 class="text-lg font-bold mb-4 border-b-2 border-blue-500 inline-block pb-1">Useful Links
-                        </h4>
-                        <ul class="space-y-2 text-gray-400">
-                            <li><a href="#" class="hover:text-blue-400 transition">Home</a></li>
-                            <li><a href="#about" class="hover:text-blue-400 transition">Tentang Kami</a></li>
-                            <li><a href="#services" class="hover:text-blue-400 transition">Layanan</a></li>
-                            <li><a href="#" class="hover:text-blue-400 transition">Terms of service</a></li>
-                            <li><a href="#" class="hover:text-blue-400 transition">Privacy policy</a></li>
-                        </ul>
-                    </div>
-
-                    <div>
-                        <h4 class="text-lg font-bold mb-4 border-b-2 border-blue-500 inline-block pb-1">Layanan Kami
-                        </h4>
-                        <ul class="space-y-2 text-gray-400">
-                            <li><a href="#" class="hover:text-blue-400 transition">Usulan Kepegawaian</a></li>
-                            <li><a href="#" class="hover:text-blue-400 transition">Dokumen Digital</a></li>
-                            <li><a href="#" class="hover:text-blue-400 transition">Simulasi Kredit</a></li>
-                            <li><a href="#" class="hover:text-blue-400 transition">Arsip & Surat</a></li>
-                        </ul>
-                    </div>
-
-                    <div>
-                        <h4 class="text-lg font-bold mb-4 border-b-2 border-blue-500 inline-block pb-1">Newsletter</h4>
-                        <p class="text-gray-400 mb-4">Berlangganan untuk mendapatkan informasi terbaru seputar
-                            kepegawaian.
-                        </p>
-                        <form action="#" class="flex">
-                            <input type="email" placeholder="Email Anda"
-                                class="w-full px-4 py-2 rounded-l-md bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500">
-                            <button type="submit"
-                                class="bg-blue-600 px-4 py-2 rounded-r-md hover:bg-blue-700 transition">Sub</button>
-                        </form>
-                    </div>
-
                 </div>
 
-                <div class="border-t border-slate-800 pt-8 text-center text-gray-400">
-                    <p>&copy; Copyright <strong>KEPEGAWAIAN</strong> {{ date('Y') }} Dinas Tenaga Kerja. Sistem
-                        Manajemen Magang.</p>
+                <div>
+                    <h4 class="text-lg font-bold mb-4 border-b-2 border-blue-500 inline-block pb-1">Useful Links</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-blue-400 transition">Home</a></li>
+                        <li><a href="#about" class="hover:text-blue-400 transition">Tentang Kami</a></li>
+                        <li><a href="#services" class="hover:text-blue-400 transition">Layanan</a></li>
+                        <li><a href="#" class="hover:text-blue-400 transition">Terms of service</a></li>
+                        <li><a href="#" class="hover:text-blue-400 transition">Privacy policy</a></li>
+                    </ul>
                 </div>
+
+                <div>
+                    <h4 class="text-lg font-bold mb-4 border-b-2 border-blue-500 inline-block pb-1">Layanan Kami</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#" class="hover:text-blue-400 transition">Usulan Kepegawaian</a></li>
+                        <li><a href="#" class="hover:text-blue-400 transition">Dokumen Digital</a></li>
+                        <li><a href="#" class="hover:text-blue-400 transition">Simulasi Kredit</a></li>
+                        <li><a href="#" class="hover:text-blue-400 transition">Arsip & Surat</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-lg font-bold mb-4 border-b-2 border-blue-500 inline-block pb-1">Newsletter</h4>
+                    <p class="text-gray-400 mb-4">Berlangganan untuk mendapatkan informasi terbaru seputar kepegawaian.
+                    </p>
+                    <form action="#" class="flex">
+                        <input type="email" placeholder="Email Anda"
+                            class="w-full px-4 py-2 rounded-l-md bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-blue-500">
+                        <button type="submit"
+                            class="bg-blue-600 px-4 py-2 rounded-r-md hover:bg-blue-700 transition">Sub</button>
+                    </form>
+                </div>
+
             </div>
-        </footer>
+
+            <div class="border-t border-slate-800 pt-8 text-center text-gray-400">
+                <p>&copy; Copyright <strong>KEPEGAWAIAN</strong> {{ date('Y') }} Dinas Tenaga Kerja. Sistem
+                    Manajemen Magang.</p>
+            </div>
+        </div>
+    </footer> 
     @endif
     @stack('script')
-
+    
 </body>
 
 </html>

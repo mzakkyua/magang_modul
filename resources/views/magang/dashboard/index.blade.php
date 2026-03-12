@@ -1,5 +1,5 @@
 @extends('layouts.layoutlanding')
-@section('title', 'Dashboard Peserta')
+@section('title', 'Homepage')
 
 @section('content')
     <!-- hero section -->
@@ -177,35 +177,35 @@
 
     </section>
 
+{{-- ================= TIMELINE ================= --}}
+<section class="bg-gray-100 py-16">
+    {{-- Kita beri ID 'timeline-wrapper' pada container grid --}}
+    <div id="timeline-wrapper" class="container mx-auto grid md:grid-cols-2 gap-8 items-start transition-all duration-500">
 
+        <div id="text-section">
+            <h2 class="text-3xl font-bold mb-4 text-gray-800">Timeline Magang</h2>
+            <p class="text-gray-600 mb-6">
+                Peserta dapat melihat periode kegiatan magang, tanggal mulai hingga selesai.
+            </p>
 
-    {{-- ================= TIMELINE ================= --}}
-    <section class="bg-gray-100 py-16">
-
-        <div class="container mx-auto grid md:grid-cols-2 gap-8">
-
-            <div>
-
-                <h2 class="text-3xl font-bold mb-4">
-                    Timeline Magang
-                </h2>
-
-                <p class="text-gray-600">
-                    Peserta dapat melihat periode kegiatan magang,
-                    tanggal mulai hingga selesai.
-                </p>
-
+            <div class="inline-flex bg-white p-1 rounded-xl shadow-sm border border-gray-200">
+                <button onclick="changeView('compact')" id="btn-compact" class="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition-all">
+                    Simpel
+                </button>
+                <button onclick="changeView('detailed')" id="btn-detailed" 
+                class="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition-all">
+                Zoom In
+            </button>
             </div>
-
-            <div class="bg-white p-4 rounded-xl shadow">
-
-                @include('calendar')
-
-            </div>
-
         </div>
 
-    </section>
+        <div id="calendar-container" class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 transition-all duration-500">
+            @include('calendar')
+        </div>
+
+    </div>
+</section>
+
     <!-- gallery -->
     <section class="text-gray-700 body-font" id="gallery">
         <div class="flex justify-center text-3xl font-bold text-gray-800 text-center py-10">
