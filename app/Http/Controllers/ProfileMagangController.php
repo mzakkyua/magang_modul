@@ -218,7 +218,7 @@ class ProfileMagangController extends Controller
          */
 
         return redirect()
-            ->route('landing.index')
+            ->route('profile.edit')
             ->with('success', 'Profil berhasil diperbarui! Sekarang Anda bisa melamar.');
     }
 }
