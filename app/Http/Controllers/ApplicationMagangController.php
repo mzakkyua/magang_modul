@@ -238,6 +238,39 @@ class ApplicationMagangController extends Controller
                 }
 
 
+                /**
+                 * ===========================================================
+                 * BUSINESS RULE 8 — CEK KELENGKAPAN DOKUMEN (CV & PROPOSAL)
+                 * ===========================================================
+                 */
+
+                // 1. Cek kelengkapan dokumen Ketua (Leader)
+                $leaderProfile = \App\Models\ProfileMagang::where('user_id', $leaderId)->first();
+
+                if (!$leaderProfile || empty($leaderProfile->cv_file_path)) {
+                    throw new \Exception('Pendaftaran gagal! Anda belum mengunggah CV. Silakan lengkapi di menu Profil.');
+                }
+
+                // 2. Cek proposal khusus untuk jalur Penelitian
+                if ($vacancy->type === 'penelitian' && empty($leaderProfile->proposal_file_path)) {
+                    throw new \Exception('Untuk jalur penelitian, Anda wajib mengunggah File Proposal di menu Profil Anda.');
+                }
+
+                // 3. Cek CV Anggota (jika mendaftar secara kelompok)
+                if ($totalOrang > 1) {
+                    foreach ($memberIds as $userId) {
+                        // Skip ketua karena sudah dicek di atas
+                        if ($userId === $leaderId) continue;
+
+                        $memberProfile = \App\Models\ProfileMagang::where('user_id', $userId)->first();
+
+                        if (!$memberProfile || empty($memberProfile->cv_file_path)) {
+                            $memberName = $users[$userId] ?? 'Anggota';
+                            throw new \Exception("Pendaftaran gagal! Anggota '$memberName' belum mengunggah CV di profilnya.");
+                        }
+                    }
+                }
+
 
                 /**
                  * ===========================================================
@@ -254,6 +287,11 @@ class ApplicationMagangController extends Controller
                 ]);
 
 
+                /**
+                 * ===========================================================
+                 * SUCCESS RESPONSE
+                 * ===========================================================
+                 */
 
                 /**
                  * ===========================================================
@@ -270,6 +308,12 @@ class ApplicationMagangController extends Controller
                     ]);
                 }
 
+                /**
+                 * ===========================================================
+                 * AUTO UPDATE STATUS LOWONGAN
+                 * ===========================================================
+                 */
+                $vacancy->updateStatusBasedOnQuota();
 
 
                 /**
