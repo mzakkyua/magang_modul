@@ -62,39 +62,79 @@
             @endif
         </script>
 
-        <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        {{-- KOTAK UTAMA (CARD) LOWONGAN --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 mb-8 p-6 md:p-10">
+
+            {{-- 1. HEADER --}}
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900">{{ $vacancy->title }}</h1>
-                    <div class="flex gap-3 mt-2">
-                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full">
-                            Divisi {{ $vacancy->division_name }}
+                    <h1 class="text-3xl font-bold text-gray-900 mb-3">{{ $vacancy->title }}</h1>
+                    <div class="flex gap-2 text-sm font-medium">
+                        <span class="bg-blue-50 text-blue-700 px-3 py-1 rounded-md">
+                            Divisi: {{ $vacancy->division_name }}
                         </span>
-                        <span class="bg-green-100 text-green-800 text-xs font-bold px-3 py-1 rounded-full">
-                            {{ strtoupper($vacancy->type) }}
+                        <span class="bg-green-50 text-green-700 px-3 py-1 rounded-md uppercase tracking-wider">
+                            {{ $vacancy->type }}
                         </span>
                     </div>
                 </div>
-                <div class="text-right">
-                    <p class="text-sm text-gray-500">Batas Lamaran</p>
-                    <p class="font-bold text-red-600">{{ \Carbon\Carbon::parse($vacancy->end_date)->format('d F Y') }}
+                <div class="text-left md:text-right">
+                    <p class="text-xs text-gray-500 mb-1">Batas Lamaran</p>
+                    <p class="text-lg font-bold text-red-600">
+                        {{ \Carbon\Carbon::parse($vacancy->end_date)->format('d F Y') }}
                     </p>
                 </div>
             </div>
 
-            <div class="prose max-w-none text-gray-600 border-t pt-6">
-                <h3 class="text-lg font-bold text-gray-800 mb-2">Deskripsi Pekerjaan</h3>
-                <p class="mb-6 whitespace-pre-line">{{ $vacancy->description }}</p>
+            <hr class="border-gray-100 mb-6">
 
-                <h3 class="text-lg font-bold text-gray-800 mb-2">Kriteria / Persyaratan</h3>
-                <ul class="list-disc pl-5 mb-6">
-                    <li>Mahasiswa aktif semester 5 ke atas.</li>
-                    <li>Berkomitmen mengikuti magang selama periode yang ditentukan.</li>
-                    <li>Memiliki laptop pribadi.</li>
-                </ul>
+            {{-- 2. INFO SINGKAT (KUOTA & ANGGOTA) --}}
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Periode Magang</p>
+                    <p class="font-semibold text-gray-800 text-sm">
+                        {{ \Carbon\Carbon::parse($vacancy->start_date)->format('d M') }} -
+                        {{ \Carbon\Carbon::parse($vacancy->end_date)->format('d M Y') }}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Sisa Kuota</p>
+                    <p class="font-semibold text-blue-600 text-sm">
+                        {{ $vacancy->getSisaKuota() }} <span class="text-gray-500">/ {{ $vacancy->quota_slots }}
+                            Slot</span>
+                    </p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Pendaftaran</p>
+                    <p class="font-semibold text-gray-800 text-sm capitalize">{{ $vacancy->registration_mode }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Jumlah Anggota</p>
+                    <p class="font-semibold text-gray-800 text-sm">
+                        @if ($vacancy->registration_mode === 'individu')
+                            1 Orang
+                        @else
+                            {{ $vacancy->min_members }} - {{ $vacancy->max_members }} Orang
+                        @endif
+                    </p>
+                </div>
             </div>
 
-            <div class="mt-8 border-t pt-6">
+            {{-- 3. DESKRIPSI DAN KRITERIA (MENGAMBIL DARI DATABASE) --}}
+            <div class="mb-10">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Deskripsi Pekerjaan & Persyaratan</h3>
+                <div class="text-gray-700 leading-relaxed text-sm md:text-base">
+                    @if ($vacancy->description)
+                        {{-- Memanggil data asli dari database dengan aman --}}
+                        {!! nl2br(e($vacancy->description)) !!}
+                    @else
+                        <p class="text-gray-400 italic">Belum ada deskripsi.</p>
+                    @endif
+                </div>
+            </div>
+
+            {{-- 4. TOMBOL LAMAR DENGAN LOGIKA AUTH ASLI --}}
+            <div class="mt-8 border-t border-gray-100 pt-8">
 
                 {{-- KONDISI 1: JIKA PENGUNJUNG ADALAH ADMIN --}}
                 @if (Auth::guard('web')->check())
@@ -129,7 +169,9 @@
                         </div>
                     </div>
                 @endif
+
             </div>
+
         </div>
     </div>
 
@@ -187,8 +229,58 @@
                                         class="block w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                                         placeholder="Jelaskan secara singkat latar belakang dan tujuan penelitian Anda..."></textarea>
                                     {{-- Teks Penghitung Karakter Abstrak --}}
-                                    <p id="abstract_counter" class="text-xs text-gray-500 text-right mt-1 font-medium">0
+                                    <p id="abstract_counter"
+                                        class="text-xs text-gray-500 text-right mt-1 font-medium">0
                                         / 1000 karakter</p>
+                                </div>
+                            @endif
+
+                            {{-- KONDISI KHUSUS UNTUK JALUR KELOMPOK / HYBRID --}}
+                            @if (in_array($vacancy->registration_mode, ['kelompok', 'hybrid']))
+                                <div class="mb-4 bg-blue-50 p-4 rounded-lg border border-blue-100">
+
+                                    {{-- PILIHAN MODE UNTUK HYBRID --}}
+                                    @if ($vacancy->registration_mode === 'hybrid')
+                                        <div class="mb-4">
+                                            <label class="block mb-2 text-sm font-bold text-[#37517e]">Daftar
+                                                Sebagai:</label>
+                                            <select id="hybrid-mode-select"
+                                                class="block w-full p-2.5 text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500">
+                                                <option value="individu">Individu (Sendiri)</option>
+                                                <option value="kelompok">Kelompok (Tim)</option>
+                                            </select>
+                                        </div>
+                                    @endif
+
+                                    {{-- AREA INPUT ANGGOTA (Sembunyi default jika hybrid-individu) --}}
+                                    <div id="group-input-area"
+                                        class="{{ $vacancy->registration_mode === 'hybrid' ? 'hidden' : '' }}">
+                                        <label class="block mb-2 text-sm font-bold text-[#37517e]">
+                                            Anggota Kelompok (Masukkan Email)
+                                        </label>
+                                        <p class="text-xs text-gray-600 mb-3">
+                                            Anggota: Min {{ $vacancy->min_members }} orang, Maks
+                                            {{ $vacancy->max_members }} orang (termasuk Anda sebagai Ketua).
+                                        </p>
+
+                                        <div id="members-container" class="space-y-2">
+                                            <div class="flex gap-2 member-input">
+                                                {{-- Jika hybrid, input ini awalnya dinonaktifkan (disabled) --}}
+                                                <input type="email" name="member_emails[]"
+                                                    {{ $vacancy->registration_mode === 'kelompok' ? 'required' : '' }}
+                                                    {{ $vacancy->registration_mode === 'hybrid' ? 'disabled' : '' }}
+                                                    class="block w-full p-2.5 text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                                                    placeholder="email.anggota1@test.com">
+                                            </div>
+                                        </div>
+
+                                        <button type="button" id="add-member-btn"
+                                            class="mt-3 text-sm text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 transition">
+                                            <i class="bi bi-plus-circle"></i> Tambah Anggota Lainnya
+                                        </button>
+                                        <p class="text-[10px] text-gray-500 mt-2 italic">* Pastikan email anggota sudah
+                                            terdaftar di sistem dan profil mereka (CV) sudah lengkap.</p>
+                                    </div>
                                 </div>
                             @endif
 
@@ -262,6 +354,73 @@
                 });
             }
         });
+
+        // =======================================================
+        // LOGIKA TAMBAH ANGGOTA KELOMPOK DINAMIS
+        // =======================================================
+        const container = document.getElementById('members-container');
+        const addBtn = document.getElementById('add-member-btn');
+        // Max member dikurangi 1 karena ketua (yang login) sudah dihitung 1
+        const maxMembers = {{ $vacancy->max_members ?? 1 }} - 1;
+
+        if (container && addBtn) {
+            addBtn.addEventListener('click', function() {
+                const currentInputs = container.querySelectorAll('.member-input').length;
+
+                // Cek agar tidak melebihi kuota maksimal kelompok
+                if (currentInputs >= maxMembers) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Batas Maksimal',
+                        text: `Lowongan ini maksimal ${maxMembers + 1} orang (termasuk Anda).`
+                    });
+                    return;
+                }
+
+                // Buat elemen input baru
+                const div = document.createElement('div');
+                div.className = 'flex gap-2 member-input mt-2';
+                div.innerHTML = `
+                    <input type="email" name="member_emails[]" required
+                        class="block w-full p-2.5 text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="email.anggota@test.com">
+                    <button type="button" onclick="this.parentElement.remove()" class="px-3 py-2 bg-red-50 text-red-600 rounded-lg border border-red-200 hover:bg-red-100 transition" title="Hapus baris ini">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // =======================================================
+        // LOGIKA HYBRID (TAMPIL/SEMBUNYIKAN ANGGOTA KELOMPOK)
+        // =======================================================
+        const hybridSelect = document.getElementById('hybrid-mode-select');
+        const groupArea = document.getElementById('group-input-area');
+        const membersContainerObj = document.getElementById('members-container');
+
+        if (hybridSelect && groupArea && membersContainerObj) {
+            hybridSelect.addEventListener('change', function() {
+                const isKelompok = this.value === 'kelompok';
+                const inputs = membersContainerObj.querySelectorAll('input[name="member_emails[]"]');
+
+                if (isKelompok) {
+                    // Tampilkan area kelompok dan aktifkan inputnya
+                    groupArea.classList.remove('hidden');
+                    inputs.forEach(input => {
+                        input.disabled = false;
+                        input.required = true; // Wajib diisi kalau milih kelompok
+                    });
+                } else {
+                    // Sembunyikan area kelompok dan matikan inputnya
+                    groupArea.classList.add('hidden');
+                    inputs.forEach(input => {
+                        input.disabled = true; // Agar tidak dikirim ke Controller
+                        input.required = false;
+                    });
+                }
+            });
+        }
     </script>
 </body>
 
