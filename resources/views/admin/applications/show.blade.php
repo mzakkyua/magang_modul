@@ -156,6 +156,106 @@
                 </div>
             @endif
 
+            {{-- TIMELINE PERJALANAN MAGANG (HANYA MUNCUL JIKA DITERIMA) --}}
+            @if ($application->status === 'accepted')
+                @php
+                    $vacancy = $application->vacancy;
+                    $now = \Carbon\Carbon::now();
+                    $startDate = \Carbon\Carbon::parse($vacancy->start_date);
+                    $endDate = \Carbon\Carbon::parse($vacancy->end_date);
+
+                    $isStarted = $now->gte($startDate);
+                    $isFinished = $now->gt($endDate);
+                @endphp
+
+                <div class="bg-white p-6 rounded-lg shadow mt-6 border-t-4 border-green-500">
+                    <h3 class="text-lg font-bold text-gray-800 mb-8 flex items-center gap-2 border-b pb-3">
+                        <i class="bi bi-geo-alt-fill text-green-500"></i> Pantauan Status Magang Pelamar
+                    </h3>
+
+                    {{-- MENGGUNAKAN LIST AGAR ANTI NABRAK & LEBIH RAPI --}}
+                    <ol class="relative border-l-2 border-gray-200 ml-3">
+
+                        {{-- STEP 1: DITERIMA --}}
+                        <li class="mb-8 ml-6">
+                            <div class="absolute w-4 h-4 bg-green-500 rounded-full -left-2.25 top-1 ring-4 ring-green-100">
+                            </div>
+                            <h4 class="text-sm font-bold text-gray-900 mb-1">Telah Diterima</h4>
+                            <time class="block mb-1 text-xs font-bold text-gray-400">
+                                <i class="bi bi-calendar-check mr-1"></i>
+                                {{ \Carbon\Carbon::parse($application->updated_at)->format('d M Y') }}
+                            </time>
+                            <p class="text-xs text-gray-500">
+                                Disetujui pada pukul {{ \Carbon\Carbon::parse($application->updated_at)->format('H:i') }}
+                                WIB.
+                            </p>
+                        </li>
+
+                        {{-- STEP 2: PERSIAPAN --}}
+                        <li class="mb-8 ml-6">
+                            <div
+                                class="absolute w-4 h-4 {{ $isStarted ? 'bg-green-500 ring-green-100' : 'bg-blue-500 ring-blue-100 animate-pulse' }} rounded-full -left-2.25 top-1 ring-4">
+                            </div>
+                            <h4 class="text-sm font-bold {{ $isStarted ? 'text-gray-900' : 'text-blue-700' }} mb-1">
+                                Persiapan Magang</h4>
+                            <time class="block mb-1 text-xs font-bold text-gray-400">
+                                <i class="bi bi-clock-history mr-1"></i> Target: {{ $startDate->format('d M Y') }}
+                            </time>
+                            <p class="text-xs text-gray-500">
+                                @if ($isStarted)
+                                    Masa persiapan telah dilewati.
+                                @else
+                                    Pelamar sedang dalam masa tunggu sebelum magang dimulai.
+                                @endif
+                            </p>
+                        </li>
+
+                        {{-- STEP 3: PELAKSANAAN --}}
+                        <li class="mb-8 ml-6">
+                            <div
+                                class="absolute w-4 h-4 {{ $isFinished ? 'bg-green-500 ring-green-100' : ($isStarted ? 'bg-blue-500 ring-blue-100 animate-pulse' : 'bg-gray-200 ring-white') }} rounded-full -left-2.25 top-1 ring-4">
+                            </div>
+                            <h4
+                                class="text-sm font-bold {{ $isFinished ? 'text-gray-900' : ($isStarted ? 'text-blue-700' : 'text-gray-400') }} mb-1">
+                                Pelaksanaan Magang Aktif</h4>
+                            <time class="block mb-1 text-xs font-bold text-gray-400">
+                                <i class="bi bi-calendar-range mr-1"></i> {{ $startDate->format('d M') }} s/d
+                                {{ $endDate->format('d M Y') }}
+                            </time>
+                            <p class="text-xs {{ $isStarted && !$isFinished ? 'text-gray-600' : 'text-gray-400' }}">
+                                @if ($isFinished)
+                                    Telah menyelesaikan masa magang.
+                                @elseif($isStarted)
+                                    Sedang aktif magang di divisi terkait.
+                                @else
+                                    Belum dimulai.
+                                @endif
+                            </p>
+                        </li>
+
+                        {{-- STEP 4: SELESAI --}}
+                        <li class="ml-6">
+                            <div
+                                class="absolute w-4 h-4 {{ $isFinished ? 'bg-blue-500 ring-blue-100 animate-pulse' : 'bg-gray-200 ring-white' }} rounded-full -left-2.25 top-1 ring-4">
+                            </div>
+                            <h4 class="text-sm font-bold {{ $isFinished ? 'text-blue-700' : 'text-gray-400' }} mb-1">
+                                Selesai & Penilaian</h4>
+                            <time class="block mb-1 text-xs font-bold text-gray-400">
+                                <i class="bi bi-flag mr-1"></i> Mulai: {{ $endDate->format('d M Y') }}
+                            </time>
+                            <p class="text-xs text-gray-400">
+                                @if ($isFinished)
+                                    Peserta siap dinilai. Silakan buka menu <strong>Penilaian</strong>.
+                                @else
+                                    Menunggu masa magang berakhir untuk melakukan penilaian.
+                                @endif
+                            </p>
+                        </li>
+
+                    </ol>
+                </div>
+            @endif
+
         </div>
 
         {{-- ================= RIGHT SIDE ================= --}}
