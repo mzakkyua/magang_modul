@@ -64,7 +64,7 @@ return new class extends Migration
             $table->text('evaluation_notes')->nullable(); // Catatan Resmi
             $table->text('additional_notes')->nullable(); // Catatan NB
 
-            $table->timestamp('created_at')->useCurrent();
+            $table->timestamps();
         });
 
         // 4. Certificates (Manual Upload)

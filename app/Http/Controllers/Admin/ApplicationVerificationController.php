@@ -227,6 +227,17 @@ class ApplicationVerificationController extends Controller
         $app = ApplicationMagang::with('vacancy')->findOrFail($id);
 
         /*
+
+        /*
+        ==============================================================
+        MENCEGAH DOUBLE SUBMIT / STATUS GANDA
+        ==============================================================
+        */
+        if ($app->status === $request->status) {
+            return back()->with('error', 'Lamaran ini sudah berstatus ' . strtoupper($request->status) . '!');
+        }
+        /*
+        
     ==============================================================
     2. VALIDASI HAK AKSES ADMIN
     ==============================================================

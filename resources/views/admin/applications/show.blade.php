@@ -26,8 +26,34 @@
                         <i class="bi bi-calendar mr-1"></i>
                         Daftar: {{ \Carbon\Carbon::parse($application->submission_date)->format('d M Y') }}
                     </span>
+
+                    <span class="bg-gray-100 px-2 py-1 rounded text-gray-600 uppercase font-bold text-xs">
+                        Tipe: {{ $application->vacancy->type }}
+                    </span>
                 </div>
             </div>
+
+            {{-- INFORMASI PENELITIAN (HANYA JIKA TIPE PENELITIAN) --}}
+            @if ($application->vacancy->type === 'penelitian')
+                <div class="bg-amber-50 border border-amber-200 p-6 rounded-lg shadow-sm">
+                    <h3 class="text-amber-800 text-lg font-bold mb-4 flex items-center">
+                        <i class="bi bi-journal-text mr-2"></i> Rencana Penelitian
+                    </h3>
+
+                    <div class="mb-4">
+                        <h4 class="text-xs font-bold text-amber-700 uppercase tracking-wider mb-1">Judul Penelitian</h4>
+                        <p class="text-gray-900 font-medium bg-white p-3 rounded border border-amber-100">
+                            {{ $application->research_title ?? 'Tidak mencantumkan judul' }}</p>
+                    </div>
+
+                    <div>
+                        <h4 class="text-xs font-bold text-amber-700 uppercase tracking-wider mb-1">Abstrak Singkat</h4>
+                        <p
+                            class="text-gray-800 bg-white p-4 rounded border border-amber-100 text-sm whitespace-pre-wrap leading-relaxed">
+                            {{ $application->research_abstract ?? 'Tidak mencantumkan abstrak' }}</p>
+                    </div>
+                </div>
+            @endif
 
             {{-- DATA PELAMAR --}}
             <div class="bg-white p-6 rounded-lg shadow">
@@ -35,34 +61,101 @@
                     Data Pelamar / Anggota Kelompok
                 </h3>
 
-                @foreach ($application->members as $member)
-                    <div class="mb-4 p-4 border rounded-lg bg-gray-50">
-                        <h4 class="font-bold text-gray-900">
-                            {{ $member->user->name }}
-                        </h4>
+                @foreach ($application->members as $index => $member)
+                    @php
+                        $profile = $member->user->profile;
+                        $isLeader = $member->user_id === $application->leader_user_id;
+                    @endphp
 
-                        <p class="text-sm text-gray-600">
-                            {{ $member->user->email }}
-                        </p>
+                    <div
+                        class="mb-6 p-5 border {{ $isLeader ? 'border-blue-200 bg-blue-50/30' : 'border-gray-200 bg-gray-50' }} rounded-xl">
 
-                        <div class="grid grid-cols-2 gap-2 text-sm mt-2">
+                        {{-- Header Peserta --}}
+                        <div class="flex items-start justify-between mb-4 border-b pb-3">
                             <div>
-                                <span class="text-xs text-gray-500">Instansi</span>
-                                <div class="font-medium">
-                                    {{ $member->user->profile->institution_name ?? '-' }}
-                                </div>
+                                <h4 class="font-bold text-lg text-gray-900 flex items-center gap-2">
+                                    {{ $profile->full_name ?? $member->user->name }}
+                                    @if ($isLeader)
+                                        <span
+                                            class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider">Ketua</span>
+                                    @endif
+                                </h4>
+                                <p class="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                                    <i class="bi bi-envelope"></i> {{ $member->user->email }}
+                                </p>
                             </div>
+                        </div>
 
+                        {{-- Grid Info --}}
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-4 text-sm mb-5">
                             <div>
-                                <span class="text-xs text-gray-500">Jurusan</span>
-                                <div class="font-medium">
-                                    {{ $member->user->profile->major ?? '-' }}
+                                <span class="text-[11px] font-bold text-gray-400 uppercase">NIM / NISN</span>
+                                <div class="font-medium text-gray-800">{{ $profile->nim_nisn ?? '-' }}</div>
+                            </div>
+                            <div>
+                                <span class="text-[11px] font-bold text-gray-400 uppercase">Instansi</span>
+                                <div class="font-medium text-gray-800">{{ $profile->institution_name ?? '-' }}</div>
+                            </div>
+                            <div>
+                                <span class="text-[11px] font-bold text-gray-400 uppercase">Jurusan</span>
+                                <div class="font-medium text-gray-800">{{ $profile->major ?? '-' }}</div>
+                            </div>
+                            <div>
+                                <span class="text-[11px] font-bold text-gray-400 uppercase">Jenjang</span>
+                                <div class="font-medium text-gray-800">{{ $profile->education_level ?? '-' }}</div>
+                            </div>
+                            <div>
+                                <span class="text-[11px] font-bold text-gray-400 uppercase">No. WhatsApp</span>
+                                <div class="font-medium text-gray-800">
+                                    @if ($profile && $profile->phone_number)
+                                        <a href="https://wa.me/{{ preg_replace('/^0/', '62', preg_replace('/[^0-9]/', '', $profile->phone_number)) }}"
+                                            target="_blank" class="text-green-600 hover:underline flex items-center gap-1">
+                                            <i class="bi bi-whatsapp"></i> {{ $profile->phone_number }}
+                                        </a>
+                                    @else
+                                        -
+                                    @endif
                                 </div>
                             </div>
                         </div>
+
+                        {{-- Dokumen Lampiran --}}
+                        @if ($profile && ($profile->cv_file_path || $profile->proposal_file_path))
+                            <div class="bg-white p-3 rounded border flex flex-wrap gap-3">
+                                @if ($profile->cv_file_path)
+                                    <a href="{{ Storage::url($profile->cv_file_path) }}" target="_blank"
+                                        class="inline-flex items-center gap-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded transition">
+                                        <i class="bi bi-file-earmark-person-fill text-blue-500"></i> Lihat CV
+                                    </a>
+                                @endif
+
+                                @if ($profile->proposal_file_path)
+                                    <a href="{{ Storage::url($profile->proposal_file_path) }}" target="_blank"
+                                        class="inline-flex items-center gap-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded transition">
+                                        <i class="bi bi-file-earmark-text-fill text-amber-500"></i> Lihat Proposal
+                                    </a>
+                                @endif
+                            </div>
+                        @else
+                            <div class="text-xs text-red-500 italic">
+                                <i class="bi bi-exclamation-circle"></i> Belum mengunggah dokumen (CV/Proposal).
+                            </div>
+                        @endif
+
                     </div>
                 @endforeach
             </div>
+
+            {{-- CATATAN TAMBAHAN DARI PELAMAR --}}
+            @if ($application->notes)
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <h3 class="text-sm font-bold text-gray-800 mb-2 uppercase tracking-wider flex items-center gap-2">
+                        <i class="bi bi-chat-square-text"></i> Catatan Tambahan
+                    </h3>
+                    <p class="text-sm text-gray-600 italic bg-gray-50 p-4 rounded border">"{{ $application->notes }}"</p>
+                </div>
+            @endif
+
         </div>
 
         {{-- ================= RIGHT SIDE ================= --}}
@@ -93,33 +186,51 @@
                 </div>
 
                 {{-- ======== APPROVE ======== --}}
-                <form action="{{ route('admin.applications.update-status', $application->id) }}" method="POST"
-                    class="form-approve mb-3"
-                    data-name="{{ $application->members->first()->user->name ?? 'Pelamar ini' }}">
-                    @csrf
-                    @method('PATCH')
-                    <input type="hidden" name="status" value="accepted">
+                @if ($application->status !== 'accepted')
+                    <form action="{{ route('admin.applications.update-status', $application->id) }}" method="POST"
+                        class="form-approve mb-3 action-form"
+                        data-name="{{ $application->members->first()->user->name ?? 'Pelamar ini' }}">
+                        @csrf
+                        @method('PATCH')
+                        <input type="hidden" name="status" value="accepted">
 
-                    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded">
-                        ✅ TERIMA LAMARAN
+                        <button type="submit"
+                            class="action-btn w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded shadow-sm transition">
+                            ✅ TERIMA LAMARAN
+                        </button>
+                    </form>
+                @else
+                    <button disabled
+                        class="w-full bg-gray-200 text-gray-500 font-bold py-2 rounded shadow-inner mb-3 cursor-not-allowed">
+                        ✅ SUDAH DITERIMA
                     </button>
-                </form>
+                @endif
 
                 {{-- ======== REJECT ======== --}}
-                <form action="{{ route('admin.applications.update-status', $application->id) }}" method="POST"
-                    class="form-reject" data-name="{{ $application->members->first()->user->name ?? 'Pelamar ini' }}">
-                    @csrf
-                    @method('PATCH')
-                    <input type="hidden" name="status" value="rejected">
-                    <input type="hidden" name="admin_feedback">
+                @if ($application->status !== 'rejected')
+                    <form action="{{ route('admin.applications.update-status', $application->id) }}" method="POST"
+                        class="form-reject action-form"
+                        data-name="{{ $application->members->first()->user->name ?? 'Pelamar ini' }}">
+                        @csrf
+                        @method('PATCH')
+                        <input type="hidden" name="status" value="rejected">
+                        <input type="hidden" name="admin_feedback">
 
-                    <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded">
-                        ❌ TOLAK LAMARAN
+                        <button type="submit"
+                            class="action-btn w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded shadow-sm transition">
+                            ❌ TOLAK LAMARAN
+                        </button>
+                    </form>
+                @else
+                    <button disabled
+                        class="w-full bg-gray-200 text-gray-500 font-bold py-2 rounded shadow-inner cursor-not-allowed">
+                        ❌ SUDAH DITOLAK
                     </button>
-                </form>
+                @endif
 
                 <div class="mt-4 pt-4 border-t text-center">
-                    <a href="{{ route('admin.applications.index') }}" class="text-sm text-gray-500 hover:text-gray-800">
+                    <a href="{{ route('admin.applications.index') }}"
+                        class="text-sm text-gray-500 hover:text-blue-600 font-medium transition">
                         ← Kembali ke Daftar Lamaran
                     </a>
                 </div>
