@@ -1,5 +1,5 @@
 @extends('layouts.navprofile')
-@section('title', 'profile')
+@section('title', 'Profil Saya')
 @section('content')
 
 
