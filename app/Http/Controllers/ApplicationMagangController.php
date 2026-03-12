@@ -94,195 +94,204 @@ class ApplicationMagangController extends Controller
 
         /**
          * ===============================================================
-         * STEP 4 — DATABASE TRANSACTION
+         * STEP 4 — DATABASE TRANSACTION DENGAN TRY CATCH
          * ===============================================================
-         * Semua proses dibungkus dalam transaction.
-         *
-         * Jika salah satu proses gagal:
-         * seluruh perubahan database akan rollback.
+         * Membungkus transaction dengan try-catch agar jika terjadi
+         * Exception, sistem tidak crash melainkan kembali ke halaman
+         * sebelumnya dengan pesan error.
          */
+        try {
+            return DB::transaction(function () use ($request, $leaderId, $vacancyId, $memberIds, $totalOrang) {
 
-        return DB::transaction(function () use ($request, $leaderId, $vacancyId, $memberIds, $totalOrang) {
+                /**
+                 * ===========================================================
+                 * STEP 5 — LOCK VACANCY
+                 * ===========================================================
+                 *
+                 * lockForUpdate() digunakan untuk mencegah race condition
+                 * ketika banyak user mendaftar di waktu yang sama.
+                 */
 
-            /**
-             * ===========================================================
-             * STEP 5 — LOCK VACANCY
-             * ===========================================================
-             *
-             * lockForUpdate() digunakan untuk mencegah race condition
-             * ketika banyak user mendaftar di waktu yang sama.
-             */
-
-            $vacancy = VacancyMagang::where('id', $vacancyId)
-                ->lockForUpdate()
-                ->firstOrFail();
-
-
-
-            /**
-             * ===========================================================
-             * BUSINESS RULE 1 — CEK STATUS LOWONGAN
-             * ===========================================================
-             */
-
-            if ($vacancy->status !== 'open') {
-                throw new \Exception('Maaf, pendaftaran untuk lowongan ini sedang ditutup oleh admin.');
-            }
+                $vacancy = VacancyMagang::where('id', $vacancyId)
+                    ->lockForUpdate()
+                    ->firstOrFail();
 
 
 
-            /**
-             * ===========================================================
-             * BUSINESS RULE 2 — CEK MODE PENDAFTARAN
-             * ===========================================================
-             *
-             * registration_mode:
-             * - individu
-             * - kelompok
-             * - hybrid
-             */
+                /**
+                 * ===========================================================
+                 * BUSINESS RULE 1 — CEK STATUS LOWONGAN
+                 * ===========================================================
+                 */
 
-            if ($vacancy->registration_mode === 'individu' && $totalOrang > 1) {
-                throw new \Exception('Lowongan ini hanya menerima pendaftaran individu.');
-            }
-
-            if ($vacancy->registration_mode === 'kelompok' && $totalOrang == 1) {
-                throw new \Exception('Lowongan ini hanya menerima pendaftaran kelompok.');
-            }
-
-
-
-            /**
-             * ===========================================================
-             * BUSINESS RULE 3 — CEK MIN & MAX MEMBER
-             * ===========================================================
-             */
-
-            if ($totalOrang < $vacancy->min_members) {
-                throw new \Exception("Lowongan ini mewajibkan minimal {$vacancy->min_members} orang.");
-            }
-
-            if ($totalOrang > $vacancy->max_members) {
-                throw new \Exception("Lowongan ini membatasi maksimal {$vacancy->max_members} orang.");
-            }
-
-
-
-            /**
-             * ===========================================================
-             * BUSINESS RULE 4 — VALIDASI PENELITIAN
-             * ===========================================================
-             */
-
-            if ($vacancy->type === 'penelitian') {
-
-                if (empty($request->research_title) || empty($request->research_abstract)) {
-                    throw new \Exception('Untuk jalur penelitian, judul dan abstrak wajib diisi.');
+                if ($vacancy->status !== 'open') {
+                    throw new \Exception('Maaf, pendaftaran untuk lowongan ini sedang ditutup oleh admin.');
                 }
-            }
 
 
 
-            /**
-             * ===========================================================
-             * BUSINESS RULE 5 — CEK DUPLICATE APPLY
-             * ===========================================================
-             */
+                /**
+                 * ===========================================================
+                 * BUSINESS RULE 2 — CEK MODE PENDAFTARAN
+                 * ===========================================================
+                 *
+                 * registration_mode:
+                 * - individu
+                 * - kelompok
+                 * - hybrid
+                 */
 
-            $alreadyApplied = ApplicationMagang::where('vacancy_id', $vacancyId)
-                ->where('leader_user_id', $leaderId)
-                ->whereIn('status', ['pending', 'verified', 'interview', 'accepted'])
-                ->exists();
-
-            if ($alreadyApplied) {
-                throw new \Exception('Anda sudah mendaftar pada lowongan ini.');
-            }
-
-
-
-            /**
-             * ===========================================================
-             * BUSINESS RULE 6 — CEK USER BUSY
-             * ===========================================================
-             * Pastikan semua anggota tidak sedang berada
-             * di pengajuan aktif lain.
-             */
-
-            // Ambil username sekaligus (hindari N+1 query)
-            $users = UserMagang::whereIn('id', $memberIds)
-                ->pluck('username', 'id');
-
-            foreach ($memberIds as $userId) {
-
-                if ($this->isUserBusy($userId)) {
-
-                    $nama = $users[$userId] ?? 'User';
-
-                    throw new \Exception("User '$nama' masih terdaftar pada pengajuan lain yang aktif.");
+                if ($vacancy->registration_mode === 'individu' && $totalOrang > 1) {
+                    throw new \Exception('Lowongan ini hanya menerima pendaftaran individu.');
                 }
-            }
+
+                if ($vacancy->registration_mode === 'kelompok' && $totalOrang == 1) {
+                    throw new \Exception('Lowongan ini hanya menerima pendaftaran kelompok.');
+                }
 
 
 
-            /**
-             * ===========================================================
-             * BUSINESS RULE 7 — CEK KUOTA SLOT
-             * ===========================================================
-             */
+                /**
+                 * ===========================================================
+                 * BUSINESS RULE 3 — CEK MIN & MAX MEMBER
+                 * ===========================================================
+                 */
 
-            $terpakai = ApplicationMagang::where('vacancy_id', $vacancyId)
-                ->whereIn('status', ['pending', 'verified', 'interview', 'accepted'])
-                ->count();
+                if ($totalOrang < $vacancy->min_members) {
+                    throw new \Exception("Lowongan ini mewajibkan minimal {$vacancy->min_members} orang.");
+                }
 
-            if (($vacancy->quota_slots - $terpakai) <= 0) {
-                throw new \Exception('Mohon maaf, kuota pendaftaran baru saja penuh.');
-            }
-
-
-
-            /**
-             * ===========================================================
-             * SAVE STEP 1 — CREATE APPLICATION HEADER
-             * ===========================================================
-             */
-
-            $application = ApplicationMagang::create([
-                'vacancy_id'        => $vacancyId,
-                'leader_user_id'    => $leaderId,
-                'research_title'    => $request->research_title,
-                'research_abstract' => $request->research_abstract,
-                'status'            => 'pending',
-            ]);
+                if ($totalOrang > $vacancy->max_members) {
+                    throw new \Exception("Lowongan ini membatasi maksimal {$vacancy->max_members} orang.");
+                }
 
 
 
-            /**
-             * ===========================================================
-             * SAVE STEP 2 — CREATE APPLICATION MEMBERS
-             * ===========================================================
-             */
+                /**
+                 * ===========================================================
+                 * BUSINESS RULE 4 — VALIDASI PENELITIAN
+                 * ===========================================================
+                 */
 
-            foreach ($memberIds as $userId) {
+                if ($vacancy->type === 'penelitian') {
 
-                ApplicationMemberMagang::create([
-                    'application_id'    => $application->id,
-                    'user_id'           => $userId,
-                    'individual_status' => 'active',
+                    if (empty($request->research_title) || empty($request->research_abstract)) {
+                        throw new \Exception('Untuk jalur penelitian, judul dan abstrak wajib diisi.');
+                    }
+                }
+
+
+
+                /**
+                 * ===========================================================
+                 * BUSINESS RULE 5 — CEK DUPLICATE APPLY
+                 * ===========================================================
+                 */
+
+                $alreadyApplied = ApplicationMagang::where('vacancy_id', $vacancyId)
+                    ->where('leader_user_id', $leaderId)
+                    ->whereIn('status', ['pending', 'verified', 'interview', 'accepted'])
+                    ->exists();
+
+                if ($alreadyApplied) {
+                    throw new \Exception('Anda sudah mendaftar pada lowongan ini.');
+                }
+
+
+
+                /**
+                 * ===========================================================
+                 * BUSINESS RULE 6 — CEK USER BUSY
+                 * ===========================================================
+                 * Pastikan semua anggota tidak sedang berada
+                 * di pengajuan aktif lain.
+                 */
+
+                // Ambil username sekaligus (hindari N+1 query)
+                $users = UserMagang::whereIn('id', $memberIds)
+                    ->pluck('username', 'id');
+
+                foreach ($memberIds as $userId) {
+
+                    if ($this->isUserBusy($userId)) {
+
+                        $nama = $users[$userId] ?? 'User';
+
+                        throw new \Exception("Anda '$nama' masih terdaftar pada p   engajuan lain yang aktif.");
+                    }
+                }
+
+
+
+                /**
+                 * ===========================================================
+                 * BUSINESS RULE 7 — CEK KUOTA SLOT
+                 * ===========================================================
+                 */
+
+                $terpakai = ApplicationMagang::where('vacancy_id', $vacancyId)
+                    ->whereIn('status', ['pending', 'verified', 'interview', 'accepted'])
+                    ->count();
+
+                if (($vacancy->quota_slots - $terpakai) <= 0) {
+                    throw new \Exception('Mohon maaf, kuota pendaftaran baru saja penuh.');
+                }
+
+
+
+                /**
+                 * ===========================================================
+                 * SAVE STEP 1 — CREATE APPLICATION HEADER
+                 * ===========================================================
+                 */
+
+                $application = ApplicationMagang::create([
+                    'vacancy_id'        => $vacancyId,
+                    'leader_user_id'    => $leaderId,
+                    'research_title'    => $request->research_title,
+                    'research_abstract' => $request->research_abstract,
+                    'status'            => 'pending',
                 ]);
-            }
 
 
 
+                /**
+                 * ===========================================================
+                 * SAVE STEP 2 — CREATE APPLICATION MEMBERS
+                 * ===========================================================
+                 */
+
+                foreach ($memberIds as $userId) {
+
+                    ApplicationMemberMagang::create([
+                        'application_id'    => $application->id,
+                        'user_id'           => $userId,
+                        'individual_status' => 'active',
+                    ]);
+                }
+
+
+
+                /**
+                 * ===========================================================
+                 * SUCCESS RESPONSE
+                 * ===========================================================
+                 */
+
+                return redirect()
+                    ->route('dashboard.index')
+                    ->with('success', 'Pendaftaran berhasil! Silakan menunggu verifikasi admin.');
+            });
+        } catch (\Exception $e) {
             /**
              * ===========================================================
-             * SUCCESS RESPONSE
+             * ERROR HANDLING RESPONSE
              * ===========================================================
+             * Menangkap error (misal: user sibuk, kuota penuh) dan 
+             * mengembalikan user ke halaman sebelumnya dengan pesan error.
              */
-
-            return redirect()
-                ->route('dashboard')
-                ->with('success', 'Pendaftaran berhasil! Silakan menunggu verifikasi admin.');
-        });
+            return back()->with('error', $e->getMessage());
+        }
     }
 
 

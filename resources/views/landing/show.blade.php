@@ -15,14 +15,52 @@
 
     <nav class="bg-white shadow-sm sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-            <a href="{{ route('landing.index') }}" class="flex items-center text-gray-600 hover:text-blue-600 transition">
-                <i class="bi bi-arrow-left mr-2"></i> Kembali ke Daftar
-            </a>
+            {{-- LOGIKA TOMBOL KEMBALI DINAMIS --}}
+            @if (Auth::guard('web')->check())
+                {{-- Admin --}}
+                <a href="{{ route('landing.index') }}"
+                    class="flex items-center text-gray-600 hover:text-blue-600 transition">
+                    <i class="bi bi-arrow-left mr-2"></i> Kembali
+                </a>
+            @elseif(Auth::guard('magang')->check())
+                {{-- Peserta Magang yang sudah login --}}
+                <a href="{{ route('dashboard.index') }}"
+                    class="flex items-center text-gray-600 hover:text-blue-600 transition">
+                    <i class="bi bi-arrow-left mr-2"></i> Kembali ke Dashboard
+                </a>
+            @else
+                {{-- Tamu / Guest --}}
+                <a href="{{ route('landing.index') }}"
+                    class="flex items-center text-gray-600 hover:text-blue-600 transition">
+                    <i class="bi bi-arrow-left mr-2"></i> Kembali ke Daftar
+                </a>
+            @endif
             <span class="font-bold text-blue-600 text-xl">SINAKERTRANS</span>
         </div>
     </nav>
 
     <div class="max-w-4xl mx-auto px-4 py-10">
+
+        {{-- SCRIPT SWEETALERT2 UNTUK POP-UP NOTIFIKASI --}}
+        <script type="module">
+            @if (session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: "{!! session('success') !!}",
+                    confirmButtonColor: '#2563EB', // Warna biru dari Tailwind
+                });
+            @endif
+
+            @if (session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: "{!! session('error') !!}",
+                    confirmButtonColor: '#DC2626', // Warna merah dari Tailwind
+                });
+            @endif
+        </script>
 
         <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
@@ -95,6 +133,7 @@
         </div>
     </div>
 
+    {{-- MODAL HANYA UNTUK MAGANG --}}
     @if (Auth::guard('magang')->check())
         <div id="applicationModal" tabindex="-1" aria-hidden="true"
             class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full bg-black bg-opacity-50">

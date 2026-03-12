@@ -1,35 +1,42 @@
-import './bootstrap';
+import "./bootstrap";
+import Swal from "sweetalert2";
+window.Swal = Swal;
 
 document.addEventListener("DOMContentLoaded", function () {
-
     const tabs = ["semua", "magang", "penelitian"];
     const buttons = document.querySelectorAll(".tab-btn");
 
-tabs.forEach(t => {
+    tabs.forEach((t) => {
         if (t !== "semua") {
             const tabElement = document.getElementById("tab-" + t);
             if (tabElement) tabElement.classList.add("hidden");
         }
     });
 
-    buttons.forEach(button => {
-
+    buttons.forEach((button) => {
         button.addEventListener("click", function () {
-
             const tab = this.dataset.tab;
 
             // reset semua tombol
-            buttons.forEach(btn => {
-                btn.classList.remove("border-b-2", "border-blue-600", "font-semibold");
+            buttons.forEach((btn) => {
+                btn.classList.remove(
+                    "border-b-2",
+                    "border-blue-600",
+                    "font-semibold",
+                );
                 btn.classList.add("text-gray-500");
             });
 
             // aktifkan tombol yang diklik
-            this.classList.add("border-b-2", "border-blue-600", "font-semibold");
+            this.classList.add(
+                "border-b-2",
+                "border-blue-600",
+                "font-semibold",
+            );
             this.classList.remove("text-gray-500");
 
             // sembunyikan semua tab
-            tabs.forEach(t => {
+            tabs.forEach((t) => {
                 const tabElement = document.getElementById("tab-" + t);
                 if (tabElement) {
                     tabElement.classList.add("hidden");
@@ -41,9 +48,6 @@ tabs.forEach(t => {
             if (activeTab) {
                 activeTab.classList.remove("hidden");
             }
-
         });
-
     });
-
 });
