@@ -179,4 +179,31 @@ class LandingController extends Controller
             'search'
         ));
     }
+
+    /**
+     * ===============================================================
+     * DETAIL LOWONGAN
+     * ===============================================================
+     *
+     * Menampilkan detail lowongan.
+     * Hanya lowongan dengan status OPEN yang boleh diakses.
+     */
+    public function show($id)
+    {
+        /**
+         * ===========================================================
+         * AMBIL DATA LOWONGAN
+         * ===========================================================
+         */
+        $vacancy = VacancyMagang::where('id', $id)
+            ->where('status', 'open')
+            ->firstOrFail();
+
+        /**
+         * ===========================================================
+         * RETURN VIEW DETAIL
+         * ===========================================================
+         */
+        return view('landing.show', compact('vacancy'));
+    }
 }

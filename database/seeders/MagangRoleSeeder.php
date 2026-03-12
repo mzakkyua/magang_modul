@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+
 use App\Models\User;
 use App\Models\MagangAccessRight;
 use Illuminate\Support\Facades\Hash;
@@ -14,7 +15,7 @@ class MagangRoleSeeder extends Seeder
         // 1. BUAT AKUN SUPER ADMIN (Pak Bos)
         $super = User::create([
             'name' => 'Bapak Kepala Dinas',
-            'email' => 'bos@dinas.go.id', 
+            'email' => 'bos@dinas.go.id',
             'password' => Hash::make('password'),
         ]);
 

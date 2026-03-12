@@ -108,179 +108,156 @@
         </div>
     </section>
 
-<section class="px-10 py-10">
+    <section class="px-10 py-10">
 
-{{-- SEARCH --}}
-<div class="max-w-2xl mx-auto mb-10">
+        {{-- SEARCH --}}
+        <div class="max-w-2xl mx-auto mb-10">
 
-<form action="{{ route('dashboard.index') }}" method="GET"
-class="flex gap-2 bg-white p-2 rounded-lg shadow">
+            <form action="{{ route('dashboard.index') }}" method="GET" class="flex gap-2 bg-white p-2 rounded-lg shadow">
 
-<input
-type="text"
-name="search"
-value="{{ request('search') }}"
-placeholder="Cari posisi magang..."
-class="flex-1 px-4 py-2 outline-none rounded-md">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari posisi magang..."
+                    class="flex-1 px-4 py-2 outline-none rounded-md">
 
-<button
-class="bg-blue-700 text-white px-6 py-2 rounded-md">
-Cari
-</button>
+                <button class="bg-blue-700 text-white px-6 py-2 rounded-md">
+                    Cari
+                </button>
 
-</form>
+            </form>
 
-</div>
+        </div>
 
 
 
-{{-- HASIL SEARCH --}}
-@if($search)
+        {{-- HASIL SEARCH --}}
+        @if ($search)
+            <div class="max-w-7xl mx-auto mb-6 text-gray-600">
 
-<div class="max-w-7xl mx-auto mb-6 text-gray-600">
+                Hasil pencarian untuk :
+                <span class="font-semibold text-blue-700">
+                    "{{ $search }}"
+                </span>
 
-Hasil pencarian untuk :
-<span class="font-semibold text-blue-700">
-"{{ $search }}"
-</span>
+                <a href="{{ route('dashboard.index') }}" class="ml-2 text-blue-600 text-sm">
+                    Reset
+                </a>
 
-<a href="{{ route('dashboard.index') }}"
-class="ml-2 text-blue-600 text-sm">
-Reset
-</a>
+            </div>
+        @endif
 
-</div>
 
-@endif
 
+        {{-- LOWONGAN --}}
+        <div class="max-w-7xl mx-auto">
 
+            <h2 class="text-3xl font-bold mb-6 border-l-4 border-blue-600 pl-4">
+                Lowongan Tersedia
+            </h2>
 
-{{-- LOWONGAN --}}
-<div class="max-w-7xl mx-auto">
 
-<h2 class="text-3xl font-bold mb-6 border-l-4 border-blue-600 pl-4">
-Lowongan Tersedia
-</h2>
 
+            {{-- FILTER TAB --}}
+            <div class="flex gap-6 border-b mb-8">
 
+                <button data-tab="semua" id="btn-semua" class="tab-btn border-b-2 border-blue-600 pb-2 font-semibold">
 
-{{-- FILTER TAB --}}
-<div class="flex gap-6 border-b mb-8">
+                    Semua
 
-<button data-tab="semua"
-id="btn-semua"
-class="tab-btn border-b-2 border-blue-600 pb-2 font-semibold">
+                </button>
 
-Semua
+                <button data-tab="magang" id="btn-magang" class="tab-btn pb-2 text-gray-500">
 
-</button>
+                    Magang
 
-<button data-tab="magang"
-id="btn-magang"
-class="tab-btn pb-2 text-gray-500">
+                </button>
 
-Magang
+                <button data-tab="penelitian" id="btn-penelitian" class="tab-btn pb-2 text-gray-500">
 
-</button>
+                    Penelitian
 
-<button data-tab="penelitian"
-id="btn-penelitian"
-class="tab-btn pb-2 text-gray-500">
+                </button>
 
-Penelitian
+            </div>
 
-</button>
 
-</div>
 
+            {{-- TAB SEMUA --}}
+            <div id="tab-semua">
 
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-{{-- TAB SEMUA --}}
-<div id="tab-semua">
+                    @forelse ($vacanciesMagang as $job)
+                        <x-job-card :job="$job" />
 
-<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    @empty
+                    @endforelse
 
-@forelse ($vacanciesMagang as $job)
 
-<x-job-card :job="$job"/>
+                    @forelse ($vacanciesPenelitian as $job)
+                        <x-job-card :job="$job" />
 
-@empty
-@endforelse
+                    @empty
+                    @endforelse
 
 
-@forelse ($vacanciesPenelitian as $job)
+                    @if ($vacanciesMagang->isEmpty() && $vacanciesPenelitian->isEmpty())
+                        <div class="col-span-3 text-center py-20 text-gray-500">
 
-<x-job-card :job="$job"/>
+                            Maaf, lowongan tidak ditemukan
 
-@empty
-@endforelse
+                        </div>
+                    @endif
 
+                </div>
 
-@if($vacanciesMagang->isEmpty() && $vacanciesPenelitian->isEmpty())
+            </div>
 
-<div class="col-span-3 text-center py-20 text-gray-500">
 
-Maaf, lowongan tidak ditemukan
 
-</div>
+            {{-- TAB MAGANG --}}
+            <div id="tab-magang" class="hidden">
 
-@endif
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-</div>
+                    @forelse ($vacanciesMagang as $job)
+                        <x-job-card :job="$job" />
 
-</div>
+                    @empty
 
+                        <div class="col-span-3 text-center py-20 text-gray-500">
+                            Maaf, lowongan magang tidak ditemukan
+                        </div>
+                    @endforelse
 
+                </div>
 
-{{-- TAB MAGANG --}}
-<div id="tab-magang" class="hidden">
+            </div>
 
-<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-@forelse ($vacanciesMagang as $job)
 
-<x-job-card :job="$job"/>
+            {{-- TAB PENELITIAN --}}
+            <div id="tab-penelitian" class="hidden">
 
-@empty
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-<div class="col-span-3 text-center py-20 text-gray-500">
-Maaf, lowongan magang tidak ditemukan
-</div>
+                    @forelse ($vacanciesPenelitian as $job)
+                        <x-job-card :job="$job" />
 
-@endforelse
+                    @empty
 
-</div>
+                        <div class="col-span-3 text-center py-20 text-gray-500">
+                            Maaf, lowongan penelitian tidak ditemukan
+                        </div>
+                    @endforelse
 
-</div>
+                </div>
 
+            </div>
 
+        </div>
 
-{{-- TAB PENELITIAN --}}
-<div id="tab-penelitian" class="hidden">
+    </section>
 
-<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-@forelse ($vacanciesPenelitian as $job)
-
-<x-job-card :job="$job"/>
-
-@empty
-
-<div class="col-span-3 text-center py-20 text-gray-500">
-Maaf, lowongan penelitian tidak ditemukan
-</div>
-
-@endforelse
-
-</div>
-
-</div>
-
-</div>
-
-</section>
-
-   
 
     {{-- ================= TIMELINE ================= --}}
     <section class="bg-gray-100 py-16">
@@ -318,7 +295,8 @@ Maaf, lowongan penelitian tidak ditemukan
         <div class="grid grid-cols-1 place-items-center sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
 
             <div class="group relative">
-                <img src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-1.jpeg" alt="Image 1"
+                <img src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-1.jpeg"
+                    alt="Image 1"
                     class="aspect-2/3 h-80 object-cover rounded-lg transition-transform transform scale-100 group-hover:scale-105" />
             </div>
 
