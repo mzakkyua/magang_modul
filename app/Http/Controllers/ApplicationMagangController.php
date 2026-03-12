@@ -237,6 +237,7 @@ class ApplicationMagangController extends Controller
                     throw new \Exception('Mohon maaf, kuota pendaftaran baru saja penuh.');
                 }
 
+
                 /**
                  * ===========================================================
                  * BUSINESS RULE 8 — CEK KELENGKAPAN DOKUMEN (CV & PROPOSAL)
@@ -286,6 +287,11 @@ class ApplicationMagangController extends Controller
                 ]);
 
 
+                /**
+                 * ===========================================================
+                 * SUCCESS RESPONSE
+                 * ===========================================================
+                 */
 
                 /**
                  * ===========================================================
