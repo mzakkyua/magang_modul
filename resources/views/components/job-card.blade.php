@@ -34,7 +34,7 @@
 
             <span>
                 <i class="bi bi-people"></i>
-                Kuota: {{ $job->quota_slots }}
+                Sisa Kuota: <strong class="text-blue-600">{{ $job->getSisaKuota() }}</strong> / {{ $job->quota_slots }}
             </span>
 
             <span>

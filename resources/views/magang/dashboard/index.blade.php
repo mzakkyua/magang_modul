@@ -24,90 +24,11 @@
     </div>
 
     <!-- service section -->
-    <section class="py-16 bg-gray-50" id="services">
-        <div class="container mx-auto px-4 max-w-7xl">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-4xl font-extrabold text-[#37517e] mb-4">Program Magang</h2>
-                <p class="text-gray-600 max-w-2xl mx-auto italic">Pilih divisi yang sesuai dengan bidang keahlian dan minat akademik Anda.</p>
-            </div>
+    <section>
+    @include('program.section')
+    @include('program.modal')
+   </section>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div
-                    class="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
-                    <div class="relative h-56 overflow-hidden">
-                        <img src="https://www.sos.co.id/assets/images/news/1751275811.webp" alt="Administrasi"
-                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                        <div class="absolute top-4 left-4">
-                            <span
-                                class="bg-blue-600 text-white text-[10px] font-bold uppercase px-3 py-1 rounded-full shadow-lg">Administrasi</span>
-                        </div>
-                    </div>
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-gray-800 mb-3 group-hover:text-blue-600 transition">Administrasi
-                            Umum & Perkantoran</h3>
-                        <p class="text-gray-600 text-sm leading-relaxed mb-4">Mempelajari tata kelola dokumen dinas,
-                            surat-menyurat formal, dan manajemen kearsipan digital di lingkungan pemerintahan.</p>
-                        <div class="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-wider">
-                            <span>Detail Program</span>
-                            <i class="bi bi-arrow-right"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div
-                    class="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100">
-                    <div class="relative h-56 overflow-hidden">
-                        <img src="https://www.score.org/sites/default/files/styles/responsive_16_9_500w/public/d7_migration/42/AdobeStock_377657914%20%281%29.jpg?itok=32he_-io"
-                            alt="Hubungan Industrial"
-                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                        <div class="absolute top-4 left-4">
-                            <span
-                                class="bg-indigo-600 text-white text-[10px] font-bold uppercase px-3 py-1 rounded-full shadow-lg">Hubungan
-                                Kerja</span>
-                        </div>
-                    </div>
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-gray-800 mb-3 group-hover:text-indigo-600 transition">Hubungan
-                            Industrial</h3>
-                        <p class="text-gray-600 text-sm leading-relaxed mb-4">Terlibat dalam proses mediasi hubungan kerja,
-                            pemantauan kesejahteraan pekerja, dan sosialisasi peraturan ketenagakerjaan.</p>
-                        <div class="flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-wider">
-                            <span>Detail Program</span>
-                            <i class="bi bi-arrow-right"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div
-                    class="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-blue-100 ring-2 ring-blue-50">
-                    <div class="relative h-56 overflow-hidden">
-                        <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&auto=format&fit=crop"
-                            alt="IT Support"
-                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                        <div class="absolute top-4 left-4">
-                            <span
-                                class="bg-cyan-600 text-white text-[10px] font-bold uppercase px-3 py-1 rounded-full shadow-lg">IT
-                                & Sistem Informasi</span>
-                        </div>
-                        <div class="absolute inset-0 bg-blue-600/10 group-hover:bg-transparent transition-colors"></div>
-                    </div>
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-gray-800 mb-3 group-hover:text-blue-600 transition">Pengembangan
-                            Web & IT Support</h3>
-                        <p class="text-gray-600 text-sm leading-relaxed mb-4">Membantu pengelolaan website dinas,
-                            pemeliharaan server, dan pengembangan aplikasi pelayanan publik digital (e-government).</p>
-                        <div class="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-wider">
-                            <span>Detail Program</span>
-                            <i class="bi bi-arrow-right"></i>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </section>
-
-    <section class="px-10 py-10">
 
         {{-- SEARCH --}}
         <div class="max-w-2xl mx-auto mb-10">

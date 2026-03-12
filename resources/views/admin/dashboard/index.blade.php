@@ -116,10 +116,10 @@
                     @forelse ($pendaftaranTerbaru as $item)
                         <tr class="hover:bg-slate-50">
                             <td class="px-6 py-4 font-medium text-slate-800">
-                                {{ $item->leader?->user?->name ?? '-' }}
+                                {{ $item->leader?->username ?? '-' }}
                             </td>
                             <td class="px-6 py-4 text-slate-600">
-                                {{ $item->leader?->user?->profile?->institution_name ?? '-' }}
+                                {{ $item->leader?->profile?->institution_name ?? '-' }}
                             </td>
                             <td class="px-6 py-4 text-slate-600">
                                 {{ $item->submission_date?->format('d M Y') ?? '-' }}

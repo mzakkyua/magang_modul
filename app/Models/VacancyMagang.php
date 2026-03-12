@@ -66,6 +66,47 @@ class VacancyMagang extends Model
     }
 
     /**
+     * =========================================================
+     * FUNGSI PINTAR: CEK & UPDATE STATUS KUOTA OTOMATIS
+     * =========================================================
+     */
+    public function updateStatusBasedOnQuota()
+    {
+        // Hitung berapa kuota yang sedang terpakai (status aktif)
+        $terpakai = $this->applications()
+            ->whereIn('status', ['pending', 'verified', 'interview', 'accepted'])
+            ->count();
+
+        $sisaKuota = $this->quota_slots - $terpakai;
+
+        // Jika kuota habis, tutup. Jika masih ada, buka.
+        if ($sisaKuota <= 0 && $this->status === 'open') {
+            $this->update(['status' => 'closed']);
+        } elseif ($sisaKuota > 0 && $this->status === 'closed') {
+            $this->update(['status' => 'open']);
+        }
+    }
+
+    /**
+     * =====================================================
+     * MENGHITUNG SISA KUOTA (UNTUK TAMPILAN)
+     * =====================================================
+     */
+    public function getSisaKuota()
+    {
+        // Hitung jumlah pelamar yang sedang aktif
+        $terpakai = $this->applications()
+            ->whereIn('status', ['pending', 'verified', 'interview', 'accepted'])
+            ->count();
+
+        // Hitung sisa
+        $sisa = $this->quota_slots - $terpakai;
+
+        // Pastikan angkanya tidak minus (jika ada kesalahan data)
+        return $sisa > 0 ? $sisa : 0;
+    }
+
+    /**
      * =====================================================
      * HELPER METHODS
      * =====================================================

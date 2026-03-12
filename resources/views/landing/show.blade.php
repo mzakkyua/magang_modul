@@ -144,9 +144,14 @@
                             Konfirmasi Lamaran
                         </h3>
                         <button type="button"
-                            class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center"
+                            class="text-gray-400 bg-transparent hover:bg-red-600 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center"
                             data-modal-hide="applicationModal">
-                            <i class="bi bi-x-lg"></i>
+                            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 14 14">
+                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                    stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                            </svg>
+                            <span class="sr-only">Close modal</span>
                         </button>
                     </div>
                     <div class="p-6 space-y-6">
@@ -159,11 +164,39 @@
                             @csrf
                             <input type="hidden" name="vacancy_id" value="{{ $vacancy->id }}">
 
+                            {{-- KONDISI KHUSUS UNTUK JALUR PENELITIAN --}}
+                            @if ($vacancy->type === 'penelitian')
+                                <div class="mb-4">
+                                    <label for="research_title"
+                                        class="block mb-2 text-sm font-medium text-gray-900">Judul Penelitian <span
+                                            class="text-red-500">*</span></label>
+                                    <input type="text" id="research_title" name="research_title" maxlength="255"
+                                        required
+                                        class="block w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="Masukkan rencana judul penelitian Anda">
+                                    {{-- Teks Penghitung Karakter Judul --}}
+                                    <p id="title_counter" class="text-xs text-gray-500 text-right mt-1 font-medium">0 /
+                                        255 karakter</p>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="research_abstract"
+                                        class="block mb-2 text-sm font-medium text-gray-900">Abstrak Singkat <span
+                                            class="text-red-500">*</span></label>
+                                    <textarea id="research_abstract" name="research_abstract" rows="4" maxlength="1000" required
+                                        class="block w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="Jelaskan secara singkat latar belakang dan tujuan penelitian Anda..."></textarea>
+                                    {{-- Teks Penghitung Karakter Abstrak --}}
+                                    <p id="abstract_counter" class="text-xs text-gray-500 text-right mt-1 font-medium">0
+                                        / 1000 karakter</p>
+                                </div>
+                            @endif
+
+                            {{-- CATATAN UMUM (OPSIONAL) --}}
                             <div class="mb-4">
                                 <label for="notes" class="block mb-2 text-sm font-medium text-gray-900">Catatan
-                                    Singkat
-                                    (Opsional)</label>
-                                <textarea id="notes" name="notes" rows="3"
+                                    Singkat (Opsional)</label>
+                                <textarea id="notes" name="notes" rows="2"
                                     class="block w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                                     placeholder="Kenapa Anda tertarik?"></textarea>
                             </div>
@@ -179,6 +212,57 @@
         </div>
     @endif
 
+    {{-- SCRIPT UNTUK SWEETALERT DAN PENGHITUNG KARAKTER --}}
+    <script type="module">
+        // 1. LOGIKA SWEETALERT (DENGAN PERBAIKAN TOMBOL TAILWIND)
+        @if (session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: "{!! session('success') !!}",
+                buttonsStyling: false, // Matikan style bawaan
+                customClass: {
+                    confirmButton: 'bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 transition'
+                }
+            });
+        @endif
+
+        @if (session('error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: "{!! session('error') !!}",
+                buttonsStyling: false, // Matikan style bawaan
+                customClass: {
+                    confirmButton: 'bg-red-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-red-700 transition'
+                }
+            });
+        @endif
+
+        // 2. LOGIKA PENGHITUNG KARAKTER REAL-TIME
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // Elemen Judul
+            const titleInput = document.getElementById('research_title');
+            const titleCounter = document.getElementById('title_counter');
+
+            if (titleInput && titleCounter) {
+                titleInput.addEventListener('input', function() {
+                    titleCounter.textContent = this.value.length + ' / 255 karakter';
+                });
+            }
+
+            // Elemen Abstrak
+            const abstractInput = document.getElementById('research_abstract');
+            const abstractCounter = document.getElementById('abstract_counter');
+
+            if (abstractInput && abstractCounter) {
+                abstractInput.addEventListener('input', function() {
+                    abstractCounter.textContent = this.value.length + ' / 1000 karakter';
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>

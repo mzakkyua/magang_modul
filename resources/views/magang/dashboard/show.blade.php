@@ -15,7 +15,7 @@
 
     <nav class="bg-white shadow-sm sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-            <a href="{{ route('landing.index') }}" class="flex items-center text-gray-600 hover:text-blue-600 transition">
+            <a href="{{ route('dashboard.index') }}" class="flex items-center text-gray-600 hover:text-blue-600 transition">
                 <i class="bi bi-arrow-left mr-2"></i> Kembali ke Daftar
             </a>
             <span class="font-bold text-blue-600 text-xl">SINAKERTRANS</span>
@@ -74,22 +74,7 @@
                     </button>
 
                     {{-- KONDISI 3: JIKA BELUM LOGIN (TAMU) --}}
-                @else
-                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 text-center">
-                        <p class="text-gray-600 mb-3">Tertarik dengan posisi ini? Silakan login atau daftar akun
-                            terlebih dahulu.</p>
-
-                        <div class="flex justify-center gap-4">
-                            <a href="{{ route('login') }}"
-                                class="bg-white text-blue-600 border border-blue-600 font-bold py-2 px-6 rounded-lg hover:bg-blue-50 transition">
-                                Masuk
-                            </a>
-                            <a href="{{ route('register') }}"
-                                class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 transition shadow">
-                                Daftar Akun
-                            </a>
-                        </div>
-                    </div>
+                
                 @endif
             </div>
         </div>

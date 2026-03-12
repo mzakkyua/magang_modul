@@ -227,6 +227,17 @@ class ApplicationVerificationController extends Controller
         $app = ApplicationMagang::with('vacancy')->findOrFail($id);
 
         /*
+
+        /*
+        ==============================================================
+        MENCEGAH DOUBLE SUBMIT / STATUS GANDA
+        ==============================================================
+        */
+        if ($app->status === $request->status) {
+            return back()->with('error', 'Lamaran ini sudah berstatus ' . strtoupper($request->status) . '!');
+        }
+        /*
+        
     ==============================================================
     2. VALIDASI HAK AKSES ADMIN
     ==============================================================
@@ -296,6 +307,16 @@ class ApplicationVerificationController extends Controller
 
         /*
     ==============================================================
+    5.5. AUTO UPDATE STATUS LOWONGAN BERDASARKAN KUOTA
+    ==============================================================
+    Memanggil fungsi pintar di model VacancyMagang untuk mengecek
+    apakah lowongan harus ditutup (karena penuh) atau dibuka kembali
+    (karena ada pelamar yang ditolak).
+    */
+        $app->vacancy->updateStatusBasedOnQuota();
+
+        /*
+    ==============================================================
     6. BERSIHKAN CACHE DASHBOARD
     ==============================================================
     Agar statistik dashboard langsung diperbarui
@@ -310,7 +331,7 @@ class ApplicationVerificationController extends Controller
         $msg = "Status berhasil diubah menjadi " . ucfirst($request->status);
 
         if ($request->status === 'rejected') {
-            $msg .= " (Kuota slot lowongan otomatis bertambah kembali).";
+            $msg .= " (Kuota lowongan otomatis bertambah kembali).";
         } elseif ($request->status === 'accepted') {
             $msg .= " (Satu slot kuota permanen terpakai).";
         }
