@@ -110,7 +110,14 @@
             <i class="bi bi-pencil-square mr-3"></i>
             Penilaian
         </a>
+
+        <a href="{{ route('admin.calendar.index') }}"
+            class="flex items-center gap-2 p-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition">
+            <i class="bi bi-calendar-check"></i> Jadwal Kegiatan
+        </a>
     </nav>
+
+
 
     {{-- AKUN --}}
     <div class="border-t border-slate-200 p-4">
