@@ -52,24 +52,30 @@ class ApplicationMagangController extends Controller
             'vacancy_id'        => 'required|exists:vacancies_magang,id',
             'research_title'    => 'nullable|string|max:255',
             'research_abstract' => 'nullable|string',
-            'members'           => 'nullable|array',
-            'members.*'         => 'exists:users_magang,id',
+            'member_emails'     => 'nullable|array',
+            'member_emails.*'   => 'email|exists:users_magang,email', // Pastikan emailnya valid & terdaftar
+        ], [
+            'member_emails.*.exists' => 'Email anggota :input tidak ditemukan di sistem. Pastikan mereka sudah mendaftar akun.',
         ]);
 
 
         /**
          * ===============================================================
-         * STEP 2 — AMBIL DATA DASAR
+         * STEP 2 — AMBIL DATA DASAR & KONVERSI EMAIL KE ID
          * ===============================================================
          */
 
         // User yang sedang login = Ketua
         $leaderId = Auth::guard('magang')->id();
-
         $vacancyId = $request->vacancy_id;
 
-        // Ambil daftar member dari request
-        $memberIds = $request->members ?? [];
+        // Ambil daftar email dari request, lalu cari ID user-nya di database
+        $memberIds = [];
+        if ($request->has('member_emails') && !empty($request->member_emails)) {
+            $memberIds = UserMagang::whereIn('email', $request->member_emails)
+                ->pluck('id')
+                ->toArray();
+        }
 
 
         /**
@@ -157,12 +163,27 @@ class ApplicationMagangController extends Controller
                  * ===========================================================
                  */
 
+<<<<<<< HEAD
                 if ($totalOrang < $vacancy->min_members) {
                     throw new \Exception("Lowongan ini mewajibkan minimal {$vacancy->min_members} orang.");
                 }
 
                 if ($totalOrang > $vacancy->max_members) {
                     throw new \Exception("Lowongan ini membatasi maksimal {$vacancy->max_members} orang.");
+=======
+                // Jika mode Hybrid dan dia daftar sendiri (Individu), loloskan pengecekan minimal anggota kelompok
+                if ($vacancy->registration_mode === 'hybrid' && $totalOrang == 1) {
+                    // Lolos (tidak melakukan pengecekan min/max di bawah)
+                } else {
+                    // Untuk mode Kelompok, atau Hybrid yang mengundang teman
+                    if ($totalOrang < $vacancy->min_members) {
+                        throw new \Exception("Pendaftaran kelompok mewajibkan minimal {$vacancy->min_members} orang.");
+                    }
+
+                    if ($totalOrang > $vacancy->max_members) {
+                        throw new \Exception("Lowongan ini membatasi maksimal {$vacancy->max_members} orang.");
+                    }
+>>>>>>> main
                 }
 
 
@@ -237,6 +258,10 @@ class ApplicationMagangController extends Controller
                     throw new \Exception('Mohon maaf, kuota pendaftaran baru saja penuh.');
                 }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> main
                 /**
                  * ===========================================================
                  * BUSINESS RULE 8 — CEK KELENGKAPAN DOKUMEN (CV & PROPOSAL)
@@ -286,6 +311,11 @@ class ApplicationMagangController extends Controller
                 ]);
 
 
+                /**
+                 * ===========================================================
+                 * SUCCESS RESPONSE
+                 * ===========================================================
+                 */
 
                 /**
                  * ===========================================================

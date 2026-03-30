@@ -99,6 +99,11 @@ Route::get('/', [LandingController::class, 'index'])
 Route::get('/lowongan/{vacancy}', [LandingController::class, 'show'])
     ->name('landing.show');
 
+// =======================================================
+// KALENDER PUBLIK (Halaman & Fetch API untuk semua orang)
+// =======================================================
+Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar');
+Route::get('/calendar/events', [CalendarController::class, 'fetch'])->name('calendar.events');
 
 /*
 |--------------------------------------------------------------------------
@@ -146,9 +151,9 @@ Route::middleware('auth:magang')->group(function () {
 
     Route::post('/applications', [ApplicationMagangController::class, 'store'])
         ->name('applications.store');
-    
+
     Route::get('/status', [StatusMagangController::class, 'index'])
-    ->name('status');    
+        ->name('status');
 });
 
 
@@ -172,6 +177,15 @@ Route::prefix('admin')
         // ---------------------
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])
             ->name('dashboard');
+
+        // ---------------------
+        // MANAJEMEN KALENDER (KHUSUS ADMIN)
+        // ---------------------
+        // Rute ini ada di dalam prefix 'admin', sehingga URL-nya menjadi /admin/calendar
+        Route::get('/calendar', [CalendarController::class, 'indexAdmin'])->name('calendar.index');
+        Route::post('/calendar', [CalendarController::class, 'store'])->name('calendar.store');
+        Route::put('/calendar/{event}', [CalendarController::class, 'update'])->name('calendar.update');
+        Route::delete('/calendar/{event}', [CalendarController::class, 'destroy'])->name('calendar.destroy');
 
         // ---------------------
         // CRUD LOWONGAN
@@ -232,15 +246,3 @@ Route::prefix('admin')
             [AdminProfileController::class, 'update']
         )->name('profile.update');
     });
-
-     //event kalender
-    Route::get('/calendar', [CalendarController::class, 'index'])
-    ->name('calendar');
-
-Route::get('/calendar/events', [CalendarController::class, 'fetch'])
-    ->name('calendar.events');  
-Route::middleware('auth:admin')->group(function () {
-    Route::post('/calendar', [CalendarController::class, 'store']);
-    Route::put('/calendar/{event}', [CalendarController::class, 'update']);
-    Route::delete('/calendar/{event}', [CalendarController::class, 'destroy']);
-});

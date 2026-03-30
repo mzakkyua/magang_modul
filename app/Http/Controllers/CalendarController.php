@@ -183,4 +183,15 @@ class CalendarController extends Controller
             'success' => true
         ]);
     }
+
+    /**
+     * ===============================================================
+     * ADMIN CALENDAR PAGE
+     * ===============================================================
+     * Menampilkan halaman manajemen kalender khusus untuk admin
+     */
+    public function indexAdmin()
+    {
+        return view('admin.calendar.index');
+    }
 }

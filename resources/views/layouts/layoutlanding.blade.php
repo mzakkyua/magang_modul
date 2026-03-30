@@ -64,9 +64,9 @@
                                 {{-- Tombol Pemicu --}}
                                 <div
                                     class="flex items-center gap-3 text-[#37517e] cursor-pointer px-3 py-2 rounded-lg transition-all duration-200">
-                                    <div class="bg-blue-100 p-1.5 rounded-full flex items-center justify-center">
-                                        <i class="bi bi-person-circle text-lg text-blue-600"></i>
-                                    </div>
+                                    <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center border-2 border-gray-100 group-hover:border-blue-500 group-hover:ring-4 group-hover:ring-blue-50 transition-all duration-300">
+    <i class="bi bi-person text-xl text-gray-500 group-hover:text-blue-600"></i>
+</div>
                                     <div class="text-left">
                                         <p class="text-[13px] font-bold leading-tight">
                                             {{ Auth::guard('magang')->user()->nama_peserta }}
