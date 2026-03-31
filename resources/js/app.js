@@ -51,6 +51,8 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 });
+<<<<<<< HEAD
+=======
 
 window.openModal = function(title, category, image, description){
 
@@ -74,3 +76,4 @@ modal.classList.add("hidden");
 modal.classList.remove("flex");
 
 }
+>>>>>>> main

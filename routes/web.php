@@ -143,6 +143,9 @@ Route::middleware('auth:magang')->group(function () {
     Route::get('/dashboard', [DashboardMagangController::class, 'index'])
         ->name('dashboard.index');
 
+    Route::get('/dashboard/lowongan/{id}', [DashboardMagangController::class, 'show'])
+        ->name('dashboard.show');
+
     Route::get('/profile', [ProfileMagangController::class, 'edit'])
         ->name('profile.edit');
 
