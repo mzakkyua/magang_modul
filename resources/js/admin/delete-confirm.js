@@ -146,3 +146,47 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 });
+
+document.addEventListener("DOMContentLoaded", function () {
+    const btnResign = document.getElementById("btn-trigger-resign");
+    const formResign = document.getElementById("form-resign-intern-action");
+
+    if (btnResign && formResign) {
+        const applicantName = formResign.getAttribute("data-name");
+
+        btnResign.addEventListener("click", function () {
+            Swal.fire({
+                // JUDUL SEKARANG SPESIFIK PENGUNDURAN DIRI
+                title: "Konfirmasi Pengunduran Diri?",
+                text: `Berikan alasan kenapa ${applicantName} mengundurkan diri di tengah masa magang:`,
+                icon: "warning",
+                input: "textarea", // Munculkan kotak input alasan
+                inputPlaceholder:
+                    "Tuliskan alasan spesifik (misal: sakit berat, masalah perkuliahan, dll)...",
+                showCancelButton: true,
+                confirmButtonColor: "#f97316", // Warna oranye orange-500
+                cancelButtonColor: "#6b7280", // Warna abu-abu gray-500
+                confirmButtonText: "Ya, Tandai Mundur",
+                cancelButtonText: "Batal",
+                inputValidator: (value) => {
+                    if (!value) {
+                        return "Mohon maaf, alasan WAJIB diisi agar terdokumentasi.";
+                    }
+                },
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Jika admin mengonfirmasi dan mengisi alasan
+                    // Buat input hidden baru untuk admin_feedback dan isi dengan nilainya
+                    const feedbackInput = document.createElement("input");
+                    feedbackInput.type = "hidden";
+                    feedbackInput.name = "admin_feedback";
+                    feedbackInput.value = result.value;
+                    formResign.appendChild(feedbackInput);
+
+                    // Submit form secara manual
+                    formResign.submit();
+                }
+            });
+        });
+    }
+});

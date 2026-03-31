@@ -273,8 +273,9 @@
                         class="text-xl font-bold
                     {{ $application->status === 'accepted' ? 'text-green-600' : '' }}
                     {{ $application->status === 'rejected' ? 'text-red-600' : '' }}
+                    {{ $application->status === 'resigned' ? 'text-orange-600' : '' }}
                     {{ in_array($application->status, ['pending', 'verified', 'interview']) ? 'text-yellow-600' : '' }}">
-                        {{ strtoupper($application->status) }}
+                        {{ strtoupper(str_replace('_', ' ', $application->status)) }}
                     </h2>
 
                     @if ($application->admin_feedback)
@@ -326,6 +327,28 @@
                         class="w-full bg-gray-200 text-gray-500 font-bold py-2 rounded shadow-inner cursor-not-allowed">
                         ❌ SUDAH DITOLAK
                     </button>
+                @endif
+
+                {{-- ======== RESIGN (HANYA MUNCUL JIKA SUDAH ACCEPTED) ======== --}}
+                @if ($application->status === 'accepted')
+                    <div class="mt-4 pt-4 border-t border-gray-200">
+                        {{-- HAPUS form-reject, GANTI form-resign-intern. HAPUS action-form --}}
+                        <form action="{{ route('admin.applications.update-status', $application->id) }}" method="POST"
+                            id="form-resign-intern-action" class="form-resign-intern"
+                            data-name="{{ $application->members->first()->user->name ?? 'Pelamar ini' }}">
+                            @csrf
+                            @method('PATCH')
+                            <input type="hidden" name="status" value="resigned">
+
+                            {{-- Input alasan akan kita sisipkan lewat JS nanti, jadi ini dikosongkan/dihapus --}}
+                            {{-- <input type="hidden" name="admin_feedback" value=""> --}}
+
+                            <button type="button" {{-- GANTI type="submit" MENJADI type="button" --}} id="btn-trigger-resign"
+                                class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 rounded shadow-sm transition flex items-center justify-center gap-2">
+                                <i class="bi bi-person-walking"></i> MENGUNDURKAN DIRI
+                            </button>
+                        </form>
+                    </div>
                 @endif
 
                 <div class="mt-4 pt-4 border-t text-center">
