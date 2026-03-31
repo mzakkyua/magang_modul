@@ -5,7 +5,7 @@
 
     {{-- ===================== HERO SECTION ===================== --}}
     {{-- BUGFIX: konten teks sekarang DI DALAM wrapper relative --}}
-    <section class="relative w-full h-[480px] md:h-[540px] overflow-hidden" id="home">
+    <section class="relative w-full h-120 md:h-135 overflow-hidden" id="home">
 
         {{-- Background Image --}}
         <div class="absolute inset-0">
@@ -13,7 +13,7 @@
                 class="object-cover object-center w-full h-full" />
 
             {{-- Gradient Overlay --}}
-            <div class="absolute inset-0 bg-gradient-to-r from-blue-900/90 via-blue-800/75 to-blue-700/30"></div>
+            <div class="absolute inset-0 bg-linear-to-r from-blue-900/90 via-blue-800/75 to-blue-700/30"></div>
         </div>
 
         {{-- Hero Content — sekarang DI DALAM wrapper sehingga posisi benar --}}
@@ -220,7 +220,7 @@
     </section>
 
     {{-- ===================== TIMELINE & CALENDAR SECTION ===================== --}}
-    <section class="bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 py-20">
+    <section class="bg-linear-to-br from-slate-50 via-blue-50/30 to-slate-100 py-20">
         <div id="timeline-wrapper"
             class="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 items-start px-4 md:px-6 transition-all duration-500">
 
@@ -279,7 +279,7 @@
 
                         {{-- Card Header --}}
                         <div class="flex items-center gap-3 pb-4 mb-6 border-b border-gray-100">
-                            <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
                                 <i class="bi bi-geo-alt-fill text-blue-600"></i>
                             </div>
                             <div>
@@ -289,13 +289,13 @@
                         </div>
 
                         {{-- Vertical Timeline Steps --}}
-                        <div class="relative border-l-2 border-blue-100 ml-[7px] space-y-8">
+                        <div class="relative border-l-2 border-blue-100 ml-1.75 space-y-8">
 
                             {{-- STEP 1: DITERIMA --}}
                             <div class="relative pl-8">
                                 {{-- BUGFIX: -left-2.25 tidak valid, ganti ke -left-[9px] --}}
                                 <div
-                                    class="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-green-500 ring-4 ring-green-50 shadow-sm">
+                                    class="absolute -left-2.25 top-0 w-4 h-4 rounded-full bg-green-500 ring-4 ring-green-50 shadow-sm">
                                 </div>
                                 <div class="flex items-center gap-2 mb-1">
                                     <h4 class="text-sm font-bold text-gray-900">Diterima</h4>
@@ -311,7 +311,7 @@
                             <div class="relative pl-8">
                                 {{-- BUGFIX: -left-2.25top-0 ada typo, ganti ke -left-[9px] top-0 --}}
                                 <div
-                                    class="absolute -left-[9px] top-0 w-4 h-4 rounded-full {{ $isStarted ? 'bg-green-500 ring-4 ring-green-50' : 'bg-blue-500 ring-4 ring-blue-50 animate-pulse' }} shadow-sm">
+                                    class="absolute -left-2.25 top-0 w-4 h-4 rounded-full {{ $isStarted ? 'bg-green-500 ring-4 ring-green-50' : 'bg-blue-500 ring-4 ring-blue-50 animate-pulse' }} shadow-sm">
                                 </div>
                                 <div class="flex items-center gap-2 mb-1">
                                     <h4 class="text-sm font-bold {{ $isStarted ? 'text-gray-900' : 'text-blue-700' }}">
@@ -339,7 +339,7 @@
                             {{-- STEP 3: PELAKSANAAN --}}
                             <div class="relative pl-8">
                                 <div
-                                    class="absolute -left-[9px] top-0 w-4 h-4 rounded-full {{ $isFinished ? 'bg-green-500 ring-4 ring-green-50' : ($isStarted ? 'bg-blue-500 ring-4 ring-blue-50 animate-pulse' : 'bg-gray-200 ring-4 ring-white') }} shadow-sm">
+                                    class="absolute -left-2.25 top-0 w-4 h-4 rounded-full {{ $isFinished ? 'bg-green-500 ring-4 ring-green-50' : ($isStarted ? 'bg-blue-500 ring-4 ring-blue-50 animate-pulse' : 'bg-gray-200 ring-4 ring-white') }} shadow-sm">
                                 </div>
                                 <div class="flex items-center gap-2 mb-1">
                                     <h4
@@ -371,7 +371,7 @@
                             {{-- STEP 4: SELESAI & PENILAIAN --}}
                             <div class="relative pl-8">
                                 <div
-                                    class="absolute -left-[9px] top-0 w-4 h-4 rounded-full {{ $isFinished ? 'bg-blue-500 ring-4 ring-blue-50 animate-pulse' : 'bg-gray-200 ring-4 ring-white' }} shadow-sm">
+                                    class="absolute -left-2.25 top-0 w-4 h-4 rounded-full {{ $isFinished ? 'bg-blue-500 ring-4 ring-blue-50 animate-pulse' : 'bg-gray-200 ring-4 ring-white' }} shadow-sm">
                                 </div>
                                 <div class="flex items-center gap-2 mb-1">
                                     <h4 class="text-sm font-bold {{ $isFinished ? 'text-blue-700' : 'text-gray-400' }}">
@@ -444,7 +444,7 @@
                         alt="Dokumentasi Magang 1"
                         class="h-64 w-full object-cover transition-transform duration-500 group-hover:scale-110" />
                     <div
-                        class="absolute inset-0 bg-gradient-to-t from-blue-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                        class="absolute inset-0 bg-linear-to-t from-blue-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
                         <i class="bi bi-zoom-in text-white text-xl"></i>
                     </div>
                 </div>
@@ -454,7 +454,7 @@
                         alt="Dokumentasi Magang 2"
                         class="h-64 w-full object-cover transition-transform duration-500 group-hover:scale-110" />
                     <div
-                        class="absolute inset-0 bg-gradient-to-t from-blue-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                        class="absolute inset-0 bg-linear-to-t from-blue-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
                         <i class="bi bi-zoom-in text-white text-xl"></i>
                     </div>
                 </div>
@@ -464,7 +464,7 @@
                         alt="Dokumentasi Magang 3"
                         class="h-64 w-full object-cover transition-transform duration-500 group-hover:scale-110" />
                     <div
-                        class="absolute inset-0 bg-gradient-to-t from-blue-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                        class="absolute inset-0 bg-linear-to-t from-blue-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
                         <i class="bi bi-zoom-in text-white text-xl"></i>
                     </div>
                 </div>
@@ -474,7 +474,7 @@
                         alt="Dokumentasi Magang 4"
                         class="h-64 w-full object-cover transition-transform duration-500 group-hover:scale-110" />
                     <div
-                        class="absolute inset-0 bg-gradient-to-t from-blue-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
+                        class="absolute inset-0 bg-linear-to-t from-blue-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
                         <i class="bi bi-zoom-in text-white text-xl"></i>
                     </div>
                 </div>
