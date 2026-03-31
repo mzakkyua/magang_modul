@@ -116,8 +116,19 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
 
-                {{-- Logo --}}
-                <a href="/" class="flex items-center gap-2.5 shrink-0">
+
+                {{-- LOGIKA LINK LOGO DINAMIS --}}
+                @php
+                    $logoUrl = url('/'); // Default ke halaman depan (Landing Page)
+
+                    if (Auth::guard('magang')->check()) {
+                        $logoUrl = route('dashboard.index'); // Ke Dashboard Mahasiswa
+                    } elseif (Auth::guard('web')->check()) {
+                        $logoUrl = route('admin.dashboard'); // Ke Dashboard Admin
+                    }
+                @endphp
+
+                <a href="{{ $logoUrl }}" class="flex items-center gap-2.5 shrink-0 transition hover:opacity-80">
                     <div class="logo-pulse-ring relative w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center"
                         style="box-shadow: 0 0 0 3px rgba(37,99,235,0.15), 0 4px 12px rgba(37,99,235,0.3);">
                         <i class="bi bi-briefcase-fill text-white text-sm"></i>

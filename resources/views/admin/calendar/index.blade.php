@@ -64,64 +64,128 @@
                     center: 'title',
                     right: 'dayGridMonth,timeGridWeek,listWeek'
                 },
-                events: '{{ route('calendar.events') }}', // Ambil data
-                selectable: true, // Bisa klik tanggal
-                editable: true, // Bisa drag and drop
+                events: '{{ route('calendar.events') }}',
+                selectable: true,
+                editable: true,
 
                 // 1. KETIKA TANGGAL DIKLIK (TAMBAH ACARA)
                 select: async function(info) {
+                    // Mengakali "Jebakan" FullCalendar agar end-date-nya sesuai
+                    let endDateAdjusted = new Date(info.end.valueOf() - 1).toISOString().split('T')[0];
+
                     const {
                         value: formValues
                     } = await Swal.fire({
                         title: 'Tambah Kegiatan Baru',
-                        html: `<input id="swal-title" class="swal2-input" placeholder="Nama Kegiatan (Misal: Onboarding)">` +
-                            `<textarea id="swal-desc" class="swal2-textarea" placeholder="Deskripsi Singkat"></textarea>` +
-                            `<select id="swal-color" class="swal2-select">
-                            <option value="#3b82f6">Biru (Umum)</option>
-                            <option value="#10b981">Hijau (Penting)</option>
-                            <option value="#f59e0b">Kuning (Opsional)</option>
-                            <option value="#ef4444">Merah (Ujian/Evaluasi)</option>
-                        </select>`,
+                        width: '32rem', // Ukuran pop-up yang lebih proporsional (max-w-lg)
+                        // KITA GUNAKAN TAILWIND MURNI DI SINI
+                        html: `
+                            <div class="text-left space-y-5 mt-4">
+                                
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-1">Nama Kegiatan <span class="text-red-500">*</span></label>
+                                    <input id="swal-title" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow text-gray-800" placeholder="Misal: Onboarding Peserta">
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-bold text-gray-700 mb-1">Tanggal Mulai</label>
+                                        <input id="swal-start" type="date" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800" value="${info.startStr}">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-gray-700 mb-1">Tanggal Selesai</label>
+                                        <input id="swal-end" type="date" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800" value="${endDateAdjusted}">
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-1">Kategori Warna</label>
+                                    <select id="swal-color" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 bg-white">
+                                        <option value="#3b82f6">🔵 Biru (Umum)</option>
+                                        <option value="#10b981">🟢 Hijau (Penting)</option>
+                                        <option value="#f59e0b">🟡 Kuning (Opsional)</option>
+                                        <option value="#ef4444">🔴 Merah (Ujian/Evaluasi)</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-1">Deskripsi Tambahan</label>
+                                    <textarea id="swal-desc" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800 resize-none" placeholder="Ketik deskripsi singkat di sini..."></textarea>
+                                </div>
+
+                            </div>
+                        `,
                         focusConfirm: false,
                         showCancelButton: true,
                         confirmButtonText: 'Simpan',
                         cancelButtonText: 'Batal',
+                        // Styling tombol bawaan SweetAlert agar senada dengan Tailwind
+                        customClass: {
+                            confirmButton: 'bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors border-0',
+                            cancelButton: 'bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 px-6 rounded-lg transition-colors border-0'
+                        },
+                        buttonsStyling: false, // Matikan style tombol bawaan SweetAlert
                         preConfirm: () => {
+                            const title = document.getElementById('swal-title').value;
+                            if (!title) {
+                                Swal.showValidationMessage('Nama kegiatan wajib diisi!');
+                                return false;
+                            }
                             return {
-                                title: document.getElementById('swal-title').value,
+                                title: title,
                                 description: document.getElementById('swal-desc').value,
                                 color: document.getElementById('swal-color').value,
+                                start_date: document.getElementById('swal-start').value,
+                                end_date: document.getElementById('swal-end').value
                             }
                         }
                     });
 
                     if (formValues && formValues.title) {
                         fetch('{{ route('admin.calendar.store') }}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': csrfToken
-                            },
-                            body: JSON.stringify({
-                                title: formValues.title,
-                                description: formValues.description,
-                                color: formValues.color,
-                                start_date: info.startStr,
-                                end_date: info
-                                    .endStr // Fullcalendar otomatis +1 hari untuk blok selection
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': csrfToken
+                                },
+                                body: JSON.stringify(formValues)
                             })
-                        }).then(res => res.json()).then(data => {
-                            if (data.success) {
-                                calendar.refetchEvents();
-                                Swal.fire('Berhasil!', 'Kegiatan ditambahkan.', 'success');
-                            }
-                        });
+                            .then(async res => {
+                                if (!res.ok) {
+                                    const errData = await res.json();
+                                    throw new Error(errData.message ||
+                                        "Gagal menyimpan ke database");
+                                }
+                                return res.json();
+                            })
+                            .then(data => {
+                                if (data.success) {
+                                    calendar.refetchEvents();
+                                    Swal.fire('Berhasil!', 'Kegiatan ditambahkan.', 'success');
+                                }
+                            })
+                            .catch(error => {
+                                Swal.fire('Gagal Menyimpan!', error.message, 'error');
+                            });
                     }
                     calendar.unselect();
                 },
 
                 // 2. KETIKA ACARA DIKLIK (EDIT / HAPUS)
                 eventClick: function(info) {
+                    // CEK PINTAR: Apakah ini event magang otomatis (warna hijau)?
+                    if (String(info.event.id).startsWith('internship-')) {
+                        Swal.fire({
+                            title: 'Jadwal Otomatis',
+                            text: 'Jadwal ini dibuat otomatis oleh sistem untuk peserta magang. Anda tidak bisa menghapusnya dari sini. Silakan ubah status pemagang menjadi "Mundur" atau "Ditolak" di menu Verifikasi.',
+                            icon: 'warning',
+                            confirmButtonText: 'Paham',
+                            confirmButtonColor: '#3b82f6' // Warna biru
+                        });
+                        return; // Hentikan proses di sini, jangan munculkan tombol hapus!
+                    }
+
+                    // Jika ini jadwal biasa (biru, merah, kuning), munculkan pop-up hapus
                     Swal.fire({
                         title: info.event.title,
                         text: info.event.extendedProps.description || 'Tidak ada deskripsi',
@@ -140,18 +204,37 @@
                                 confirmButtonText: 'Ya, Hapus!'
                             }).then((deleteResult) => {
                                 if (deleteResult.isConfirmed) {
-                                    fetch(`/admin/calendar/${info.event.id}`, {
-                                        method: 'DELETE',
-                                        headers: {
-                                            'X-CSRF-TOKEN': csrfToken
-                                        }
-                                    }).then(res => res.json()).then(data => {
-                                        if (data.success) {
-                                            info.event.remove();
-                                            Swal.fire('Terhapus!', '',
-                                                'success');
-                                        }
-                                    });
+                                    let actualId = String(info.event.id).replace(
+                                        'global-', '');
+                                    fetch(`/admin/calendar/${actualId}`, {
+                                            method: 'DELETE',
+                                            headers: {
+                                                'X-CSRF-TOKEN': csrfToken,
+                                                'Accept': 'application/json' // Beritahu Laravel kita butuh JSON
+                                            }
+                                        })
+                                        // TAMBAHAN KODE PINTAR: Tangkap error dari server
+                                        .then(async res => {
+                                            if (!res.ok) {
+                                                throw new Error(
+                                                    `Gagal menghapus! (Error Code: ${res.status}) - Pastikan URL route benar.`
+                                                );
+                                            }
+                                            return res.json();
+                                        })
+                                        .then(data => {
+                                            if (data.success) {
+                                                info.event.remove();
+                                                Swal.fire('Terhapus!',
+                                                    'Kegiatan berhasil dihapus.',
+                                                    'success');
+                                            }
+                                        })
+                                        .catch(err => {
+                                            // Munculkan error kalau URL salah atau data tidak ada
+                                            Swal.fire('Error Backend', err.message,
+                                                'error');
+                                        });
                                 }
                             });
                         }
@@ -160,7 +243,10 @@
 
                 // 3. KETIKA ACARA DIGESER / DRAG (UPDATE TANGGAL)
                 eventDrop: function(info) {
-                    fetch(`/admin/calendar/${info.event.id}`, {
+                    // Bersihkan kata 'global-' dari ID
+                    let actualId = String(info.event.id).replace('global-', '');
+
+                    fetch(`/admin/calendar/${actualId}`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
