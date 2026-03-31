@@ -15,23 +15,20 @@
 
     <nav class="bg-white shadow-sm sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-            {{-- LOGIKA TOMBOL KEMBALI DINAMIS --}}
+            {{-- LOGIKA TOMBOL KEMBALI DINAMIS (GABUNGAN) --}}
             @if (Auth::guard('web')->check())
                 {{-- Admin --}}
-                <a href="{{ route('landing.index') }}"
-                    class="flex items-center text-gray-600 hover:text-blue-600 transition">
+                <a href="{{ route('landing.index') }}" class="flex items-center text-gray-600 hover:text-blue-600 transition">
                     <i class="bi bi-arrow-left mr-2"></i> Kembali
                 </a>
             @elseif(Auth::guard('magang')->check())
                 {{-- Peserta Magang yang sudah login --}}
-                <a href="{{ route('dashboard.index') }}"
-                    class="flex items-center text-gray-600 hover:text-blue-600 transition">
+                <a href="{{ route('dashboard.index') }}" class="flex items-center text-gray-600 hover:text-blue-600 transition">
                     <i class="bi bi-arrow-left mr-2"></i> Kembali ke Dashboard
                 </a>
             @else
                 {{-- Tamu / Guest --}}
-                <a href="{{ route('landing.index') }}"
-                    class="flex items-center text-gray-600 hover:text-blue-600 transition">
+                <a href="{{ route('landing.index') }}" class="flex items-center text-gray-600 hover:text-blue-600 transition">
                     <i class="bi bi-arrow-left mr-2"></i> Kembali ke Daftar
                 </a>
             @endif
@@ -41,14 +38,14 @@
 
     <div class="max-w-4xl mx-auto px-4 py-10">
 
-        {{-- SCRIPT SWEETALERT2 UNTUK POP-UP NOTIFIKASI --}}
+        {{-- POP-UP NOTIFIKASI SWEETALERT --}}
         <script type="module">
             @if (session('success'))
                 Swal.fire({
                     icon: 'success',
                     title: 'Berhasil!',
                     text: "{!! session('success') !!}",
-                    confirmButtonColor: '#2563EB', // Warna biru dari Tailwind
+                    confirmButtonColor: '#2563EB', 
                 });
             @endif
 
@@ -57,15 +54,13 @@
                     icon: 'error',
                     title: 'Oops...',
                     text: "{!! session('error') !!}",
-                    confirmButtonColor: '#DC2626', // Warna merah dari Tailwind
+                    confirmButtonColor: '#DC2626', 
                 });
             @endif
         </script>
 
-        {{-- KOTAK UTAMA (CARD) LOWONGAN --}}
+        {{-- DETAIL LOWONGAN --}}
         <div class="bg-white rounded-2xl shadow-sm border border-gray-200 mb-8 p-6 md:p-10">
-
-            {{-- 1. HEADER --}}
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>
                     <h1 class="text-3xl font-bold text-gray-900 mb-3">{{ $vacancy->title }}</h1>
@@ -88,7 +83,6 @@
 
             <hr class="border-gray-100 mb-6">
 
-            {{-- 2. INFO SINGKAT (KUOTA & ANGGOTA) --}}
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 bg-gray-50 p-4 rounded-xl border border-gray-100">
                 <div>
                     <p class="text-xs text-gray-500 mb-1">Periode Magang</p>
@@ -100,8 +94,7 @@
                 <div>
                     <p class="text-xs text-gray-500 mb-1">Sisa Kuota</p>
                     <p class="font-semibold text-blue-600 text-sm">
-                        {{ $vacancy->getSisaKuota() }} <span class="text-gray-500">/ {{ $vacancy->quota_slots }}
-                            Slot</span>
+                        {{ $vacancy->getSisaKuota() }} <span class="text-gray-500">/ {{ $vacancy->quota_slots }} Slot</span>
                     </p>
                 </div>
                 <div>
@@ -120,12 +113,10 @@
                 </div>
             </div>
 
-            {{-- 3. DESKRIPSI DAN KRITERIA (MENGAMBIL DARI DATABASE) --}}
             <div class="mb-10">
                 <h3 class="text-lg font-bold text-gray-900 mb-4">Deskripsi Pekerjaan & Persyaratan</h3>
                 <div class="text-gray-700 leading-relaxed text-sm md:text-base">
                     @if ($vacancy->description)
-                        {{-- Memanggil data asli dari database dengan aman --}}
                         {!! nl2br(e($vacancy->description)) !!}
                     @else
                         <p class="text-gray-400 italic">Belum ada deskripsi.</p>
@@ -133,30 +124,22 @@
                 </div>
             </div>
 
-            {{-- 4. TOMBOL LAMAR DENGAN LOGIKA AUTH ASLI --}}
+            {{-- TOMBOL AKSI BERDASARKAN ROLE PENGGUNA --}}
             <div class="mt-8 border-t border-gray-100 pt-8">
-
-                {{-- KONDISI 1: JIKA PENGUNJUNG ADALAH ADMIN --}}
                 @if (Auth::guard('web')->check())
                     <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
                         <p class="text-sm text-yellow-700">
                             Halo Admin! Anda sedang dalam mode pratinjau. Admin tidak bisa melamar.
                         </p>
                     </div>
-
-                    {{-- KONDISI 2: JIKA SUDAH LOGIN SEBAGAI MAHASISWA --}}
                 @elseif(Auth::guard('magang')->check())
                     <button type="button" data-modal-target="applicationModal" data-modal-toggle="applicationModal"
                         class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition transform hover:-translate-y-1">
                         🚀 Lamar Posisi Ini Sekarang
                     </button>
-
-                    {{-- KONDISI 3: JIKA BELUM LOGIN (TAMU) --}}
                 @else
                     <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 text-center">
-                        <p class="text-gray-600 mb-3">Tertarik dengan posisi ini? Silakan login atau daftar akun
-                            terlebih dahulu.</p>
-
+                        <p class="text-gray-600 mb-3">Tertarik dengan posisi ini? Silakan login atau daftar akun terlebih dahulu.</p>
                         <div class="flex justify-center gap-4">
                             <a href="{{ route('login') }}"
                                 class="bg-white text-blue-600 border border-blue-600 font-bold py-2 px-6 rounded-lg hover:bg-blue-50 transition">
@@ -169,13 +152,11 @@
                         </div>
                     </div>
                 @endif
-
             </div>
-
         </div>
     </div>
 
-    {{-- MODAL HANYA UNTUK MAGANG --}}
+    {{-- MODAL LAMARAN (HANYA MUNCUL UNTUK ROLE MAGANG) --}}
     @if (Auth::guard('magang')->check())
         <div id="applicationModal" tabindex="-1" aria-hidden="true"
             class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full bg-black bg-opacity-50">
@@ -186,13 +167,9 @@
                             Konfirmasi Lamaran
                         </h3>
                         <button type="button"
-                            class="text-gray-400 bg-transparent hover:bg-red-600 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center"
+                            class="text-gray-400 bg-transparent hover:bg-red-600 hover:text-white rounded-lg text-sm w-8 h-8 ml-auto inline-flex justify-center items-center transition"
                             data-modal-hide="applicationModal">
-                            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                viewBox="0 0 14 14">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                    stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
-                            </svg>
+                            <i class="bi bi-x-lg"></i>
                             <span class="sr-only">Close modal</span>
                         </button>
                     </div>
@@ -206,44 +183,29 @@
                             @csrf
                             <input type="hidden" name="vacancy_id" value="{{ $vacancy->id }}">
 
-                            {{-- KONDISI KHUSUS UNTUK JALUR PENELITIAN --}}
                             @if ($vacancy->type === 'penelitian')
                                 <div class="mb-4">
-                                    <label for="research_title"
-                                        class="block mb-2 text-sm font-medium text-gray-900">Judul Penelitian <span
-                                            class="text-red-500">*</span></label>
-                                    <input type="text" id="research_title" name="research_title" maxlength="255"
-                                        required
+                                    <label for="research_title" class="block mb-2 text-sm font-medium text-gray-900">Judul Penelitian <span class="text-red-500">*</span></label>
+                                    <input type="text" id="research_title" name="research_title" maxlength="255" required
                                         class="block w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                                         placeholder="Masukkan rencana judul penelitian Anda">
-                                    {{-- Teks Penghitung Karakter Judul --}}
-                                    <p id="title_counter" class="text-xs text-gray-500 text-right mt-1 font-medium">0 /
-                                        255 karakter</p>
+                                    <p id="title_counter" class="text-xs text-gray-500 text-right mt-1 font-medium">0 / 255 karakter</p>
                                 </div>
 
                                 <div class="mb-4">
-                                    <label for="research_abstract"
-                                        class="block mb-2 text-sm font-medium text-gray-900">Abstrak Singkat <span
-                                            class="text-red-500">*</span></label>
+                                    <label for="research_abstract" class="block mb-2 text-sm font-medium text-gray-900">Abstrak Singkat <span class="text-red-500">*</span></label>
                                     <textarea id="research_abstract" name="research_abstract" rows="4" maxlength="1000" required
                                         class="block w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                                         placeholder="Jelaskan secara singkat latar belakang dan tujuan penelitian Anda..."></textarea>
-                                    {{-- Teks Penghitung Karakter Abstrak --}}
-                                    <p id="abstract_counter"
-                                        class="text-xs text-gray-500 text-right mt-1 font-medium">0
-                                        / 1000 karakter</p>
+                                    <p id="abstract_counter" class="text-xs text-gray-500 text-right mt-1 font-medium">0 / 1000 karakter</p>
                                 </div>
                             @endif
 
-                            {{-- KONDISI KHUSUS UNTUK JALUR KELOMPOK / HYBRID --}}
                             @if (in_array($vacancy->registration_mode, ['kelompok', 'hybrid']))
                                 <div class="mb-4 bg-blue-50 p-4 rounded-lg border border-blue-100">
-
-                                    {{-- PILIHAN MODE UNTUK HYBRID --}}
                                     @if ($vacancy->registration_mode === 'hybrid')
                                         <div class="mb-4">
-                                            <label class="block mb-2 text-sm font-bold text-[#37517e]">Daftar
-                                                Sebagai:</label>
+                                            <label class="block mb-2 text-sm font-bold text-[#37517e]">Daftar Sebagai:</label>
                                             <select id="hybrid-mode-select"
                                                 class="block w-full p-2.5 text-sm text-gray-900 bg-white rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500">
                                                 <option value="individu">Individu (Sendiri)</option>
@@ -252,20 +214,16 @@
                                         </div>
                                     @endif
 
-                                    {{-- AREA INPUT ANGGOTA (Sembunyi default jika hybrid-individu) --}}
-                                    <div id="group-input-area"
-                                        class="{{ $vacancy->registration_mode === 'hybrid' ? 'hidden' : '' }}">
+                                    <div id="group-input-area" class="{{ $vacancy->registration_mode === 'hybrid' ? 'hidden' : '' }}">
                                         <label class="block mb-2 text-sm font-bold text-[#37517e]">
                                             Anggota Kelompok (Masukkan Email)
                                         </label>
                                         <p class="text-xs text-gray-600 mb-3">
-                                            Anggota: Min {{ $vacancy->min_members }} orang, Maks
-                                            {{ $vacancy->max_members }} orang (termasuk Anda sebagai Ketua).
+                                            Anggota: Min {{ $vacancy->min_members }} orang, Maks {{ $vacancy->max_members }} orang (termasuk Anda sebagai Ketua).
                                         </p>
 
                                         <div id="members-container" class="space-y-2">
                                             <div class="flex gap-2 member-input">
-                                                {{-- Jika hybrid, input ini awalnya dinonaktifkan (disabled) --}}
                                                 <input type="email" name="member_emails[]"
                                                     {{ $vacancy->registration_mode === 'kelompok' ? 'required' : '' }}
                                                     {{ $vacancy->registration_mode === 'hybrid' ? 'disabled' : '' }}
@@ -274,27 +232,23 @@
                                             </div>
                                         </div>
 
-                                        <button type="button" id="add-member-btn"
-                                            class="mt-3 text-sm text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 transition">
+                                        <button type="button" id="add-member-btn" class="mt-3 text-sm text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1 transition">
                                             <i class="bi bi-plus-circle"></i> Tambah Anggota Lainnya
                                         </button>
-                                        <p class="text-[10px] text-gray-500 mt-2 italic">* Pastikan email anggota sudah
-                                            terdaftar di sistem dan profil mereka (CV) sudah lengkap.</p>
+                                        <p class="text-[10px] text-gray-500 mt-2 italic">* Pastikan email anggota sudah terdaftar di sistem dan profil mereka sudah lengkap.</p>
                                     </div>
                                 </div>
                             @endif
 
-                            {{-- CATATAN UMUM (OPSIONAL) --}}
                             <div class="mb-4">
-                                <label for="notes" class="block mb-2 text-sm font-medium text-gray-900">Catatan
-                                    Singkat (Opsional)</label>
+                                <label for="notes" class="block mb-2 text-sm font-medium text-gray-900">Catatan Singkat (Opsional)</label>
                                 <textarea id="notes" name="notes" rows="2"
                                     class="block w-full p-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500"
                                     placeholder="Kenapa Anda tertarik?"></textarea>
                             </div>
 
                             <button type="submit"
-                                class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
+                                class="w-full text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center transition">
                                 Kirim Lamaran
                             </button>
                         </form>
@@ -304,50 +258,19 @@
         </div>
     @endif
 
-    {{-- SCRIPT UNTUK SWEETALERT DAN PENGHITUNG KARAKTER --}}
     <script type="module">
-        // 1. LOGIKA SWEETALERT (DENGAN PERBAIKAN TOMBOL TAILWIND)
-        @if (session('success'))
-            Swal.fire({
-                icon: 'success',
-                title: 'Berhasil!',
-                text: "{!! session('success') !!}",
-                buttonsStyling: false, // Matikan style bawaan
-                customClass: {
-                    confirmButton: 'bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 transition'
-                }
-            });
-        @endif
-
-        @if (session('error'))
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: "{!! session('error') !!}",
-                buttonsStyling: false, // Matikan style bawaan
-                customClass: {
-                    confirmButton: 'bg-red-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-red-700 transition'
-                }
-            });
-        @endif
-
-        // 2. LOGIKA PENGHITUNG KARAKTER REAL-TIME
+        // LOGIKA PENGHITUNG KARAKTER
         document.addEventListener('DOMContentLoaded', function() {
-
-            // Elemen Judul
             const titleInput = document.getElementById('research_title');
             const titleCounter = document.getElementById('title_counter');
-
             if (titleInput && titleCounter) {
                 titleInput.addEventListener('input', function() {
                     titleCounter.textContent = this.value.length + ' / 255 karakter';
                 });
             }
 
-            // Elemen Abstrak
             const abstractInput = document.getElementById('research_abstract');
             const abstractCounter = document.getElementById('abstract_counter');
-
             if (abstractInput && abstractCounter) {
                 abstractInput.addEventListener('input', function() {
                     abstractCounter.textContent = this.value.length + ' / 1000 karakter';
@@ -355,19 +278,14 @@
             }
         });
 
-        // =======================================================
-        // LOGIKA TAMBAH ANGGOTA KELOMPOK DINAMIS
-        // =======================================================
+        // LOGIKA TAMBAH ANGGOTA KELOMPOK
         const container = document.getElementById('members-container');
         const addBtn = document.getElementById('add-member-btn');
-        // Max member dikurangi 1 karena ketua (yang login) sudah dihitung 1
         const maxMembers = {{ $vacancy->max_members ?? 1 }} - 1;
 
         if (container && addBtn) {
             addBtn.addEventListener('click', function() {
                 const currentInputs = container.querySelectorAll('.member-input').length;
-
-                // Cek agar tidak melebihi kuota maksimal kelompok
                 if (currentInputs >= maxMembers) {
                     Swal.fire({
                         icon: 'warning',
@@ -376,8 +294,6 @@
                     });
                     return;
                 }
-
-                // Buat elemen input baru
                 const div = document.createElement('div');
                 div.className = 'flex gap-2 member-input mt-2';
                 div.innerHTML = `
@@ -392,9 +308,7 @@
             });
         }
 
-        // =======================================================
-        // LOGIKA HYBRID (TAMPIL/SEMBUNYIKAN ANGGOTA KELOMPOK)
-        // =======================================================
+        // LOGIKA HYBRID
         const hybridSelect = document.getElementById('hybrid-mode-select');
         const groupArea = document.getElementById('group-input-area');
         const membersContainerObj = document.getElementById('members-container');
@@ -403,19 +317,16 @@
             hybridSelect.addEventListener('change', function() {
                 const isKelompok = this.value === 'kelompok';
                 const inputs = membersContainerObj.querySelectorAll('input[name="member_emails[]"]');
-
                 if (isKelompok) {
-                    // Tampilkan area kelompok dan aktifkan inputnya
                     groupArea.classList.remove('hidden');
                     inputs.forEach(input => {
                         input.disabled = false;
-                        input.required = true; // Wajib diisi kalau milih kelompok
+                        input.required = true;
                     });
                 } else {
-                    // Sembunyikan area kelompok dan matikan inputnya
                     groupArea.classList.add('hidden');
                     inputs.forEach(input => {
-                        input.disabled = true; // Agar tidak dikirim ke Controller
+                        input.disabled = true;
                         input.required = false;
                     });
                 }
@@ -423,5 +334,4 @@
         }
     </script>
 </body>
-
 </html>

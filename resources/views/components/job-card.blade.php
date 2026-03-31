@@ -43,9 +43,16 @@
             </div>
         </div> {{-- Akhir pembungkus konten atas --}}
 
-        {{-- Tombol sekarang akan otomatis terdorong ke paling bawah karena 'flex-grow' di atas --}}
+        {{-- Tombol sekarang akan otomatis terdorong ke paling bawah --}}
         <div class="mt-auto">
-            <a href="{{ route('landing.show', $job->id) }}"
+            @php
+                // Tentukan rute dinamis berdasarkan status login
+                $detailRoute = Auth::guard('magang')->check()
+                    ? route('dashboard.show', $job->id)
+                    : route('landing.show', $job->id);
+            @endphp
+
+            <a href="{{ $detailRoute }}"
                 class="block w-full text-center bg-gray-900 hover:bg-gray-800 text-white py-2.5 rounded-lg transition-colors font-semibold">
                 Lihat Detail
             </a>

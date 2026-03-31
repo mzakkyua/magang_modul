@@ -293,4 +293,14 @@ class DashboardMagangController extends Controller
             'search'
         ));
     }
+
+    public function show($id)
+    {
+        $vacancy = VacancyMagang::where('id', $id)
+            ->where('status', 'open')
+            ->firstOrFail();
+
+        // Mengarah ke view gabungan yang ada di folder landing
+        return view('landing.show', compact('vacancy'));
+    }
 }
