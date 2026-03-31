@@ -47,13 +47,13 @@
                                 </li>
                                 <li>
                                     <a href="{{ route('status') }}"
-                                        class="{{ request()->is('status*') ? 'text-blue-600 border-b-2 border-blue-600' : '' }} hover:text-blue-600 transition pb-1">
+                                        class="{{ request()->is('/status') ? 'text-blue-600 border-b-2 border-blue-600' : '' }} hover:text-blue-600 transition pb-1">
                                         Status
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="/sertifikat"
-                                        class="{{ request()->is('sertifikat') ? 'text-blue-600 border-b-2 border-blue-600' : '' }} hover:text-blue-600 transition pb-1">
+                                    <a href="#"
+                                        class="{{ request()->is('sertifikat*') ? 'text-blue-600 border-b-2 border-blue-600' : '' }} hover:text-blue-600 transition pb-1">
                                         Sertifikat
                                     </a>
                                 </li>

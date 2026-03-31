@@ -31,6 +31,9 @@ use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Auth\ForgotPasswordMagangController;
 use App\Http\Controllers\Auth\ResetPasswordMagangController;
 
+// Sertifikat
+use App\Http\Controllers\Auth\CertificateController;
+
 /*
 |--------------------------------------------------------------------------
 | WEB ROUTES
@@ -243,4 +246,17 @@ Route::middleware('auth:admin')->group(function () {
     Route::post('/calendar', [CalendarController::class, 'store']);
     Route::put('/calendar/{event}', [CalendarController::class, 'update']);
     Route::delete('/calendar/{event}', [CalendarController::class, 'destroy']);
+});
+
+
+//sertifikat//
+Route::middleware(['auth'])->group(function () {
+
+    // USER
+    Route::get('/sertifikat', [CertificateController::class, 'index'])->name('certificate.index');
+    Route::get('/sertifikat/download/{id}', [CertificateController::class, 'download'])->name('certificate.download');
+
+    // ADMIN
+    Route::get('/admin/sertifikat', [CertificateController::class, 'create'])->name('certificate.create');
+    Route::post('/admin/sertifikat', [CertificateController::class, 'store'])->name('certificate.store');
 });

@@ -1,6 +1,6 @@
 @extends('layouts.layoutlanding')
-@section('title','Status Pengajuan')
-@section('content')
+@section('title', 'Unduh Nilai dan Sertifikat')
+@extends('content')
 <div class="bg-gray-50 min-h-screen py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         

@@ -31,6 +31,7 @@
 
 
         {{-- SEARCH --}}
+        <section class="py-10 px-10">
         <div class="max-w-2xl mx-auto mb-10">
 
             <form action="{{ route('dashboard.index') }}" method="GET" class="flex gap-2 bg-white p-2 rounded-lg shadow">
