@@ -31,6 +31,7 @@ use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Auth\ForgotPasswordMagangController;
 use App\Http\Controllers\Auth\ResetPasswordMagangController;
 
+use App\Http\Controllers\Auth\CertificateController;
 /*
 |--------------------------------------------------------------------------
 | WEB ROUTES
@@ -157,6 +158,11 @@ Route::middleware('auth:magang')->group(function () {
 
     Route::get('/status', [StatusMagangController::class, 'index'])
         ->name('status');
+
+    Route::get('/sertifikat', [CertificateController::class, 'index'])->name('certificate.index');
+    Route::get('/sertifikat/view/{id}', [CertificateController::class, 'view'])->name('certificate.view');
+    Route::get('/sertifikat/download/{id}', [CertificateController::class, 'download'])->name('certificate.download');
+
 });
 
 
@@ -248,4 +254,8 @@ Route::prefix('admin')
             '/profile',
             [AdminProfileController::class, 'update']
         )->name('profile.update');
+
+         Route::get('/admin/sertifikat', [CertificateController::class, 'create'])->name('certificate.create');
+         Route::post('/admin/sertifikat', [CertificateController::class, 'store'])->name('certificate.store');
+    
     });
