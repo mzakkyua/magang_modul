@@ -227,6 +227,17 @@ class ApplicationVerificationController extends Controller
         $app = ApplicationMagang::with('vacancy')->findOrFail($id);
 
         /*
+
+        /*
+        ==============================================================
+        MENCEGAH DOUBLE SUBMIT / STATUS GANDA
+        ==============================================================
+        */
+        if ($app->status === $request->status) {
+            return back()->with('error', 'Lamaran ini sudah berstatus ' . strtoupper($request->status) . '!');
+        }
+        /*
+        
     ==============================================================
     2. VALIDASI HAK AKSES ADMIN
     ==============================================================
@@ -247,11 +258,11 @@ class ApplicationVerificationController extends Controller
     ==============================================================
     */
         $request->validate([
-            'status' => 'required|in:verified,interview,accepted,rejected',
-            'admin_feedback' => 'required_if:status,rejected|nullable|string|max:500',
+            'status' => 'required|in:verified,interview,accepted,rejected,resigned', // Tambah resigned
+            'admin_feedback' => 'required_if:status,rejected,resigned|nullable|string|max:500', // Wajib isi jika rejected ATAU resigned
         ], [
             'admin_feedback.required_if' =>
-            'Mohon maaf, jika menolak lamaran, WAJIB menyertakan alasannya.',
+            'Mohon maaf, jika menolak atau menandai mundur, WAJIB menyertakan alasannya.',
         ]);
 
         /*
@@ -282,14 +293,18 @@ class ApplicationVerificationController extends Controller
         }
 
         /*
-    ==============================================================
-    5. SIMPAN PERUBAHAN STATUS
-    ==============================================================
-    */
+    /*
+    ==============================================================
+    5. SIMPAN PERUBAHAN STATUS & PEMBERSIHAN CATATAN
+    ==============================================================
+    */
         $app->status = $request->status;
 
-        if ($request->filled('admin_feedback')) {
+        // Jika ditolak ATAU mengundurkan diri, simpan alasannya. Jika tidak, KOSONGKAN.
+        if (in_array($request->status, ['rejected', 'resigned'])) {
             $app->admin_feedback = $request->admin_feedback;
+        } else {
+            $app->admin_feedback = null;
         }
 
         $app->save();

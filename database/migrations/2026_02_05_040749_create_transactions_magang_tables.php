@@ -20,7 +20,7 @@ return new class extends Migration
             $table->timestamp('submission_date')->useCurrent();
 
             // Logic Kuota: Rejected = Restock
-            $table->enum('status', ['pending', 'verified', 'interview', 'accepted', 'rejected', 'completed'])
+            $table->enum('status', ['pending', 'verified', 'interview', 'accepted', 'rejected', 'resigned', 'completed'])
                 ->default('pending');
 
             $table->text('admin_feedback')->nullable();
@@ -64,7 +64,7 @@ return new class extends Migration
             $table->text('evaluation_notes')->nullable(); // Catatan Resmi
             $table->text('additional_notes')->nullable(); // Catatan NB
 
-            $table->timestamp('created_at')->useCurrent();
+            $table->timestamps();
         });
 
         // 4. Certificates (Manual Upload)

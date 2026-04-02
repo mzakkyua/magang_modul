@@ -36,44 +36,56 @@ class CalendarController extends Controller
 
     public function fetch()
     {
+        $events = [];
 
-        $events = Event::query()
-            ->select([
-                'id',
-                'title',
-                'start_date',
-                'end_date',
-                'color',
-                'description'
-            ])
-            ->get()
-            ->map(function ($event) {
+        // 1. AMBIL EVENT GLOBAL (Yang diinput Admin)
+        $globalEvents = \App\Models\Event::all();
+        foreach ($globalEvents as $event) {
+            $events[] = [
+                'id'    => 'global-' . $event->id,
+                'title' => '📌 ' . $event->title,
+                // Pastikan formatnya YYYY-MM-DD
+                'start' => \Carbon\Carbon::parse($event->start_date)->format('Y-m-d'),
+                'end'   => $event->end_date ? \Carbon\Carbon::parse($event->end_date)->addDay()->format('Y-m-d') : null,
+                'color' => $event->color ?? '#3b82f6',
+                'extendedProps' => [
+                    'description' => $event->description,
+                    'type' => 'global'
+                ]
+            ];
+        }
 
-                return [
-                    'id'    => $event->id,
-                    'title' => $event->title,
+        // 2. CEK EVENT MAGANG USER (Jika Login)
+        if (auth()->guard('magang')->check()) {
+            $userId = auth()->guard('magang')->id();
 
-                    /**
-                     * FullCalendar menggunakan format:
-                     * YYYY-MM-DD
-                     */
+            // Cari lamaran yang statusnya 'accepted'
+            $acceptedMember = \App\Models\ApplicationMemberMagang::where('user_id', $userId)
+                ->whereHas('application', function ($q) {
+                    $q->where('status', 'accepted');
+                })
+                ->with('application.vacancy')
+                ->first();
 
-                    'start' => $event->start_date,
+            // Jika ketemu, masukkan ke dalam array events
+            if ($acceptedMember && $acceptedMember->application->vacancy) {
+                $vacancy = $acceptedMember->application->vacancy;
 
-                    /**
-                     * End date +1 hari agar FullCalendar
-                     * menampilkan event sampai hari terakhir
-                     */
-
-                    'end'   => $event->end_date
-                        ? Carbon::parse($event->end_date)->addDay()->toDateString()
-                        : null,
-
-                    'color' => $event->color,
-
-                    'description' => $event->description
+                $events[] = [
+                    'id'    => 'internship-' . $acceptedMember->application_id,
+                    'title' => '🚀 MASA MAGANG: ' . $vacancy->title,
+                    // Pastikan formatnya YYYY-MM-DD
+                    'start' => \Carbon\Carbon::parse($vacancy->start_date)->format('Y-m-d'),
+                    'end'   => \Carbon\Carbon::parse($vacancy->end_date)->addDay()->format('Y-m-d'),
+                    'color' => '#10b981', // Hijau Emerald
+                    'display' => 'block',
+                    'extendedProps' => [
+                        'description' => 'Masa magang Anda di ' . $vacancy->division_name,
+                        'type' => 'internship'
+                    ]
                 ];
-            });
+            }
+        }
 
         return response()->json($events);
     }
@@ -182,5 +194,16 @@ class CalendarController extends Controller
         return response()->json([
             'success' => true
         ]);
+    }
+
+    /**
+     * ===============================================================
+     * ADMIN CALENDAR PAGE
+     * ===============================================================
+     * Menampilkan halaman manajemen kalender khusus untuk admin
+     */
+    public function indexAdmin()
+    {
+        return view('admin.calendar.index');
     }
 }
