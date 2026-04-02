@@ -38,174 +38,61 @@ use Illuminate\Support\Facades\Cache;
  * 2. ADMIN DIVISI
  *    - Hanya dapat melihat data yang berkaitan dengan divisinya saja.
  *
- * Contoh:
- * Jika admin berasal dari divisi "IT",
- * maka dashboard hanya menampilkan data lowongan dan pendaftaran
- * yang berasal dari divisi IT.
- *
  * ---------------------------------------------------------------------
  * OPTIMISASI PERFORMANCE
  * ---------------------------------------------------------------------
- * Untuk mengurangi beban query database, controller ini menggunakan:
- *
- * - Cache::remember()
- *
- * Sehingga data dashboard tidak selalu di-query ke database setiap
- * halaman dibuka. Cache disimpan selama 1 menit agar data tetap cukup
- * realtime namun tetap efisien.
- *
- * ---------------------------------------------------------------------
- * CATATAN UNTUK DEVELOPER SELANJUTNYA
- * ---------------------------------------------------------------------
- * Beberapa bagian logic di controller ini bisa dipindahkan ke tempat
- * lain jika sistem berkembang:
- *
- * 1. Validasi hak akses admin
- *    → sebaiknya dipindahkan ke Middleware khusus admin magang
- *
- * 2. Query statistik dashboard
- *    → bisa dipindahkan ke Service Layer jika logic semakin kompleks
+ * Controller ini menggunakan Cache::remember() agar data dashboard
+ * tidak selalu di-query ke database setiap halaman dibuka.
+ * Cache disimpan selama 1 menit.
  *
  * =====================================================================
  */
 class AdminDashboardController extends Controller
 {
-
     /**
      * =================================================================
      * METHOD: index()
      * =================================================================
      *
-     * Fungsi:
-     * Menampilkan halaman Dashboard Admin beserta seluruh data statistik
-     * yang diperlukan oleh view.
+     * Menampilkan halaman Dashboard Admin beserta seluruh data statistik.
      *
-     * ALUR PROSES METHOD INI:
-     *
-     * 1. Mengambil user yang sedang login.
-     * 2. Memastikan user memiliki hak akses sebagai Admin Magang.
-     * 3. Menentukan apakah user adalah Super Admin atau Admin Divisi.
-     * 4. Membuat cache key berdasarkan role admin.
-     * 5. Mengambil data statistik dashboard (menggunakan cache).
-     * 6. Mengirim seluruh data tersebut ke view dashboard.
+     * ALUR:
+     * 1. Ambil user yang sedang login
+     * 2. Validasi hak akses admin magang
+     * 3. Tentukan role (superadmin / admin divisi)
+     * 4. Buat cache key berdasarkan role
+     * 5. Ambil data statistik (dengan cache)
+     * 6. Kirim data ke view
      *
      * =================================================================
      */
     public function index()
     {
-
-        /**
-         * -------------------------------------------------------------
-         * STEP 1
-         * MENGAMBIL USER YANG SEDANG LOGIN
-         * -------------------------------------------------------------
-         *
-         * Auth::user() mengambil user yang saat ini terautentikasi
-         * melalui guard default Laravel.
-         *
-         * Pada sistem ini:
-         * - Guard default digunakan oleh Admin.
-         */
+        // STEP 1: Ambil user yang sedang login (guard default = admin)
         $user = Auth::user();
 
-
-        /**
-         * -------------------------------------------------------------
-         * STEP 2
-         * VALIDASI HAK AKSES ADMIN MAGANG
-         * -------------------------------------------------------------
-         *
-         * Tidak semua user yang login otomatis menjadi admin magang.
-         * Oleh karena itu sistem mengecek apakah user memiliki record
-         * pada tabel "magang_access_rights".
-         *
-         * Jika user tidak ditemukan pada tabel tersebut,
-         * maka akses dashboard langsung ditolak.
-         */
+        // STEP 2: Validasi hak akses admin magang
         $hakAkses = MagangAccessRight::where('user_id', $user->id)->first();
 
         if (!$hakAkses) {
             abort(403, 'Akses Ditolak: Anda tidak terdaftar sebagai Admin Magang.');
         }
 
-
-        /**
-         * -------------------------------------------------------------
-         * STEP 3
-         * MENENTUKAN ROLE ADMIN
-         * -------------------------------------------------------------
-         *
-         * Sistem menentukan apakah user merupakan:
-         *
-         * - Super Admin
-         * - Admin Divisi
-         *
-         * Super Admin dapat melihat seluruh data dari semua divisi.
-         * Admin Divisi hanya dapat melihat data dari divisinya sendiri.
-         */
+        // STEP 3: Tentukan role admin
         $isSuperAdmin = $hakAkses->role === 'superadmin';
+        $division     = $hakAkses->division_name ?? 'unknown';
 
-        /**
-         * division_name menyimpan nama divisi admin.
-         * Contoh:
-         * - IT
-         * - HR
-         * - DATA
-         */
-        $division = $hakAkses->division_name ?? 'unknown';
-
-
-        /**
-         * -------------------------------------------------------------
-         * STEP 4
-         * MENENTUKAN CACHE KEY
-         * -------------------------------------------------------------
-         *
-         * Cache key digunakan untuk membedakan cache dashboard antara:
-         *
-         * - Super Admin
-         * - Admin per divisi
-         *
-         * Contoh cache key:
-         *
-         * dashboard_superadmin
-         * dashboard_admin_it
-         * dashboard_admin_hr
-         *
-         * strtolower() digunakan agar format key konsisten.
-         */
+        // STEP 4: Buat cache key unik per role / divisi
         $cacheKey = $isSuperAdmin
             ? 'dashboard_superadmin'
             : 'dashboard_admin_' . strtolower($division);
 
-
-        /**
-         * -------------------------------------------------------------
-         * STEP 5
-         * MENGAMBIL DATA DASHBOARD (MENGGUNAKAN CACHE)
-         * -------------------------------------------------------------
-         *
-         * Cache::remember bekerja dengan cara:
-         *
-         * - Jika cache masih ada → gunakan cache
-         * - Jika cache tidak ada → jalankan query dalam closure
-         *   lalu simpan hasilnya ke cache
-         *
-         * TTL (Time To Live) cache = 1 menit
-         */
+        // STEP 5: Ambil data dashboard (gunakan cache 1 menit)
         $dashboardData = Cache::remember($cacheKey, now()->addMinutes(1), function () use ($isSuperAdmin, $division) {
 
-            /**
-             * =========================================================
-             * STATISTIK 1
-             * TOTAL LOWONGAN MAGANG AKTIF
-             * =========================================================
-             *
-             * Menghitung jumlah lowongan yang statusnya masih "open".
-             *
-             * Jika admin bukan superadmin,
-             * maka lowongan difilter berdasarkan divisi admin.
-             */
+            // =========================================================
+            // STATISTIK 1: TOTAL LOWONGAN AKTIF
+            // =========================================================
             $lowonganQuery = VacancyMagang::where('status', 'open');
 
             if (!$isSuperAdmin) {
@@ -214,39 +101,18 @@ class AdminDashboardController extends Controller
 
             $totalLowongan = $lowonganQuery->count();
 
-
-            /**
-             * =========================================================
-             * STATISTIK 2
-             * PENDAFTARAN YANG PERLU DIVERIFIKASI
-             * =========================================================
-             *
-             * Menghitung jumlah aplikasi dengan status "pending".
-             */
+            // =========================================================
+            // STATISTIK 2: PENDAFTARAN YANG PERLU DIVERIFIKASI
+            // =========================================================
             $pendingQuery = ApplicationMagang::where('status', 'pending');
 
+            // =========================================================
+            // STATISTIK 3: PESERTA YANG SEDANG MAGANG
+            // Status yang dianggap sedang magang: accepted, active
+            // =========================================================
+            $activeQuery = ApplicationMagang::whereIn('status', ['accepted', 'active']);
 
-            /**
-             * =========================================================
-             * STATISTIK 3
-             * PESERTA YANG SEDANG MAGANG
-             * =========================================================
-             *
-             * Status yang dianggap sedang magang:
-             * - accepted
-             * - active
-             */
-            $activeQuery = ApplicationMagang::whereIn('status', [
-                'accepted',
-                'active'
-            ]);
-
-            /**
-             * Jika admin bukan superadmin,
-             * maka data difilter berdasarkan divisi vacancy.
-             */
             if (!$isSuperAdmin) {
-
                 $pendingQuery->whereHas('vacancy', function ($q) use ($division) {
                     $q->where('division_name', $division);
                 });
@@ -259,47 +125,34 @@ class AdminDashboardController extends Controller
             $perluVerifikasi = $pendingQuery->count();
             $sedangMagang    = $activeQuery->count();
 
-
-            /**
-             * =========================================================
-             * STATISTIK 4
-             * TOTAL PESERTA SISWA SMK
-             * =========================================================
-             */
+            // =========================================================
+            // STATISTIK 4: TOTAL SISWA SMK
+            // =========================================================
+            // BUGFIX: Sebelumnya mencari 'siswa_smk' yang tidak pernah
+            // match. Nilai yang disimpan register form adalah 'SMA/SMK'.
             $totalSiswa = UserMagang::whereHas('profile', function ($q) {
-                $q->where('education_level', 'siswa_smk');
+                $q->where('education_level', 'SMA/SMK');
             })->count();
 
-
-            /**
-             * =========================================================
-             * STATISTIK 5
-             * TOTAL PESERTA MAHASISWA
-             * =========================================================
-             */
+            // =========================================================
+            // STATISTIK 5: TOTAL MAHASISWA
+            // =========================================================
+            // BUGFIX: Sebelumnya mencari 'mahasiswa' yang tidak pernah
+            // match. Nilai yang disimpan register form adalah:
+            // 'D3', 'S1', 'S2' — ketiganya termasuk kategori mahasiswa.
             $totalMahasiswa = UserMagang::whereHas('profile', function ($q) {
-                $q->where('education_level', 'mahasiswa');
+                $q->whereIn('education_level', ['D3', 'S1', 'S2']);
             })->count();
 
-
-            /**
-             * =========================================================
-             * DATA TAMBAHAN
-             * 5 PENDAFTARAN TERBARU
-             * =========================================================
-             *
-             * Data ini digunakan untuk tabel "Recent Applications"
-             * yang ditampilkan pada dashboard admin.
-             *
-             * Eager loading digunakan untuk mencegah N+1 Query.
-             */
+            // =========================================================
+            // DATA TAMBAHAN: 5 PENDAFTARAN TERBARU
+            // Eager loading digunakan untuk mencegah N+1 Query.
+            // =========================================================
             $pendaftaranQuery = ApplicationMagang::with([
                 'leader:id,username,email',
                 'leader.profile:id,user_id,institution_name',
                 'vacancy:id,title,division_name'
-            ])
-                ->orderByDesc('submission_date');
-
+            ])->orderByDesc('submission_date');
 
             if (!$isSuperAdmin) {
                 $pendaftaranQuery->whereHas('vacancy', function ($q) use ($division) {
@@ -307,14 +160,8 @@ class AdminDashboardController extends Controller
                 });
             }
 
-            $pendaftaranTerbaru = $pendaftaranQuery
-                ->limit(5)
-                ->get();
+            $pendaftaranTerbaru = $pendaftaranQuery->limit(5)->get();
 
-
-            /**
-             * Data yang dikembalikan ke cache.
-             */
             return [
                 'totalLowongan'      => $totalLowongan,
                 'perluVerifikasi'    => $perluVerifikasi,
@@ -325,15 +172,7 @@ class AdminDashboardController extends Controller
             ];
         });
 
-
-        /**
-         * -------------------------------------------------------------
-         * STEP 6
-         * MENGIRIM DATA KE VIEW
-         * -------------------------------------------------------------
-         *
-         * View: resources/views/admin/dashboard/index.blade.php
-         */
+        // STEP 6: Kirim data ke view
         return view('admin.dashboard.index', array_merge(
             $dashboardData,
             [

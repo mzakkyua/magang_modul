@@ -168,7 +168,7 @@ class AdminProfileController extends Controller
      * - user     : data admin yang sedang login
      * - sessions : histori sesi login
      */
-    return view('admin.profile', compact('user', 'sessions'));
+    return view('admin.profile.index', compact('user', 'sessions'));
   }
 
 

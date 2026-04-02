@@ -1,4 +1,4 @@
-@extends('layouts.layoutlanding')
+@extends('layouts.landing')
 
 @section('content')
     <div class="bg-gray-50 min-h-screen py-12">

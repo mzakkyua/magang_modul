@@ -66,23 +66,45 @@ class VacancyMagangController extends Controller
 
     /* =========================================================
      * INDEX - LIST LOWONGAN
+     * =========================================================
+     * PERUBAHAN:
+     * - Ditambahkan base query builder yang di-reuse untuk stats dan pagination.
+     *   Ini memastikan stats (total, open, closed, withApplicants) selalu
+     *   di-scope ke divisi admin yang sedang login — konsisten dengan $vacancies.
+     *   Superadmin melihat semua divisi, admin divisi hanya divisinya sendiri.
+     * - $vacancies tidak berubah (masih paginate 10, withCount applications).
      * ========================================================= */
     public function index()
     {
         $hakAkses = $this->getHakAkses();
 
-        $query = VacancyMagang::withCount('applications');
+        // STEP: Buat base query dengan filter divisi
+        // Clone dipakai agar setiap query berjalan independen tanpa saling mempengaruhi
+        $base = VacancyMagang::query();
 
-        // Jika bukan superadmin → hanya lihat divisi sendiri
         if ($hakAkses->role !== 'superadmin') {
-            $query->where('division_name', $hakAkses->division_name);
+            $base->where('division_name', $hakAkses->division_name);
         }
 
-        $vacancies = $query
+        // STEP: Hitung stats (scope sama dengan filter divisi di atas)
+        $totalVacancies      = (clone $base)->count();
+        $openCount           = (clone $base)->where('status', 'open')->count();
+        $closedCount         = (clone $base)->where('status', 'closed')->count();
+        $withApplicantsCount = (clone $base)->has('applications')->count();
+
+        // STEP: Ambil data untuk tabel (sama seperti sebelumnya)
+        $vacancies = (clone $base)
+            ->withCount('applications')
             ->orderByDesc('created_at')
             ->paginate(10);
 
-        return view('admin.vacancies.index', compact('vacancies'));
+        return view('admin.vacancies.index', compact(
+            'vacancies',
+            'totalVacancies',
+            'openCount',
+            'closedCount',
+            'withApplicantsCount',
+        ));
     }
 
     /**

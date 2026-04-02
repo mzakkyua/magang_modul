@@ -1,4 +1,4 @@
-@extends('layouts.layoutlanding')
+@extends('layouts.landing')
 @section('title', 'Dashboard - SINAKERTRANS')
 
 @section('content')
@@ -417,7 +417,7 @@
             {{-- KOLOM KANAN: CALENDAR --}}
             <div id="calendar-container"
                 class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 transition-all duration-500 sticky top-20">
-                @include('calendar')
+                @include('partials.calendar')
             </div>
 
         </div>
