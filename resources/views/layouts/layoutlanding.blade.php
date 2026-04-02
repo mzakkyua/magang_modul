@@ -168,22 +168,13 @@
                                 </li>
                                 <li>
                                     <a href="{{ route('status') }}"
-<<<<<<< HEAD
-                                        class="{{ request()->is('/status') ? 'text-blue-600 border-b-2 border-blue-600' : '' }} hover:text-blue-600 transition pb-1">
-=======
                                         class="nav-slide-link transition-colors duration-200 hover:text-blue-600 {{ request()->is('status*') ? 'text-blue-600 active' : '' }}">
->>>>>>> main
                                         Status
                                     </a>
                                 </li>
                                 <li>
-<<<<<<< HEAD
-                                    <a href="#"
-                                        class="{{ request()->is('sertifikat*') ? 'text-blue-600 border-b-2 border-blue-600' : '' }} hover:text-blue-600 transition pb-1">
-=======
                                     <a href="/sertifikat"
                                         class="nav-slide-link transition-colors duration-200 hover:text-blue-600 {{ request()->is('sertifikat') ? 'text-blue-600 active' : '' }}">
->>>>>>> main
                                         Sertifikat
                                     </a>
                                 </li>

@@ -1,8 +1,13 @@
 <?php
+
+namespace App\Http\Controllers\Auth;
+
+use App\Http\Controllers\Controller;
 use App\Models\Certificate;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class CertificateController extends Controller
 {
@@ -37,15 +42,15 @@ class CertificateController extends Controller
 
     public function index()
     {
-        $certificates = Certificate::where('user_id', auth()->id())->get();
-        return view('user.certificate.index', compact('certificates'));
+        $certificates = Certificate::where('user_id', Auth::id())->get();
+        return view('magang.sertifikat.index', compact('certificates'));
     }
 
     public function download($id)
     {
         $cert = Certificate::findOrFail($id);
 
-        if ($cert->user_id != auth()->id()) {
+        if ($cert->user_id != Auth::id()) {
             abort(403);
         }
 
