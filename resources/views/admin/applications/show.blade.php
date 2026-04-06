@@ -258,104 +258,285 @@
 
         </div>
 
-        {{-- ================= RIGHT SIDE ================= --}}
+        {{-- ================================================================
+RIGHT SIDEBAR: KEPUTUSAN VERIFIKASI
+================================================================
+Menggabungkan 2 versi:
+- Versi lama  : tombol TERIMA / TOLAK / RESIGN + status display
+- Versi baru  : alur sequential (pending→verified→interview→accepted)
+                + manual override select
+
+Semua route, form method, hidden input, id, class JS (form-approve,
+form-reject, form-resign-intern, action-form, btn-trigger-resign)
+TIDAK DIUBAH — hanya visual yang diupgrade & disatukan.
+================================================================ --}}
+
         <div class="lg:col-span-1">
-            <div class="bg-white p-6 rounded-lg shadow sticky top-6">
-                <h3 class="text-lg font-bold text-gray-800 mb-4">
-                    Keputusan Verifikasi
-                </h3>
+            <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden sticky top-0">
 
-                {{-- STATUS SAAT INI --}}
-                <div class="mb-5 text-center p-4 bg-gray-50 rounded border">
-                    <p class="text-xs text-gray-500 uppercase">Status Saat Ini</p>
-
-                    <h2
-                        class="text-xl font-bold
-                    {{ $application->status === 'accepted' ? 'text-green-600' : '' }}
-                    {{ $application->status === 'rejected' ? 'text-red-600' : '' }}
-                    {{ $application->status === 'resigned' ? 'text-orange-600' : '' }}
-                    {{ in_array($application->status, ['pending', 'verified', 'interview']) ? 'text-yellow-600' : '' }}">
-                        {{ strtoupper(str_replace('_', ' ', $application->status)) }}
-                    </h2>
-
-                    @if ($application->admin_feedback)
-                        <div class="mt-2 text-xs bg-red-50 text-red-700 p-2 rounded border">
-                            <strong>Catatan Admin:</strong><br>
-                            {{ $application->admin_feedback }}
-                        </div>
-                    @endif
+                {{-- ── HEADER ── --}}
+                <div class="px-5 py-4 border-b border-gray-50 flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                        <i class="bi bi-shield-check text-blue-500 text-sm"></i>
+                    </div>
+                    <h3 class="text-sm font-extrabold text-gray-900">Keputusan Verifikasi</h3>
                 </div>
 
-                {{-- ======== APPROVE ======== --}}
-                @if ($application->status !== 'accepted')
-                    <form action="{{ route('admin.applications.update-status', $application->id) }}" method="POST"
-                        class="form-approve mb-3 action-form"
-                        data-name="{{ $application->members->first()->user->name ?? 'Pelamar ini' }}">
-                        @csrf
-                        @method('PATCH')
-                        <input type="hidden" name="status" value="accepted">
+                <div class="p-5 space-y-5">
 
-                        <button type="submit"
-                            class="action-btn w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded shadow-sm transition">
-                            ✅ TERIMA LAMARAN
-                        </button>
-                    </form>
-                @else
-                    <button disabled
-                        class="w-full bg-gray-200 text-gray-500 font-bold py-2 rounded shadow-inner mb-3 cursor-not-allowed">
-                        ✅ SUDAH DITERIMA
-                    </button>
-                @endif
+                    {{-- ── STATUS SAAT INI ── --}}
+                    <div
+                        class="rounded-xl border p-4 text-center
+                {{ $application->status === 'accepted' ? 'bg-emerald-50 border-emerald-200' : '' }}
+                {{ $application->status === 'rejected' ? 'bg-red-50 border-red-200' : '' }}
+                {{ $application->status === 'resigned' ? 'bg-orange-50 border-orange-200' : '' }}
+                {{ $application->status === 'completed' ? 'bg-teal-50 border-teal-200' : '' }}
+                {{ in_array($application->status, ['pending', 'verified', 'interview']) ? 'bg-amber-50 border-amber-200' : '' }}">
 
-                {{-- ======== REJECT ======== --}}
-                @if ($application->status !== 'rejected')
-                    <form action="{{ route('admin.applications.update-status', $application->id) }}" method="POST"
-                        class="form-reject action-form"
-                        data-name="{{ $application->members->first()->user->name ?? 'Pelamar ini' }}">
-                        @csrf
-                        @method('PATCH')
-                        <input type="hidden" name="status" value="rejected">
-                        <input type="hidden" name="admin_feedback">
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">
+                            Status Saat Ini
+                        </p>
 
-                        <button type="submit"
-                            class="action-btn w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded shadow-sm transition">
-                            ❌ TOLAK LAMARAN
-                        </button>
-                    </form>
-                @else
-                    <button disabled
-                        class="w-full bg-gray-200 text-gray-500 font-bold py-2 rounded shadow-inner cursor-not-allowed">
-                        ❌ SUDAH DITOLAK
-                    </button>
-                @endif
+                        {{-- Badge status besar --}}
+                        @php
+                            $statusConfig = [
+                                'pending' => [
+                                    'label' => 'Menunggu',
+                                    'color' => 'text-amber-600',
+                                    'dot' => 'bg-amber-500',
+                                ],
+                                'verified' => [
+                                    'label' => 'Terverifikasi',
+                                    'color' => 'text-blue-600',
+                                    'dot' => 'bg-blue-500',
+                                ],
+                                'interview' => [
+                                    'label' => 'Wawancara',
+                                    'color' => 'text-indigo-600',
+                                    'dot' => 'bg-indigo-500',
+                                ],
+                                'accepted' => [
+                                    'label' => 'Diterima',
+                                    'color' => 'text-emerald-600',
+                                    'dot' => 'bg-emerald-500',
+                                ],
+                                'rejected' => ['label' => 'Ditolak', 'color' => 'text-red-600', 'dot' => 'bg-red-500'],
+                                'resigned' => [
+                                    'label' => 'Mengundurkan Diri',
+                                    'color' => 'text-orange-600',
+                                    'dot' => 'bg-orange-500',
+                                ],
+                                'completed' => [
+                                    'label' => 'Selesai',
+                                    'color' => 'text-teal-600',
+                                    'dot' => 'bg-teal-500',
+                                ],
+                            ];
+                            $cfg = $statusConfig[$application->status] ?? [
+                                'label' => strtoupper($application->status),
+                                'color' => 'text-gray-600',
+                                'dot' => 'bg-gray-400',
+                            ];
+                        @endphp
 
-                {{-- ======== RESIGN (HANYA MUNCUL JIKA SUDAH ACCEPTED) ======== --}}
-                @if ($application->status === 'accepted')
-                    <div class="mt-4 pt-4 border-t border-gray-200">
-                        {{-- HAPUS form-reject, GANTI form-resign-intern. HAPUS action-form --}}
+                        <div class="flex items-center justify-center gap-2">
+                            <span
+                                class="w-2 h-2 rounded-full {{ $cfg['dot'] }}
+                                 {{ in_array($application->status, ['pending', 'verified', 'interview']) ? 'animate-pulse' : '' }}">
+                            </span>
+                            <span class="text-lg font-extrabold {{ $cfg['color'] }}">
+                                {{ $cfg['label'] }}
+                            </span>
+                        </div>
+
+                        {{-- Catatan admin jika ada --}}
+                        @if ($application->admin_feedback)
+                            <div class="mt-3 text-left bg-white/60 border border-red-100 rounded-lg px-3 py-2">
+                                <p class="text-[10px] font-bold text-red-400 uppercase tracking-wider mb-0.5">
+                                    Catatan Admin
+                                </p>
+                                <p class="text-xs text-red-600 leading-relaxed">
+                                    {{ $application->admin_feedback }}
+                                </p>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- ────────────────────────────────────────
+            BAGIAN 1: AKSI SELANJUTNYA (Sequential Flow)
+            Tampilkan hanya satu tombol sesuai status saat ini.
+            Logic @if chain dari dokumen 10 — tidak diubah.
+            ──────────────────────────────────────── --}}
+                    <div>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2.5">
+                            Aksi Selanjutnya
+                        </p>
+
+                        @if ($application->status === 'pending')
+                            {{-- Verifikasi dokumen --}}
+                            <form action="{{ route('admin.applications.update-status', $application->id) }}"
+                                method="POST" class="form-approve action-form"
+                                data-name="{{ $application->members->first()->user->name ?? 'Pelamar ini' }}">
+                                @csrf @method('PATCH')
+                                <input type="hidden" name="status" value="verified">
+                                <button type="submit"
+                                    class="action-btn w-full flex items-center justify-center gap-2
+                                   bg-blue-50 text-blue-600 border border-blue-200 font-bold py-2.5 rounded-xl
+                                   hover:bg-blue-600 hover:text-white hover:border-blue-600 hover:shadow-md hover:shadow-blue-600/25
+                                   transition-all duration-200 text-sm">
+                                    <i class="bi bi-patch-check"></i> Verifikasi Dokumen
+                                </button>
+                            </form>
+                        @elseif ($application->status === 'verified')
+                            {{-- Panggil wawancara --}}
+                            <form action="{{ route('admin.applications.update-status', $application->id) }}"
+                                method="POST" class="action-form"
+                                data-name="{{ $application->members->first()->user->name ?? 'Pelamar ini' }}">
+                                @csrf @method('PATCH')
+                                <input type="hidden" name="status" value="interview">
+                                <button type="submit"
+                                    class="action-btn w-full flex items-center justify-center gap-2
+                                   bg-indigo-50 text-indigo-600 border border-indigo-200 font-bold py-2.5 rounded-xl
+                                   hover:bg-indigo-600 hover:text-white hover:border-indigo-600 hover:shadow-md hover:shadow-indigo-600/25
+                                   transition-all duration-200 text-sm">
+                                    <i class="bi bi-camera-video"></i> Panggil Wawancara
+                                </button>
+                            </form>
+                        @elseif ($application->status === 'interview')
+                            {{-- Terima pemagang --}}
+                            <form action="{{ route('admin.applications.update-status', $application->id) }}"
+                                method="POST" class="form-approve action-form"
+                                data-name="{{ $application->members->first()->user->name ?? 'Pelamar ini' }}">
+                                @csrf @method('PATCH')
+                                <input type="hidden" name="status" value="accepted">
+                                <button type="submit"
+                                    class="action-btn w-full flex items-center justify-center gap-2
+                                   bg-emerald-600 text-white font-bold py-2.5 rounded-xl
+                                   hover:bg-emerald-700 shadow-md shadow-emerald-600/25 hover:shadow-emerald-600/40
+                                   transition-all duration-200 text-sm">
+                                    <i class="bi bi-check-circle-fill"></i> Terima Pemagang
+                                </button>
+                            </form>
+                        @elseif ($application->status === 'accepted')
+                            {{-- Selesaikan magang --}}
+                            <form action="{{ route('admin.applications.update-status', $application->id) }}"
+                                method="POST" class="action-form"
+                                data-name="{{ $application->members->first()->user->name ?? 'Pelamar ini' }}">
+                                @csrf @method('PATCH')
+                                <input type="hidden" name="status" value="completed">
+                                <button type="submit"
+                                    class="action-btn w-full flex items-center justify-center gap-2
+                                   bg-teal-600 text-white font-bold py-2.5 rounded-xl
+                                   hover:bg-teal-700 shadow-md shadow-teal-600/25 hover:shadow-teal-600/40
+                                   transition-all duration-200 text-sm">
+                                    <i class="bi bi-award-fill"></i> Selesaikan Magang
+                                </button>
+                            </form>
+                        @else
+                            {{-- Status terminal: rejected / resigned / completed --}}
+                            <div class="bg-gray-50 border border-gray-200 rounded-xl p-3 text-center">
+                                <p class="text-xs text-gray-400 font-medium">Alur normal telah selesai.</p>
+                            </div>
+                        @endif
+
+                        {{-- ── TOLAK (muncul selama belum rejected / completed) ── --}}
+                        @if (!in_array($application->status, ['rejected', 'completed', 'resigned']))
+                            <form action="{{ route('admin.applications.update-status', $application->id) }}"
+                                method="POST" class="form-reject action-form mt-2"
+                                data-name="{{ $application->members->first()->user->name ?? 'Pelamar ini' }}">
+                                @csrf @method('PATCH')
+                                <input type="hidden" name="status" value="rejected">
+                                <input type="hidden" name="admin_feedback">
+                                <button type="submit"
+                                    class="action-btn w-full flex items-center justify-center gap-2
+                                   bg-white text-red-500 border border-red-200 font-bold py-2.5 rounded-xl
+                                   hover:bg-red-600 hover:text-white hover:border-red-600 hover:shadow-md hover:shadow-red-600/20
+                                   transition-all duration-200 text-sm">
+                                    <i class="bi bi-x-circle"></i> Tolak Lamaran
+                                </button>
+                            </form>
+                        @endif
+
+                        {{-- ── RESIGN (hanya jika accepted) ── --}}
+                        {{--
+                    id="form-resign-intern-action", class="form-resign-intern",
+                    id="btn-trigger-resign", type="button" — semua TIDAK DIUBAH.
+                    JavaScript menggunakan ID dan class ini untuk inject admin_feedback.
+                --}}
+                        @if ($application->status === 'accepted')
+                            <div class="mt-2">
+                                <form action="{{ route('admin.applications.update-status', $application->id) }}"
+                                    method="POST" id="form-resign-intern-action" class="form-resign-intern"
+                                    data-name="{{ $application->members->first()->user->name ?? 'Pelamar ini' }}">
+                                    @csrf @method('PATCH')
+                                    <input type="hidden" name="status" value="resigned">
+                                    <button type="button" id="btn-trigger-resign"
+                                        class="w-full flex items-center justify-center gap-2
+                                       bg-white text-orange-500 border border-orange-200 font-bold py-2.5 rounded-xl
+                                       hover:bg-orange-500 hover:text-white hover:border-orange-500
+                                       transition-all duration-200 text-sm">
+                                        <i class="bi bi-person-walking"></i> Mengundurkan Diri
+                                    </button>
+                                </form>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- ────────────────────────────────────────
+            BAGIAN 2: OVERRIDE MANUAL
+            Logic select + route dari dokumen 10 — tidak diubah.
+            ──────────────────────────────────────── --}}
+                    <div class="pt-5 border-t border-gray-100">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2.5">
+                            Ubah Status Manual
+                        </p>
+
                         <form action="{{ route('admin.applications.update-status', $application->id) }}" method="POST"
-                            id="form-resign-intern-action" class="form-resign-intern"
-                            data-name="{{ $application->members->first()->user->name ?? 'Pelamar ini' }}">
-                            @csrf
-                            @method('PATCH')
-                            <input type="hidden" name="status" value="resigned">
-
-                            {{-- Input alasan akan kita sisipkan lewat JS nanti, jadi ini dikosongkan/dihapus --}}
-                            {{-- <input type="hidden" name="admin_feedback" value=""> --}}
-
-                            <button type="button" {{-- GANTI type="submit" MENJADI type="button" --}} id="btn-trigger-resign"
-                                class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 rounded shadow-sm transition flex items-center justify-center gap-2">
-                                <i class="bi bi-person-walking"></i> MENGUNDURKAN DIRI
+                            class="flex gap-2">
+                            @csrf @method('PATCH')
+                            <select name="status"
+                                class="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-medium
+                               text-gray-700 bg-white outline-none appearance-none cursor-pointer
+                               hover:border-blue-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-100
+                               transition-all duration-200
+                               bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22M6%208l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')]
+                               bg-position-[right_10px_center] bg-no-repeat bg-size-[14px]">
+                                <option value="pending" {{ $application->status == 'pending' ? 'selected' : '' }}>
+                                    Pending</option>
+                                <option value="verified" {{ $application->status == 'verified' ? 'selected' : '' }}>
+                                    Verified</option>
+                                <option value="interview" {{ $application->status == 'interview' ? 'selected' : '' }}>
+                                    Interview</option>
+                                <option value="accepted" {{ $application->status == 'accepted' ? 'selected' : '' }}>
+                                    Accepted</option>
+                                <option value="rejected" {{ $application->status == 'rejected' ? 'selected' : '' }}>
+                                    Rejected</option>
+                                <option value="resigned" {{ $application->status == 'resigned' ? 'selected' : '' }}>
+                                    Resigned</option>
+                                <option value="completed" {{ $application->status == 'completed' ? 'selected' : '' }}>
+                                    Completed</option>
+                            </select>
+                            <button type="submit"
+                                class="bg-gray-900 hover:bg-gray-700 text-white px-4 py-2.5 rounded-xl
+                               text-sm font-bold transition-all duration-200 shrink-0">
+                                Ubah
                             </button>
                         </form>
-                    </div>
-                @endif
 
-                <div class="mt-4 pt-4 border-t text-center">
-                    <a href="{{ route('admin.applications.index') }}"
-                        class="text-sm text-gray-500 hover:text-blue-600 font-medium transition">
-                        ← Kembali ke Daftar Lamaran
-                    </a>
+                        <p class="text-[10px] text-gray-400 mt-2 leading-relaxed">
+                            Gunakan jika ada pembatalan, kesalahan sistem, atau kondisi di luar alur normal.
+                        </p>
+                    </div>
+
+                    {{-- ── KEMBALI ── --}}
+                    <div class="pt-4 border-t border-gray-50 text-center">
+                        <a href="{{ route('admin.applications.index') }}"
+                            class="inline-flex items-center gap-1.5 text-sm text-gray-400
+                           hover:text-blue-600 font-medium transition-colors duration-150">
+                            <i class="bi bi-arrow-left text-xs"></i> Kembali ke Daftar Lamaran
+                        </a>
+                    </div>
+
                 </div>
             </div>
         </div>

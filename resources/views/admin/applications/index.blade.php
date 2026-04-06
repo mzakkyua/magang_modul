@@ -5,22 +5,9 @@
 @section('content')
 
     {{-- ===================== PAGE HEADER + SUMMARY CARDS ===================== --}}
-    @php
-        // STEP: Hitung ringkasan per status dari data yang sudah ada
-        // Catatan: ini hanya akurat jika $data adalah Collection, bukan paginated LengthAwarePaginator
-        // Jika paginated, pertimbangkan kirim variable terpisah dari controller
-        $statusCounts = [
-            'pending' => \App\Models\ApplicationMagang::where('status', 'pending')->count(),
-            'verified' => \App\Models\ApplicationMagang::where('status', 'verified')->count(),
-            'interview' => \App\Models\ApplicationMagang::where('status', 'interview')->count(),
-            'accepted' => \App\Models\ApplicationMagang::where('status', 'accepted')->count(),
-            'rejected' => \App\Models\ApplicationMagang::where('status', 'rejected')->count(),
-            'resigned' => \App\Models\ApplicationMagang::where('status', 'resigned')->count(),
-        ];
-    @endphp
 
-    {{-- Summary Cards --}}
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+    {{-- Summary Cards (Diubah jadi grid-cols-7 agar kartu 'Selesai' muat) --}}
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
 
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-1">
             <p class="text-2xl font-extrabold text-gray-800">{{ array_sum($statusCounts) }}</p>
@@ -52,116 +39,81 @@
             <p class="text-xs text-gray-400 font-medium">Mundur</p>
         </div>
 
+        {{-- TAMBAHAN BARU: Kartu Selesai --}}
+        <div class="bg-white rounded-2xl border border-teal-100 shadow-sm p-4 flex flex-col gap-1">
+            <p class="text-2xl font-extrabold text-teal-500">{{ $statusCounts['completed'] }}</p>
+            <p class="text-xs text-gray-400 font-medium">Selesai/Lulus</p>
+        </div>
+
     </div>
 
     {{-- ===================== FILTER TABS ===================== --}}
-    {{-- BUGFIX: semua tab sekarang punya logic active state dinamis --}}
     @php
         $currentStatus = request('status');
-
-        // Helper: tentukan class tab berdasarkan apakah aktif
         $activeClass = 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/20 font-bold';
         $inactiveClass = 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-gray-300 font-semibold';
     @endphp
 
     <div class="flex flex-wrap gap-2 mb-6">
-
-        {{-- Semua --}}
         <a href="{{ route('admin.applications.index') }}"
-            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-all duration-150
-        {{ !$currentStatus ? $activeClass : $inactiveClass }}">
-            <i class="bi bi-grid-3x3-gap text-xs"></i>
-            Semua
+            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-all duration-150 {{ !$currentStatus ? $activeClass : $inactiveClass }}">
+            <i class="bi bi-grid-3x3-gap text-xs"></i> Semua
             <span
-                class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full
-            {{ !$currentStatus ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500' }}">
-                {{ array_sum($statusCounts) }}
-            </span>
+                class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full {{ !$currentStatus ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500' }}">{{ array_sum($statusCounts) }}</span>
         </a>
-
-        {{-- Menunggu --}}
         <a href="{{ route('admin.applications.index', ['status' => 'pending']) }}"
-            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-all duration-150
-        {{ $currentStatus === 'pending' ? $activeClass : $inactiveClass }}">
+            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-all duration-150 {{ $currentStatus === 'pending' ? $activeClass : $inactiveClass }}">
             <i
-                class="bi bi-hourglass-split text-xs text-amber-500 {{ $currentStatus === 'pending' ? 'text-white!' : '' }}"></i>
+                class="bi bi-hourglass-split text-xs {{ $currentStatus === 'pending' ? 'text-white' : 'text-amber-500' }}"></i>
             Menunggu
             <span
-                class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full
-            {{ $currentStatus === 'pending' ? 'bg-white/20 text-white' : 'bg-amber-50 text-amber-600 border border-amber-200' }}">
-                {{ $statusCounts['pending'] }}
-            </span>
+                class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full {{ $currentStatus === 'pending' ? 'bg-white/20 text-white' : 'bg-amber-50 text-amber-600 border border-amber-200' }}">{{ $statusCounts['pending'] }}</span>
         </a>
-
-        {{-- Diverifikasi --}}
         <a href="{{ route('admin.applications.index', ['status' => 'verified']) }}"
-            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-all duration-150
-        {{ $currentStatus === 'verified' ? $activeClass : $inactiveClass }}">
-            <i
-                class="bi bi-shield-check text-xs text-blue-500 {{ $currentStatus === 'verified' ? 'text-white!' : '' }}"></i>
+            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-all duration-150 {{ $currentStatus === 'verified' ? $activeClass : $inactiveClass }}">
+            <i class="bi bi-shield-check text-xs {{ $currentStatus === 'verified' ? 'text-white' : 'text-blue-500' }}"></i>
             Diverifikasi
             <span
-                class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full
-            {{ $currentStatus === 'verified' ? 'bg-white/20 text-white' : 'bg-blue-50 text-blue-600 border border-blue-200' }}">
-                {{ $statusCounts['verified'] }}
-            </span>
+                class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full {{ $currentStatus === 'verified' ? 'bg-white/20 text-white' : 'bg-blue-50 text-blue-600 border border-blue-200' }}">{{ $statusCounts['verified'] }}</span>
         </a>
-
-        {{-- Interview --}}
         <a href="{{ route('admin.applications.index', ['status' => 'interview']) }}"
-            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-all duration-150
-        {{ $currentStatus === 'interview' ? $activeClass : $inactiveClass }}">
+            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-all duration-150 {{ $currentStatus === 'interview' ? $activeClass : $inactiveClass }}">
             <i
-                class="bi bi-camera-video text-xs text-purple-500 {{ $currentStatus === 'interview' ? 'text-white!' : '' }}"></i>
+                class="bi bi-camera-video text-xs {{ $currentStatus === 'interview' ? 'text-white' : 'text-purple-500' }}"></i>
             Interview
             <span
-                class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full
-            {{ $currentStatus === 'interview' ? 'bg-white/20 text-white' : 'bg-purple-50 text-purple-600 border border-purple-200' }}">
-                {{ $statusCounts['interview'] }}
-            </span>
+                class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full {{ $currentStatus === 'interview' ? 'bg-white/20 text-white' : 'bg-purple-50 text-purple-600 border border-purple-200' }}">{{ $statusCounts['interview'] }}</span>
         </a>
-
-        {{-- Diterima --}}
         <a href="{{ route('admin.applications.index', ['status' => 'accepted']) }}"
-            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-all duration-150
-        {{ $currentStatus === 'accepted' ? $activeClass : $inactiveClass }}">
+            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-all duration-150 {{ $currentStatus === 'accepted' ? $activeClass : $inactiveClass }}">
             <i
-                class="bi bi-check-circle text-xs text-emerald-500 {{ $currentStatus === 'accepted' ? 'text-white!' : '' }}"></i>
+                class="bi bi-check-circle text-xs {{ $currentStatus === 'accepted' ? 'text-white' : 'text-emerald-500' }}"></i>
             Diterima
             <span
-                class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full
-            {{ $currentStatus === 'accepted' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-600 border border-emerald-200' }}">
-                {{ $statusCounts['accepted'] }}
-            </span>
+                class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full {{ $currentStatus === 'accepted' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-600 border border-emerald-200' }}">{{ $statusCounts['accepted'] }}</span>
         </a>
-
-        {{-- Ditolak --}}
         <a href="{{ route('admin.applications.index', ['status' => 'rejected']) }}"
-            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-all duration-150
-        {{ $currentStatus === 'rejected' ? $activeClass : $inactiveClass }}">
-            <i class="bi bi-x-circle text-xs text-red-400 {{ $currentStatus === 'rejected' ? 'text-white!' : '' }}"></i>
+            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-all duration-150 {{ $currentStatus === 'rejected' ? $activeClass : $inactiveClass }}">
+            <i class="bi bi-x-circle text-xs {{ $currentStatus === 'rejected' ? 'text-white' : 'text-red-400' }}"></i>
             Ditolak
             <span
-                class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full
-            {{ $currentStatus === 'rejected' ? 'bg-white/20 text-white' : 'bg-red-50 text-red-500 border border-red-200' }}">
-                {{ $statusCounts['rejected'] }}
-            </span>
+                class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full {{ $currentStatus === 'rejected' ? 'bg-white/20 text-white' : 'bg-red-50 text-red-500 border border-red-200' }}">{{ $statusCounts['rejected'] }}</span>
         </a>
-
-        {{-- TAMBAHAN BARU: Mundur/Resigned --}}
         <a href="{{ route('admin.applications.index', ['status' => 'resigned']) }}"
-            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-all duration-150
-        {{ $currentStatus === 'resigned' ? $activeClass : $inactiveClass }}">
+            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-all duration-150 {{ $currentStatus === 'resigned' ? $activeClass : $inactiveClass }}">
             <i
-                class="bi bi-person-walking text-xs text-orange-400 {{ $currentStatus === 'resigned' ? 'text-white!' : '' }}"></i>
+                class="bi bi-person-walking text-xs {{ $currentStatus === 'resigned' ? 'text-white' : 'text-orange-400' }}"></i>
             Mundur
             <span
-                class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full
-            {{ $currentStatus === 'resigned' ? 'bg-white/20 text-white' : 'bg-orange-50 text-orange-500 border border-orange-200' }}">
-                {{ $statusCounts['resigned'] }}
-            </span>
+                class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full {{ $currentStatus === 'resigned' ? 'bg-white/20 text-white' : 'bg-orange-50 text-orange-500 border border-orange-200' }}">{{ $statusCounts['resigned'] }}</span>
         </a>
-
+        <a href="{{ route('admin.applications.index', ['status' => 'completed']) }}"
+            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-all duration-150 {{ $currentStatus === 'completed' ? $activeClass : $inactiveClass }}">
+            <i class="bi bi-award-fill text-xs {{ $currentStatus === 'completed' ? 'text-white' : 'text-teal-500' }}"></i>
+            Selesai
+            <span
+                class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full {{ $currentStatus === 'completed' ? 'bg-white/20 text-white' : 'bg-teal-50 text-teal-600 border border-teal-200' }}">{{ $statusCounts['completed'] }}</span>
+        </a>
     </div>
 
     {{-- ===================== TABEL UTAMA ===================== --}}
@@ -280,6 +232,11 @@
                                     <span
                                         class="inline-flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold text-orange-600 bg-orange-50 border border-orange-200 rounded-full">
                                         <i class="bi bi-person-walking text-[10px]"></i> Mundur
+                                    </span>
+                                @elseif ($app->status === 'completed')
+                                    <span
+                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-bold text-teal-700 bg-teal-50 border border-teal-200 rounded-full">
+                                        <i class="bi bi-award-fill text-[10px]"></i> Lulus
                                     </span>
                                 @endif
                             </td>

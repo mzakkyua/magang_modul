@@ -12,12 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('certificates', function (Blueprint $table) {
-    $table->id();
-    $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-    $table->string('title');
-    $table->string('file');
-    $table->timestamps();
-});
+            $table->id();
+            $table->foreignId('user_id')->constrained('users_magang')->cascadeOnDelete();
+            $table->string('title');
+            $table->string('file');
+            $table->timestamps();
+        });
     }
 
     /**

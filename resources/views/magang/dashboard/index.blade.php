@@ -1,4 +1,4 @@
-@extends('layouts.layoutlanding')
+@extends('layouts.landing')
 @section('title', 'Dashboard - SINAKERTRANS')
 
 @section('content')

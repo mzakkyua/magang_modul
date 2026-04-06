@@ -97,4 +97,13 @@ class UserMagang extends Authenticatable implements CanResetPasswordContract
     {
         return $this->profile && $this->profile->isComplete();
     }
+
+    /**
+     * Relasi ke ApplicationMemberMagang
+     * Menghubungkan peserta dengan lamaran (baik individu maupun kelompok)
+     */
+    public function applicationMembers()
+    {
+        return $this->hasMany(\App\Models\ApplicationMemberMagang::class, 'user_id');
+    }
 }

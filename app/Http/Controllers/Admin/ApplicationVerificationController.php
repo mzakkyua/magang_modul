@@ -80,6 +80,13 @@ class ApplicationVerificationController extends Controller
      * - Filter status pelamar (optional)
      * - Pagination (10 data per halaman)
      *
+     * PERUBAHAN:
+     * - Ditambahkan $statusCounts yang di-scope ke divisi admin.
+     *   Sebelumnya dihitung di Blade (@php block) tanpa filter divisi,
+     *   sehingga semua admin dari semua divisi melihat angka yang sama.
+     *   Sekarang pola-nya sama dengan VacancyMagangController@index:
+     *   gunakan base query → clone → hitung per status.
+     *
      * ==================================================================
      */
     public function index(Request $request)
@@ -98,46 +105,58 @@ class ApplicationVerificationController extends Controller
             abort(403, 'Anda tidak memiliki akses ke halaman verifikasi ini.');
         }
 
+        /*
+        ==============================================================
+        2. BASE QUERY DENGAN FILTER DIVISI
+        ==============================================================
+        Base query ini di-reuse untuk $statusCounts dan $data agar
+        filter divisi selalu konsisten di keduanya.
+
+        Clone dipakai agar setiap query berjalan independen
+        tanpa kondisi sebelumnya ikut terbawa.
+        */
+        $base = ApplicationMagang::whereHas('vacancy', function ($q) use ($hakAkses) {
+            // BUSINESS LOGIC: superadmin lihat semua divisi, admin divisi hanya divisinya
+            if ($hakAkses->role !== 'superadmin') {
+                $q->where('division_name', $hakAkses->division_name);
+            }
+        });
 
         /*
         ==============================================================
-        2. QUERY DASAR LAMARAN
+        3. HITUNG STATUS COUNTS (SCOPE SAMA DENGAN FILTER DIVISI)
+        ==============================================================
+        Variabel ini dikirim ke Blade untuk stats cards dan tab badges.
+        Menggantikan @php block di Blade yang query tanpa filter divisi.
+        */
+        $statusCounts = [
+            'pending'   => (clone $base)->where('status', 'pending')->count(),
+            'verified'  => (clone $base)->where('status', 'verified')->count(),
+            'interview' => (clone $base)->where('status', 'interview')->count(),
+            'accepted'  => (clone $base)->where('status', 'accepted')->count(),
+            'rejected'  => (clone $base)->where('status', 'rejected')->count(),
+            'resigned'  => (clone $base)->where('status', 'resigned')->count(),
+            'completed' => (clone $base)->where('status', 'completed')->count(),
+        ];
+
+        /*
+        ==============================================================
+        4. QUERY DATA UNTUK TABEL (DENGAN FILTER STATUS OPSIONAL)
         ==============================================================
         Eager loading digunakan untuk menghindari N+1 query.
         */
-        $applications = ApplicationMagang::with([
-            'vacancy',
-            'leader'
-        ])->orderBy('submission_date', 'desc');
+        $query = (clone $base)
+            ->with(['vacancy', 'leader'])
+            ->orderBy('submission_date', 'desc');
 
-
-        /*
-        ==============================================================
-        3. FILTER DIVISI ADMIN
-        ==============================================================
-        */
-        if ($hakAkses->role !== 'superadmin') {
-
-            $applications->whereHas('vacancy', function ($q) use ($hakAkses) {
-                $q->where('division_name', $hakAkses->division_name);
-            });
-        }
-
-
-        /*
-        ==============================================================
-        4. FILTER STATUS (OPTIONAL)
-        ==============================================================
-        */
+        // STEP: Filter status (opsional, dari query param ?status=...)
         if ($request->filled('status')) {
-            $applications->where('status', $request->status);
+            $query->where('status', $request->status);
         }
 
+        $data = $query->paginate(10);
 
-        $data = $applications->paginate(10);
-
-
-        return view('admin.applications.index', compact('data'));
+        return view('admin.applications.index', compact('data', 'statusCounts'));
     }
 
 
@@ -258,8 +277,8 @@ class ApplicationVerificationController extends Controller
     ==============================================================
     */
         $request->validate([
-            'status' => 'required|in:verified,interview,accepted,rejected,resigned', // Tambah resigned
-            'admin_feedback' => 'required_if:status,rejected,resigned|nullable|string|max:500', // Wajib isi jika rejected ATAU resigned
+            'status' => 'required|in:verified,interview,accepted,rejected,resigned,completed',
+            'admin_feedback' => 'required_if:status,rejected,resigned|nullable|string|max:500',
         ], [
             'admin_feedback.required_if' =>
             'Mohon maaf, jika menolak atau menandai mundur, WAJIB menyertakan alasannya.',
@@ -293,11 +312,10 @@ class ApplicationVerificationController extends Controller
         }
 
         /*
-    /*
-    ==============================================================
-    5. SIMPAN PERUBAHAN STATUS & PEMBERSIHAN CATATAN
-    ==============================================================
-    */
+    ==============================================================
+    5. SIMPAN PERUBAHAN STATUS & PEMBERSIHAN CATATAN
+    ==============================================================
+    */
         $app->status = $request->status;
 
         // Jika ditolak ATAU mengundurkan diri, simpan alasannya. Jika tidak, KOSONGKAN.
