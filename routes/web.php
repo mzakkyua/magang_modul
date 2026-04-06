@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\ApplicationVerificationController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AssessmentController;
 use App\Http\Controllers\Admin\AdminProfileController;
+use App\Http\Controllers\Admin\PegawaiController;
 
 // Auth Reset Password
 use App\Http\Controllers\Auth\ForgotPasswordMagangController;
@@ -272,4 +273,14 @@ Route::prefix('admin')
             '/certificate/store',
             [CertificateController::class, 'store']
         )->name('certificate.store');
+
+        // ---------------------
+        // MANAJEMEN DATA PEGAWAI & HAK AKSES
+        // ---------------------
+        Route::get('/pegawai', [PegawaiController::class, 'index'])
+            ->name('pegawai.index');
+        Route::post('/pegawai/{id}/access', [PegawaiController::class, 'storeAccess'])
+            ->name('pegawai.access.store');
+        Route::delete('/pegawai/{id}/access', [PegawaiController::class, 'destroyAccess'])
+            ->name('pegawai.access.destroy');
     });

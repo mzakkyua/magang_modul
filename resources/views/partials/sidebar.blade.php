@@ -76,8 +76,11 @@
                 <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Kepegawaian</p>
             </div>
 
-            <a href="#"
-                class="flex items-center px-3 py-2.5 mb-0.5 rounded-xl font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all duration-150">
+            <a href="{{ route('admin.pegawai.index') }}"
+                class="flex items-center px-3 py-2.5 mb-0.5 rounded-xl font-semibold transition-all duration-150
+            {{ request()->routeIs('admin.pegawai*')
+                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
                 <i class="bi bi-people mr-2.5 text-base"></i>
                 Data Pegawai
             </a>

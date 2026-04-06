@@ -1,79 +1,117 @@
 @extends('layouts.landing')
+
 @section('title', 'Unduh Nilai dan Sertifikat')
+
 @section('content')
     <div class="bg-gray-50 min-h-screen py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
-            {{-- Header Judul --}}
-            <div class="text-center mb-12">
-                <p class="text-blue-600 font-bold uppercase tracking-widest text-sm mb-2">Unduh Sertifikat</p>
-                <h1 class="text-4xl font-extrabold text-[#37517e]">Riwayat</h1>
+            {{-- ===================== PAGE HEADER ===================== --}}
+            <div class="mb-10">
+                <p class="text-blue-600 font-bold uppercase tracking-widest text-xs mb-2 flex items-center gap-2">
+                    <i class="bi bi-award"></i> Sertifikat
+                </p>
+                <h1 class="text-3xl font-extrabold text-gray-900">Sertifikat & Unduhan</h1>
+                <p class="text-gray-500 text-sm mt-1">Unduh sertifikat keikutsertaan magang kamu di sini.</p>
             </div>
 
-            {{-- Tabel Riwayat --}}
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-[#2d3748] text-white">
-                            <th class="px-6 py-4 font-bold uppercase text-xs">No.</th>
-                            <th class="px-6 py-4 font-bold uppercase text-xs">Posisi Magang</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @forelse($certificates as $cert)
-                            <tr class="hover:bg-gray-50">
+            {{-- ===================== KONTEN SERTIFIKAT ===================== --}}
+            @forelse($certificates as $cert)
+                @php
+                    // STEP: Tentukan tipe file untuk preview
+                    $extension = strtolower(pathinfo($cert->file, PATHINFO_EXTENSION));
+                    $isImage = in_array($extension, ['jpg', 'jpeg', 'png']);
+                @endphp
 
-                                <!-- NO -->
-                                <td class="px-6 py-4">
-                                    {{ $loop->iteration }}
-                                </td>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
 
-                                <!-- JUDUL -->
-                                <td class="px-6 py-4">
-                                    <div class="font-semibold text-gray-800">
-                                        {{ $cert->title }}
-                                    </div>
+                    {{-- Card Header --}}
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                        <div class="flex items-center gap-3">
+                            {{-- Nomor urut --}}
+                            <div
+                                class="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+                                <span class="text-blue-600 text-xs font-extrabold">{{ $loop->iteration }}</span>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900 text-sm leading-tight">{{ $cert->title }}</h3>
+                                <p class="text-xs text-gray-400 mt-0.5 uppercase tracking-wide">
+                                    {{ strtoupper($extension) }} • Sertifikat Magang
+                                </p>
+                            </div>
+                        </div>
 
-                                    <!-- PREVIEW -->
-                                    <div
-                                        class="mt-3 w-full h-64 bg-gray-100 border border-gray-200 rounded-lg overflow-hidden flex items-center justify-center relative">
-                                        @php
-                                            // Ambil ekstensi file (pdf, jpg, png, dll)
-                                            $extension = strtolower(pathinfo($cert->file, PATHINFO_EXTENSION));
-                                        @endphp
+                        {{-- Tombol Download --}}
+                        <a href="{{ route('certificate.download', $cert->id) }}"
+                            class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm shadow-blue-600/20 shrink-0">
+                            <i class="bi bi-download text-xs"></i>
+                            Unduh
+                        </a>
+                    </div>
 
-                                        @if (in_array($extension, ['jpg', 'jpeg', 'png']))
-                                            {{-- Jika Gambar: Gunakan tag img dengan object-contain agar pas di tengah tanpa terpotong --}}
-                                            <img src="{{ route('certificate.view', $cert->id) }}" alt="{{ $cert->title }}"
-                                                class="w-full h-full object-contain">
-                                        @else
-                                            {{-- Jika PDF: Gunakan iframe --}}
-                                            <iframe src="{{ route('certificate.view', $cert->id) }}"
-                                                class="w-full h-full border-0">
-                                            </iframe>
-                                        @endif
-                                    </div>
-                                </td>
+                    {{-- Preview Area --}}
+                    <div class="p-5">
+                        <div class="w-full bg-gray-50 border border-gray-100 rounded-xl overflow-hidden relative"
+                            style="height: 480px;">
 
-                                <!-- AKSI -->
-                                <td class="px-6 py-4 text-center">
-                                    <a href="{{ route('certificate.download', $cert->id) }}"
-                                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-                                        Download
-                                    </a>
-                                </td>
+                            @if ($isImage)
+                                {{-- Preview Gambar --}}
+                                <img src="{{ route('certificate.view', $cert->id) }}" alt="{{ $cert->title }}"
+                                    class="w-full h-full object-contain">
+                            @else
+                                {{-- Preview PDF via iframe --}}
+                                <iframe src="{{ route('certificate.view', $cert->id) }}" class="w-full h-full border-0">
+                                </iframe>
+                            @endif
 
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="3" class="text-center py-6 text-gray-500">
-                                    Belum ada sertifikat
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                            {{-- Badge tipe file di pojok --}}
+                            <div class="absolute top-3 right-3">
+                                <span
+                                    class="inline-flex items-center gap-1 bg-white/90 backdrop-blur-sm border border-gray-200 text-gray-600 text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm">
+                                    <i
+                                        class="bi bi-{{ $isImage ? 'image' : 'file-earmark-pdf' }} text-[9px]
+                                    {{ $isImage ? 'text-green-500' : 'text-red-500' }}"></i>
+                                    {{ strtoupper($extension) }}
+                                </span>
+                            </div>
+
+                        </div>
+
+                        {{-- Footer card: link buka di tab baru --}}
+                        <div class="flex items-center justify-between mt-3">
+                            <p class="text-xs text-gray-400">
+                                <i class="bi bi-info-circle mr-1"></i>
+                                Klik unduh untuk menyimpan sertifikat ke perangkat kamu.
+                            </p>
+                            <a href="{{ route('certificate.view', $cert->id) }}" target="_blank"
+                                class="text-xs text-blue-500 hover:text-blue-700 font-semibold flex items-center gap-1 transition">
+                                <i class="bi bi-box-arrow-up-right text-[10px]"></i>
+                                Buka di tab baru
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+
+            @empty
+
+                {{-- ===================== EMPTY STATE ===================== --}}
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 px-6 py-20 text-center">
+                    <div class="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                        <i class="bi bi-award text-4xl text-gray-300"></i>
+                    </div>
+                    <h3 class="text-gray-600 font-bold text-lg mb-1">Belum Ada Sertifikat</h3>
+                    <p class="text-gray-400 text-sm max-w-sm mx-auto leading-relaxed">
+                        Sertifikat akan tersedia setelah masa magang kamu selesai dan admin telah menerbitkannya.
+                    </p>
+                    <a href="{{ route('dashboard.index') }}"
+                        class="inline-flex items-center gap-2 mt-6 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition shadow-md shadow-blue-600/20">
+                        <i class="bi bi-house text-xs"></i>
+                        Kembali ke Dashboard
+                    </a>
+                </div>
+            @endforelse
+
         </div>
     </div>
 @endsection

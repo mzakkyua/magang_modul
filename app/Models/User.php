@@ -70,4 +70,13 @@ class User extends Authenticatable
     {
         return $this->magangAccessRight?->role === 'admin divisi';
     }
+
+    /**
+     * Relasi ke tabel magang_access_rights (Hak Akses Magang)
+     * Satu user (pegawai) memiliki satu hak akses magang.
+     */
+    public function magangAccess()
+    {
+        return $this->hasOne(\App\Models\MagangAccessRight::class, 'user_id');
+    }
 }
