@@ -4,42 +4,63 @@
 
 @section('content')
 
-    {{-- ===================== PAGE HEADER + SUMMARY CARDS ===================== --}}
+    @php
+        $currentStatus = request('status');
+        $currentSearch = request('search');
 
-    {{-- Summary Cards (Diubah jadi grid-cols-7 agar kartu 'Selesai' muat) --}}
+        // Map status ke label & warna untuk dropdown
+        $statusOptions = [
+            '' => ['label' => 'Semua Status', 'color' => 'gray', 'icon' => 'bi-grid-3x3-gap'],
+            'pending' => ['label' => 'Menunggu', 'color' => 'amber', 'icon' => 'bi-hourglass-split'],
+            'verified' => ['label' => 'Diverifikasi', 'color' => 'blue', 'icon' => 'bi-shield-check'],
+            'interview' => ['label' => 'Interview', 'color' => 'purple', 'icon' => 'bi-camera-video'],
+            'accepted' => ['label' => 'Diterima', 'color' => 'emerald', 'icon' => 'bi-check-circle'],
+            'rejected' => ['label' => 'Ditolak', 'color' => 'red', 'icon' => 'bi-x-circle'],
+            'resigned' => ['label' => 'Mundur', 'color' => 'orange', 'icon' => 'bi-person-walking'],
+            'completed' => ['label' => 'Selesai / Lulus', 'color' => 'teal', 'icon' => 'bi-award-fill'],
+        ];
+
+        $activeOption = $statusOptions[$currentStatus] ?? $statusOptions[''];
+
+        $colorMap = [
+            'gray' => ['bg' => 'bg-gray-100', 'text' => 'text-gray-600', 'border' => 'border-gray-200'],
+            'amber' => ['bg' => 'bg-amber-50', 'text' => 'text-amber-600', 'border' => 'border-amber-200'],
+            'blue' => ['bg' => 'bg-blue-50', 'text' => 'text-blue-600', 'border' => 'border-blue-200'],
+            'purple' => ['bg' => 'bg-purple-50', 'text' => 'text-purple-600', 'border' => 'border-purple-200'],
+            'emerald' => ['bg' => 'bg-emerald-50', 'text' => 'text-emerald-600', 'border' => 'border-emerald-200'],
+            'red' => ['bg' => 'bg-red-50', 'text' => 'text-red-500', 'border' => 'border-red-200'],
+            'orange' => ['bg' => 'bg-orange-50', 'text' => 'text-orange-500', 'border' => 'border-orange-200'],
+            'teal' => ['bg' => 'bg-teal-50', 'text' => 'text-teal-600', 'border' => 'border-teal-200'],
+        ];
+    @endphp
+
+    {{-- ===================== SUMMARY CARDS ===================== --}}
     <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
 
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-1">
             <p class="text-2xl font-extrabold text-gray-800">{{ array_sum($statusCounts) }}</p>
             <p class="text-xs text-gray-400 font-medium">Total</p>
         </div>
-
         <div class="bg-white rounded-2xl border border-amber-100 shadow-sm p-4 flex flex-col gap-1">
             <p class="text-2xl font-extrabold text-amber-500">{{ $statusCounts['pending'] }}</p>
             <p class="text-xs text-gray-400 font-medium">Menunggu</p>
         </div>
-
         <div class="bg-white rounded-2xl border border-blue-100 shadow-sm p-4 flex flex-col gap-1">
             <p class="text-2xl font-extrabold text-blue-500">{{ $statusCounts['verified'] + $statusCounts['interview'] }}</p>
             <p class="text-xs text-gray-400 font-medium">Diproses</p>
         </div>
-
         <div class="bg-white rounded-2xl border border-emerald-100 shadow-sm p-4 flex flex-col gap-1">
             <p class="text-2xl font-extrabold text-emerald-500">{{ $statusCounts['accepted'] }}</p>
             <p class="text-xs text-gray-400 font-medium">Diterima</p>
         </div>
-
         <div class="bg-white rounded-2xl border border-red-100 shadow-sm p-4 flex flex-col gap-1">
             <p class="text-2xl font-extrabold text-red-400">{{ $statusCounts['rejected'] }}</p>
             <p class="text-xs text-gray-400 font-medium">Ditolak</p>
         </div>
-
         <div class="bg-white rounded-2xl border border-orange-100 shadow-sm p-4 flex flex-col gap-1">
             <p class="text-2xl font-extrabold text-orange-400">{{ $statusCounts['resigned'] }}</p>
             <p class="text-xs text-gray-400 font-medium">Mundur</p>
         </div>
-
-        {{-- TAMBAHAN BARU: Kartu Selesai --}}
         <div class="bg-white rounded-2xl border border-teal-100 shadow-sm p-4 flex flex-col gap-1">
             <p class="text-2xl font-extrabold text-teal-500">{{ $statusCounts['completed'] }}</p>
             <p class="text-xs text-gray-400 font-medium">Selesai/Lulus</p>
@@ -47,74 +68,102 @@
 
     </div>
 
-    {{-- ===================== FILTER TABS ===================== --}}
-    @php
-        $currentStatus = request('status');
-        $activeClass = 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/20 font-bold';
-        $inactiveClass = 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-gray-300 font-semibold';
-    @endphp
+    {{-- ===================== TOOLBAR: SEARCH + FILTER DROPDOWN ===================== --}}
+    {{--
+        Semua filter dikirim via GET form — tidak ada JavaScript submit,
+        cukup user tekan Enter di search atau klik opsi dropdown.
+        ?search=...&status=... dikirim ke route yang sama.
+        withQueryString() di controller memastikan keduanya terbawa ke pagination.
+    --}}
+    <form method="GET" action="{{ route('admin.applications.index') }}" class="flex flex-col sm:flex-row gap-3 mb-5">
 
-    <div class="flex flex-wrap gap-2 mb-6">
-        <a href="{{ route('admin.applications.index') }}"
-            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-all duration-150 {{ !$currentStatus ? $activeClass : $inactiveClass }}">
-            <i class="bi bi-grid-3x3-gap text-xs"></i> Semua
-            <span
-                class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full {{ !$currentStatus ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500' }}">{{ array_sum($statusCounts) }}</span>
-        </a>
-        <a href="{{ route('admin.applications.index', ['status' => 'pending']) }}"
-            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-all duration-150 {{ $currentStatus === 'pending' ? $activeClass : $inactiveClass }}">
-            <i
-                class="bi bi-hourglass-split text-xs {{ $currentStatus === 'pending' ? 'text-white' : 'text-amber-500' }}"></i>
-            Menunggu
-            <span
-                class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full {{ $currentStatus === 'pending' ? 'bg-white/20 text-white' : 'bg-amber-50 text-amber-600 border border-amber-200' }}">{{ $statusCounts['pending'] }}</span>
-        </a>
-        <a href="{{ route('admin.applications.index', ['status' => 'verified']) }}"
-            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-all duration-150 {{ $currentStatus === 'verified' ? $activeClass : $inactiveClass }}">
-            <i class="bi bi-shield-check text-xs {{ $currentStatus === 'verified' ? 'text-white' : 'text-blue-500' }}"></i>
-            Diverifikasi
-            <span
-                class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full {{ $currentStatus === 'verified' ? 'bg-white/20 text-white' : 'bg-blue-50 text-blue-600 border border-blue-200' }}">{{ $statusCounts['verified'] }}</span>
-        </a>
-        <a href="{{ route('admin.applications.index', ['status' => 'interview']) }}"
-            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-all duration-150 {{ $currentStatus === 'interview' ? $activeClass : $inactiveClass }}">
-            <i
-                class="bi bi-camera-video text-xs {{ $currentStatus === 'interview' ? 'text-white' : 'text-purple-500' }}"></i>
-            Interview
-            <span
-                class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full {{ $currentStatus === 'interview' ? 'bg-white/20 text-white' : 'bg-purple-50 text-purple-600 border border-purple-200' }}">{{ $statusCounts['interview'] }}</span>
-        </a>
-        <a href="{{ route('admin.applications.index', ['status' => 'accepted']) }}"
-            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-all duration-150 {{ $currentStatus === 'accepted' ? $activeClass : $inactiveClass }}">
-            <i
-                class="bi bi-check-circle text-xs {{ $currentStatus === 'accepted' ? 'text-white' : 'text-emerald-500' }}"></i>
-            Diterima
-            <span
-                class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full {{ $currentStatus === 'accepted' ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-600 border border-emerald-200' }}">{{ $statusCounts['accepted'] }}</span>
-        </a>
-        <a href="{{ route('admin.applications.index', ['status' => 'rejected']) }}"
-            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-all duration-150 {{ $currentStatus === 'rejected' ? $activeClass : $inactiveClass }}">
-            <i class="bi bi-x-circle text-xs {{ $currentStatus === 'rejected' ? 'text-white' : 'text-red-400' }}"></i>
-            Ditolak
-            <span
-                class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full {{ $currentStatus === 'rejected' ? 'bg-white/20 text-white' : 'bg-red-50 text-red-500 border border-red-200' }}">{{ $statusCounts['rejected'] }}</span>
-        </a>
-        <a href="{{ route('admin.applications.index', ['status' => 'resigned']) }}"
-            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-all duration-150 {{ $currentStatus === 'resigned' ? $activeClass : $inactiveClass }}">
-            <i
-                class="bi bi-person-walking text-xs {{ $currentStatus === 'resigned' ? 'text-white' : 'text-orange-400' }}"></i>
-            Mundur
-            <span
-                class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full {{ $currentStatus === 'resigned' ? 'bg-white/20 text-white' : 'bg-orange-50 text-orange-500 border border-orange-200' }}">{{ $statusCounts['resigned'] }}</span>
-        </a>
-        <a href="{{ route('admin.applications.index', ['status' => 'completed']) }}"
-            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border transition-all duration-150 {{ $currentStatus === 'completed' ? $activeClass : $inactiveClass }}">
-            <i class="bi bi-award-fill text-xs {{ $currentStatus === 'completed' ? 'text-white' : 'text-teal-500' }}"></i>
-            Selesai
-            <span
-                class="ml-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full {{ $currentStatus === 'completed' ? 'bg-white/20 text-white' : 'bg-teal-50 text-teal-600 border border-teal-200' }}">{{ $statusCounts['completed'] }}</span>
-        </a>
-    </div>
+        {{-- ── SEARCH BAR ── --}}
+        <div class="relative flex-1">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                <i class="bi bi-search text-gray-400 text-sm"></i>
+            </div>
+            <input type="text" name="search" value="{{ $currentSearch }}" placeholder="Cari nama atau email pelamar..."
+                class="w-full pl-10 pr-10 py-2.5 rounded-xl border text-sm font-medium text-gray-800
+                       outline-none transition-all duration-200
+                       border-gray-200 bg-white placeholder:text-gray-300 placeholder:font-normal
+                       hover:border-blue-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-100">
+            {{-- Tombol clear search --}}
+            @if ($currentSearch)
+                <a href="{{ route('admin.applications.index', array_filter(['status' => $currentStatus])) }}"
+                    class="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="bi bi-x-circle-fill text-sm"></i>
+                </a>
+            @endif
+        </div>
+
+        {{-- ── FILTER DROPDOWN ── --}}
+        {{--
+            Tombol ini toggle dropdown via JavaScript.
+            Pilihan filter dikirim sebagai hidden input agar tetap di-submit bareng form search.
+        --}}
+        <div class="relative shrink-0" id="filterDropdownWrapper">
+            <input type="hidden" name="status" id="statusHidden" value="{{ $currentStatus }}">
+
+            <button type="button" id="filterBtn"
+                onclick="document.getElementById('filterDropdown').classList.toggle('hidden')"
+                class="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-bold
+                       transition-all duration-150 whitespace-nowrap
+                       {{ $currentStatus
+                           ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/20'
+                           : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300' }}">
+                <i class="bi {{ $activeOption['icon'] }} text-sm"></i>
+                {{ $activeOption['label'] }}
+                @if ($currentStatus)
+                    {{-- Badge count pada filter aktif --}}
+                    <span class="bg-white/25 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded-full">
+                        {{ $statusCounts[$currentStatus] ?? 0 }}
+                    </span>
+                @endif
+                <i class="bi bi-chevron-down text-xs ml-1 transition-transform duration-200" id="filterChevron"></i>
+            </button>
+
+            {{-- Dropdown panel --}}
+            <div id="filterDropdown"
+                class="hidden absolute right-0 top-full mt-2 w-52 bg-white border border-gray-100
+                        rounded-2xl shadow-xl shadow-gray-200/80 py-2 z-50 overflow-hidden">
+
+                @foreach ($statusOptions as $val => $opt)
+                    @php $c = $colorMap[$opt['color']]; @endphp
+                    <button type="button" onclick="setFilter('{{ $val }}')"
+                        class="flex items-center justify-between w-full px-4 py-2.5 text-sm
+                               transition-colors duration-100 text-left
+                               {{ $currentStatus === $val
+                                   ? 'bg-blue-50 text-blue-700 font-bold'
+                                   : 'text-gray-600 font-medium hover:bg-gray-50' }}">
+                        <span class="flex items-center gap-2.5">
+                            <span class="w-6 h-6 rounded-lg flex items-center justify-center {{ $c['bg'] }}">
+                                <i class="bi {{ $opt['icon'] }} text-xs {{ $c['text'] }}"></i>
+                            </span>
+                            {{ $opt['label'] }}
+                        </span>
+                        @if ($val !== '')
+                            <span
+                                class="text-[10px] font-extrabold {{ $c['text'] }} {{ $c['bg'] }}
+                                         px-1.5 py-0.5 rounded-full border {{ $c['border'] }}">
+                                {{ $statusCounts[$val] ?? 0 }}
+                            </span>
+                        @else
+                            <span
+                                class="text-[10px] font-extrabold text-gray-500 bg-gray-100
+                                         px-1.5 py-0.5 rounded-full">
+                                {{ array_sum($statusCounts) }}
+                            </span>
+                        @endif
+                    </button>
+                @endforeach
+
+            </div>
+        </div>
+
+        {{-- Tombol submit tersembunyi — dipicu saat user pilih filter atau tekan Enter --}}
+        <button type="submit" id="formSubmitBtn" class="hidden"></button>
+
+    </form>
 
     {{-- ===================== TABEL UTAMA ===================== --}}
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -128,9 +177,15 @@
                 <h2 class="font-bold text-gray-800 text-sm">
                     @if ($currentStatus)
                         Lamaran —
-                        <span class="text-blue-600 capitalize">{{ ucfirst($currentStatus) }}</span>
+                        <span
+                            class="text-blue-600 capitalize">{{ $statusOptions[$currentStatus]['label'] ?? ucfirst($currentStatus) }}</span>
                     @else
                         Semua Lamaran
+                    @endif
+                    @if ($currentSearch)
+                        <span class="text-gray-400 font-normal text-xs ml-1">
+                            · hasil pencarian "<span class="text-gray-700 font-semibold">{{ $currentSearch }}</span>"
+                        </span>
                     @endif
                 </h2>
             </div>
@@ -185,7 +240,8 @@
                                     {{ $app->vacancy->title }}
                                 </p>
                                 <span
-                                    class="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
+                                    class="inline-flex items-center gap-1 text-[11px] font-semibold
+                                             text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full">
                                     <i class="bi bi-building text-[10px]"></i>
                                     {{ $app->vacancy->division_name }}
                                 </span>
@@ -244,7 +300,10 @@
                             {{-- Aksi --}}
                             <td class="px-6 py-4 text-center">
                                 <a href="{{ route('admin.applications.show', $app->id) }}"
-                                    class="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 border border-blue-200 bg-blue-50 px-3 py-1.5 rounded-xl hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-150">
+                                    class="inline-flex items-center gap-1.5 text-sm font-semibold
+                                           text-blue-600 border border-blue-200 bg-blue-50 px-3 py-1.5 rounded-xl
+                                           hover:bg-blue-600 hover:text-white hover:border-blue-600
+                                           transition-all duration-150">
                                     Periksa Berkas
                                     <i class="bi bi-arrow-right text-xs"></i>
                                 </a>
@@ -260,12 +319,24 @@
                                 </div>
                                 <p class="text-gray-500 font-semibold text-sm">Tidak ada lamaran</p>
                                 <p class="text-gray-400 text-xs mt-1">
-                                    @if ($currentStatus)
-                                        Tidak ada lamaran dengan status "{{ ucfirst($currentStatus) }}" saat ini.
+                                    @if ($currentSearch)
+                                        Tidak ditemukan pelamar dengan nama atau email
+                                        "<strong>{{ $currentSearch }}</strong>".
+                                    @elseif ($currentStatus)
+                                        Tidak ada lamaran dengan status
+                                        "{{ $statusOptions[$currentStatus]['label'] ?? $currentStatus }}" saat ini.
                                     @else
                                         Belum ada lamaran masuk untuk divisi Anda.
                                     @endif
                                 </p>
+                                @if ($currentSearch || $currentStatus)
+                                    <a href="{{ route('admin.applications.index') }}"
+                                        class="inline-flex items-center gap-1.5 mt-4 text-sm font-semibold text-blue-600
+                                              border border-blue-200 bg-blue-50 px-4 py-2 rounded-xl hover:bg-blue-600
+                                              hover:text-white transition-all">
+                                        <i class="bi bi-arrow-left text-xs"></i> Reset Filter
+                                    </a>
+                                @endif
                             </td>
                         </tr>
                     @endforelse
@@ -284,3 +355,31 @@
     </div>
 
 @endsection
+
+@push('scripts')
+    <script>
+        // SECTION: Filter dropdown — set nilai hidden input lalu submit form
+        function setFilter(val) {
+            document.getElementById('statusHidden').value = val;
+            document.getElementById('filterDropdown').classList.add('hidden');
+            document.getElementById('formSubmitBtn').click();
+        }
+
+        // SECTION: Tutup dropdown jika klik di luar area
+        document.addEventListener('click', function(e) {
+            const wrapper = document.getElementById('filterDropdownWrapper');
+            const dropdown = document.getElementById('filterDropdown');
+            if (wrapper && !wrapper.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+
+        // SECTION: Rotate chevron saat dropdown buka/tutup
+        document.getElementById('filterBtn')?.addEventListener('click', function() {
+            const chevron = document.getElementById('filterChevron');
+            const dropdown = document.getElementById('filterDropdown');
+            const isHidden = dropdown.classList.contains('hidden');
+            chevron.style.transform = isHidden ? 'rotate(180deg)' : '';
+        });
+    </script>
+@endpush

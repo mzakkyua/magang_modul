@@ -488,6 +488,7 @@
     </script>
 
     @stack('script')
+    @stack('style')
 
 </body>
 

@@ -1,295 +1,517 @@
-{{-- ===================== CALENDAR COMPONENT ===================== --}}
-{{-- Logic: FullCalendar v6, changeView(), calendar.events tidak diubah --}}
+{{-- ==========================================================
+     PARTIAL: resources/views/partials/calendar.blade.php
+     Di-include di: dashboard.blade.php (kolom kanan)
+     ========================================================== --}}
 
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 <style>
-    /* ===================== SECTION: BASE RESET ===================== */
-    #calendar {
-        font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-        transition: all 0.4s ease;
-    }
-
-    /* Hilangkan border luar yang kaku */
-    .fc-theme-standard .fc-scrollgrid {
-        border: none !important;
-    }
-
-    /* ===================== SECTION: HEADER TOOLBAR ===================== */
-    .fc-header-toolbar {
-        margin-bottom: 1.25rem !important;
-        align-items: center !important;
-    }
-
-    /* Judul bulan (contoh: "Juni 2025") */
-    .fc-toolbar-title {
-        font-size: 1rem !important;
-        font-weight: 800 !important;
-        color: #1e293b !important;
-        letter-spacing: -0.01em;
-    }
-
-    /* ===================== SECTION: NAVIGASI PREV/NEXT ===================== */
-    .fc-button-group {
-        gap: 4px;
-        display: flex !important;
-    }
-
-    .fc-button-group>.fc-button,
-    .fc-button-primary {
-        background-color: #f8fafc !important;
-        border: 1px solid #e2e8f0 !important;
-        color: #475569 !important;
-        padding: 6px 10px !important;
-        border-radius: 10px !important;
-        box-shadow: none !important;
-        margin: 0 2px !important;
-        font-size: 0.8rem !important;
-        font-weight: 600 !important;
-        transition: all 0.15s ease !important;
-    }
-
-    .fc-button-group>.fc-button:hover,
-    .fc-button-primary:hover {
-        background-color: #e0e7ff !important;
-        border-color: #c7d2fe !important;
-        color: #2563eb !important;
-    }
-
-    .fc-button-primary:not(:disabled):active,
-    .fc-button-primary:not(:disabled).fc-button-active {
-        background-color: #2563eb !important;
-        border-color: #2563eb !important;
-        color: white !important;
-    }
-
-    .fc-button-primary:disabled {
-        opacity: 0.35 !important;
-    }
-
-    /* ===================== SECTION: HEADER HARI (MIN, SEN...) ===================== */
-    .fc-col-header-cell-cushion {
-        padding: 12px 0 10px !important;
+    /* ── Header ── */
+    .cal-section-label {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
         text-transform: uppercase;
-        font-size: 0.65rem !important;
-        letter-spacing: 0.12em;
-        font-weight: 800 !important;
-        color: #94a3b8 !important;
-        text-decoration: none !important;
+        color: #94a3b8;
+        margin-bottom: 4px;
     }
 
-    /* Border header */
-    .fc-theme-standard th {
-        border: none !important;
-        border-bottom: 1px solid #f1f5f9 !important;
+    .cal-top-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
     }
 
-    /* ===================== SECTION: SEL TANGGAL ===================== */
-    .fc-theme-standard td {
-        border: 1px solid #f1f5f9 !important;
-        transition: background-color 0.15s;
+    .cal-month-title {
+        font-size: 16px;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.03em;
     }
 
-    .fc-daygrid-day-number {
-        font-weight: 600;
-        font-size: 0.8rem !important;
-        color: #475569 !important;
-        text-decoration: none !important;
-        padding: 8px 10px !important;
+    .cal-nav-group {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    #cal-today-badge {
+        font-size: 10px;
+        font-weight: 700;
+        color: #2563eb;
+        background: #eff6ff;
+        border: 1px solid #dbeafe;
+        padding: 4px 10px;
+        border-radius: 20px;
+        margin-right: 4px;
+        white-space: nowrap;
+    }
+
+    .cal-nav-btn {
+        width: 28px;
+        height: 28px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: #f8fafc;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        font-size: 15px;
+        font-weight: 700;
+        transition: all 0.15s;
         line-height: 1;
     }
 
-    /* Hover effect */
-    .fc-daygrid-day:hover {
-        background-color: #f8fafc !important;
+    .cal-nav-btn:hover {
+        background: #eff6ff;
+        border-color: #bfdbfe;
+        color: #2563eb;
+    }
+
+    /* ── Grid ── */
+    #cal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+    }
+
+    .cal-day-hdr {
+        text-align: center;
+        font-size: 9px;
+        font-weight: 800;
+        color: #cbd5e1;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 5px 0 8px;
+    }
+
+    .cal-cell {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 3px 1px 7px;
+        border-radius: 9px;
         cursor: pointer;
+        transition: background 0.12s;
+        min-height: 44px;
     }
 
-    /* Hari di luar bulan ini (lebih pudar) */
-    .fc-day-other .fc-daygrid-day-number {
-        color: #cbd5e1 !important;
-        font-weight: 400 !important;
+    .cal-cell:hover {
+        background: #f1f5f9;
     }
 
-    /* ===================== SECTION: HIGHLIGHT HARI INI ===================== */
-    .fc-day-today {
-        background-color: #eff6ff !important;
-        position: relative;
-    }
-
-    .fc-day-today .fc-daygrid-day-number {
-        color: #2563eb !important;
-        font-weight: 800 !important;
-        position: relative;
-    }
-
-    /* Titik biru kecil di bawah angka hari ini */
-    .fc-day-today .fc-daygrid-day-number::after {
-        content: '';
-        position: absolute;
-        bottom: -4px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 4px;
-        height: 4px;
-        background-color: #2563eb;
+    /* Angka hari */
+    .cal-day-num {
+        width: 26px;
+        height: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         border-radius: 50%;
+        font-size: 11px;
+        font-weight: 600;
+        color: #475569;
+        flex-shrink: 0;
+        transition: background 0.12s, color 0.12s;
     }
 
-    /* ===================== SECTION: EVENTS ===================== */
-    .fc-event {
-        border-radius: 6px !important;
-        border: none !important;
-        font-size: 0.7rem !important;
-        font-weight: 600 !important;
-        padding: 2px 6px !important;
-        cursor: pointer;
-        transition: opacity 0.15s;
+    .cal-day-num.is-today {
+        background: #2563eb;
+        color: #ffffff;
+        font-weight: 800;
+        box-shadow: 0 3px 8px rgba(37, 99, 235, 0.32);
     }
 
-    .fc-event:hover {
-        opacity: 0.85;
+    .cal-day-num.is-other {
+        color: #dde3eb;
+        font-weight: 400;
     }
 
-    .fc-event-title {
-        font-weight: 600 !important;
+    /* Dots event resmi */
+    .cal-dots {
+        display: flex;
+        gap: 3px;
+        margin-top: 2px;
+        justify-content: center;
+        flex-wrap: wrap;
     }
 
-    /* ===================== SECTION: MODE COMPACT (DEFAULT) ===================== */
-    .compact-mode .fc-daygrid-day-number {
-        font-size: 0.78rem !important;
-        padding: 8px 10px !important;
+    .cal-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        flex-shrink: 0;
     }
 
-    .compact-mode .fc-col-header-cell-cushion {
-        font-size: 0.62rem !important;
+    /* Bar tipis magang — 3px di bawah cell */
+    .internship-bar {
+        position: absolute;
+        bottom: 4px;
+        height: 3px;
+        border-radius: 2px;
+        background: #10b981;
+        opacity: 0.72;
     }
 
-    /* ===================== SECTION: MODE ZOOM IN (DETAILED) ===================== */
-    .detailed-mode .fc-daygrid-day-number {
-        font-size: 1.1rem !important;
-        padding: 16px 12px !important;
-        font-weight: 700 !important;
+    .bar-start {
+        left: 6px;
+        right: 0;
+        border-radius: 2px 0 0 2px;
     }
 
-    .detailed-mode .fc-col-header-cell-cushion {
-        font-size: 0.8rem !important;
-        padding: 16px 0 12px !important;
+    .bar-mid {
+        left: 0;
+        right: 0;
+        border-radius: 0;
     }
 
-    /* ===================== SECTION: MORE EVENTS LINK ===================== */
-    .fc-more-link {
-        color: #2563eb !important;
-        font-size: 0.7rem !important;
-        font-weight: 700 !important;
-        padding: 2px 6px !important;
-        border-radius: 6px;
-        background-color: #eff6ff;
-        text-decoration: none !important;
+    .bar-end {
+        left: 0;
+        right: 6px;
+        border-radius: 0 2px 2px 0;
     }
 
-    .fc-more-link:hover {
-        background-color: #dbeafe !important;
+    /* ── Legend ── */
+    #cal-legend {
+        display: flex;
+        gap: 14px;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #f1f5f9;
+        flex-wrap: wrap;
     }
 
-    /* ===================== SECTION: POPOVER ===================== */
-    .fc-popover {
-        border: 1px solid #e2e8f0 !important;
-        border-radius: 14px !important;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1) !important;
+    .leg-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 10.5px;
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    .leg-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .leg-bar {
+        width: 14px;
+        height: 3px;
+        border-radius: 2px;
+        display: inline-block;
+    }
+
+    /* ── Mini event list ── */
+    #cal-event-list {
+        margin-top: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    .cal-event-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 12px;
+        border-radius: 10px;
+        background: #f8fafc;
+        border: 1px solid #f1f5f9;
+    }
+
+    .cei-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .cei-title {
+        font-size: 11.5px;
+        font-weight: 700;
+        color: #334155;
+        flex: 1;
+        white-space: nowrap;
         overflow: hidden;
+        text-overflow: ellipsis;
     }
 
-    .fc-popover-header {
-        background-color: #f8fafc !important;
-        border-bottom: 1px solid #f1f5f9 !important;
-        padding: 10px 14px !important;
-        font-size: 0.75rem !important;
-        font-weight: 700 !important;
-        color: #374151 !important;
+    .cei-date {
+        font-size: 10px;
+        color: #94a3b8;
+        font-weight: 600;
+        white-space: nowrap;
     }
 
-    .fc-popover-close {
-        color: #94a3b8 !important;
+    .cei-badge {
+        font-size: 9.5px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 20px;
+        white-space: nowrap;
+    }
+
+    .badge-active {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .badge-upcoming {
+        background: #eff6ff;
+        color: #2563eb;
     }
 </style>
 
-{{-- ===================== CALENDAR ELEMENT ===================== --}}
-<div id="calendar"></div>
+{{-- ── Header ── --}}
+<p class="cal-section-label">Jadwal Aktif</p>
+<div class="cal-top-row">
+    <p class="cal-month-title" id="cal-month-label">—</p>
+    <div class="cal-nav-group">
+        <span id="cal-today-badge">—</span>
+        <button class="cal-nav-btn" onclick="calPrev()" title="Bulan sebelumnya">&#8249;</button>
+        <button class="cal-nav-btn" onclick="calNext()" title="Bulan berikutnya">&#8250;</button>
+    </div>
+</div>
 
-{{-- ===================== SCRIPT: FullCalendar Init ===================== --}}
-{{-- Logic tidak diubah: initialView, locale, events route, changeView() --}}
+{{-- ── Grid ── --}}
+<div id="cal-grid">
+    <div class="cal-day-hdr">Min</div>
+    <div class="cal-day-hdr">Sen</div>
+    <div class="cal-day-hdr">Sel</div>
+    <div class="cal-day-hdr">Rab</div>
+    <div class="cal-day-hdr">Kam</div>
+    <div class="cal-day-hdr">Jum</div>
+    <div class="cal-day-hdr">Sab</div>
+</div>
+
+{{-- ── Legend ── --}}
+<div id="cal-legend">
+    <div class="leg-item">
+        <span class="leg-dot" style="background:#3b82f6;"></span> Event Resmi
+    </div>
+    <div class="leg-item">
+        <span class="leg-bar" style="background:#10b981;"></span> Jadwal Magang
+    </div>
+</div>
+
+{{-- ── Mini event list ── --}}
+<div id="cal-event-list"></div>
+
 <script>
-    let calendar;
+    (function() {
+        /* ── State ── */
+        const TODAY = new Date();
+        const ID_DAYS = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const ID_MONTHS_FULL = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus',
+            'September', 'Oktober', 'November', 'Desember'
+        ];
+        const ID_MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov',
+        'Des'];
 
-    document.addEventListener('DOMContentLoaded', function() {
-        let calendarEl = document.getElementById('calendar');
+        let curYear = TODAY.getFullYear();
+        let curMonth = TODAY.getMonth();
 
-        // BUSINESS LOGIC: Inisialisasi FullCalendar
-        calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            locale: 'id',
-            height: 'auto',
-            headerToolbar: {
-                left: 'title',
-                center: '',
-                right: 'prev,next'
-            },
-            events: '{{ route('calendar.events') }}',
+        let internshipStart = null;
+        let internshipEnd = null;
+        let globalEvents = [];
 
-            // STEP: Tambahkan dayMaxEvents agar tidak overflow di sel kecil
-            dayMaxEvents: 2,
-        });
+        /* ── Today badge ── */
+        document.getElementById('cal-today-badge').textContent =
+            ID_DAYS[TODAY.getDay()] + ', ' +
+            TODAY.getDate() + ' ' +
+            ID_MONTHS_FULL[TODAY.getMonth()] + ' ' +
+            TODAY.getFullYear();
 
-        calendar.render();
-    });
+        /* ── Fetch events dari backend ── */
+        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        const headers = csrfMeta ? {
+            'X-CSRF-TOKEN': csrfMeta.getAttribute('content')
+        } : {};
 
-    // SECTION: Toggle compact / detailed view
-    // Logic changeView tidak berubah — hanya tombol state-nya yang sudah dipindah ke dashboard
-    function changeView(mode) {
-        const wrapper = document.getElementById('timeline-wrapper');
-        const calendarContainer = document.getElementById('calendar-container');
-        const btnC = document.getElementById('btn-compact');
-        const btnD = document.getElementById('btn-detailed');
+        fetch('{{ route('calendar.events') }}', {
+                headers
+            })
+            .then(r => r.json())
+            .then(events => {
+                events.forEach(e => {
+                    if (e.extendedProps && e.extendedProps.type === 'internship') {
+                        internshipStart = new Date(e.start);
+                        // Backend sudah +1 hari pada end (FC eksklusif), kurangi kembali
+                        const endRaw = new Date(e.end);
+                        endRaw.setDate(endRaw.getDate() - 1);
+                        internshipEnd = endRaw;
+                    } else {
+                        globalEvents.push({
+                            date: new Date(e.start),
+                            color: e.color || '#3b82f6',
+                            title: e.title.replace(/^📌\s*/, '')
+                        });
+                    }
+                });
+                renderGrid();
+                renderEventList();
+            })
+            .catch(() => renderGrid());
 
-        if (mode === 'detailed') {
-            // STEP 1: Ubah grid jadi 1 kolom (kalender full width)
-            wrapper.classList.remove('md:grid-cols-2');
-            wrapper.classList.add('grid-cols-1');
+        /* ── Render grid ── */
+        function renderGrid() {
+            const grid = document.getElementById('cal-grid');
 
-            // STEP 2: Tambahkan class CSS zoom
-            calendarContainer.classList.add('detailed-mode');
-            calendarContainer.classList.remove('compact-mode');
+            // Hapus semua cell lama, sisakan 7 header
+            while (grid.children.length > 7) grid.removeChild(grid.lastChild);
 
-            // STEP 3: Update state tombol
-            btnD.classList.add('bg-blue-600', 'text-white');
-            btnD.classList.remove('text-gray-500');
-            btnC.classList.remove('bg-blue-600', 'text-white');
-            btnC.classList.add('text-gray-500');
+            document.getElementById('cal-month-label').textContent =
+                ID_MONTHS_FULL[curMonth] + ' ' + curYear;
 
-        } else {
-            // STEP 1: Kembalikan ke grid 2 kolom
-            wrapper.classList.add('md:grid-cols-2');
-            wrapper.classList.remove('grid-cols-1');
+            const firstDay = new Date(curYear, curMonth, 1).getDay();
+            const daysInMonth = new Date(curYear, curMonth + 1, 0).getDate();
+            const prevDays = new Date(curYear, curMonth, 0).getDate();
 
-            // STEP 2: Hapus class zoom
-            calendarContainer.classList.remove('detailed-mode');
-            calendarContainer.classList.add('compact-mode');
+            // Filler bulan lalu
+            for (let i = firstDay - 1; i >= 0; i--) {
+                grid.appendChild(buildCell(prevDays - i, true, false, 'none', []));
+            }
 
-            // STEP 3: Update state tombol
-            btnC.classList.add('bg-blue-600', 'text-white');
-            btnC.classList.remove('text-gray-500');
-            btnD.classList.remove('bg-blue-600', 'text-white');
-            btnD.classList.add('text-gray-500');
+            // Hari bulan ini
+            for (let d = 1; d <= daysInMonth; d++) {
+                const date = new Date(curYear, curMonth, d);
+                const isToday = date.toDateString() === TODAY.toDateString();
+
+                let barType = 'none';
+                if (internshipStart && internshipEnd && date >= internshipStart && date <= internshipEnd) {
+                    if (date.toDateString() === internshipStart.toDateString()) barType = 'bar-start';
+                    else if (date.toDateString() === internshipEnd.toDateString()) barType = 'bar-end';
+                    else barType = 'bar-mid';
+                }
+
+                const evts = globalEvents.filter(e => e.date.toDateString() === date.toDateString());
+                grid.appendChild(buildCell(d, false, isToday, barType, evts));
+            }
+
+            // Filler bulan berikutnya
+            const total = firstDay + daysInMonth;
+            const remaining = total % 7 === 0 ? 0 : 7 - (total % 7);
+            for (let i = 1; i <= remaining; i++) {
+                grid.appendChild(buildCell(i, true, false, 'none', []));
+            }
         }
 
-        // BUSINESS LOGIC: Beri jeda agar transisi CSS selesai, lalu resize FullCalendar
-        setTimeout(() => {
-            if (typeof calendar !== 'undefined') {
-                calendar.updateSize();
+        function buildCell(day, isOther, isToday, barType, events) {
+            const cell = document.createElement('div');
+            cell.className = 'cal-cell';
+
+            // Angka hari
+            const num = document.createElement('div');
+            num.className = 'cal-day-num' +
+                (isToday ? ' is-today' : '') +
+                (isOther ? ' is-other' : '');
+            num.textContent = day;
+            cell.appendChild(num);
+
+            // Dots event resmi
+            if (events.length) {
+                const dots = document.createElement('div');
+                dots.className = 'cal-dots';
+                events.forEach(ev => {
+                    const dot = document.createElement('span');
+                    dot.className = 'cal-dot';
+                    dot.style.background = ev.color;
+                    dots.appendChild(dot);
+                });
+                cell.appendChild(dots);
             }
-        }, 400);
-    }
+
+            // Bar magang
+            if (barType !== 'none') {
+                const bar = document.createElement('div');
+                bar.className = 'internship-bar ' + barType;
+                cell.appendChild(bar);
+            }
+
+            return cell;
+        }
+
+        /* ── Render mini event list ── */
+        function renderEventList() {
+            const list = document.getElementById('cal-event-list');
+            list.innerHTML = '';
+
+            // Magang aktif
+            if (internshipStart && internshipEnd) {
+                list.appendChild(buildEventItem('#10b981', 'Masa Magang Aktif', null, 'cei-badge badge-active',
+                    'Aktif'));
+            }
+
+            // Event resmi mendatang (maks 3)
+            const upcoming = globalEvents
+                .filter(e => e.date >= TODAY)
+                .sort((a, b) => a.date - b.date)
+                .slice(0, 3);
+
+            upcoming.forEach(ev => {
+                const dateStr = ev.date.getDate() + ' ' + ID_MONTHS_SHORT[ev.date.getMonth()];
+                list.appendChild(buildEventItem(ev.color, ev.title, dateStr, 'cei-badge badge-upcoming',
+                    null));
+            });
+        }
+
+        function buildEventItem(color, title, dateStr, badgeClass, badgeText) {
+            const item = document.createElement('div');
+            item.className = 'cal-event-item';
+
+            const dot = document.createElement('span');
+            dot.className = 'cei-dot';
+            dot.style.background = color;
+
+            const ttl = document.createElement('span');
+            ttl.className = 'cei-title';
+            ttl.textContent = title;
+
+            item.appendChild(dot);
+            item.appendChild(ttl);
+
+            if (dateStr) {
+                const dt = document.createElement('span');
+                dt.className = 'cei-date';
+                dt.textContent = dateStr;
+                item.appendChild(dt);
+            }
+
+            if (badgeText) {
+                const bdg = document.createElement('span');
+                bdg.className = badgeClass;
+                bdg.textContent = badgeText;
+                item.appendChild(bdg);
+            }
+
+            return item;
+        }
+
+        /* ── Navigasi ── */
+        window.calPrev = function() {
+            curMonth--;
+            if (curMonth < 0) {
+                curMonth = 11;
+                curYear--;
+            }
+            renderGrid();
+        };
+
+        window.calNext = function() {
+            curMonth++;
+            if (curMonth > 11) {
+                curMonth = 0;
+                curYear++;
+            }
+            renderGrid();
+        };
+
+    })();
 </script>

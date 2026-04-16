@@ -32,7 +32,7 @@ use App\Http\Controllers\Admin\PegawaiController;
 use App\Http\Controllers\Auth\ForgotPasswordMagangController;
 use App\Http\Controllers\Auth\ResetPasswordMagangController;
 
-use App\Http\Controllers\Auth\CertificateController;
+use App\Http\Controllers\CertificateController;
 /*
 |--------------------------------------------------------------------------
 | WEB ROUTES
@@ -168,6 +168,9 @@ Route::middleware('auth:magang')->group(function () {
 
     Route::get('/sertifikat/download/{id}', [CertificateController::class, 'download'])
         ->name('certificate.download');
+
+    Route::delete('/profile/delete-cv', [ProfileMagangController::class, 'deleteCv'])
+        ->name('profile.delete.cv');
 });
 
 

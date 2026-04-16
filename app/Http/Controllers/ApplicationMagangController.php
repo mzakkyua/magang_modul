@@ -19,6 +19,24 @@ class ApplicationMagangController extends Controller
      */
     public function store(Request $request)
     {
+        /** @var \App\Models\UserMagang $user */
+        $user = Auth::guard('magang')->user();
+        $leaderId = $user->id;
+
+        /**
+         * ===============================================================
+         * STEP 0 — PERTAHANAN LAPIS BAJA (CEK KELENGKAPAN PROFIL KETUA)
+         * ===============================================================
+         * Kita taruh paling atas agar tidak perlu buang-buang query ke DB
+         * kalau profil ketuanya saja belum lengkap!
+         */
+        $profile = \App\Models\ProfileMagang::where('user_id', $leaderId)->first();
+
+        if (!$profile || !$profile->isComplete()) {
+            return back()->with('error', 'Gagal melamar! Anda WAJIB melengkapi seluruh data Profil (termasuk unggah CV) terlebih dahulu.');
+        }
+
+
         /**
          * ===============================================================
          * STEP 1 — VALIDASI INPUT DASAR
@@ -29,7 +47,7 @@ class ApplicationMagangController extends Controller
             'research_title'    => 'nullable|string|max:255',
             'research_abstract' => 'nullable|string',
             'member_emails'     => 'nullable|array',
-            'member_emails.*'   => 'email|exists:users_magang,email', // Pastikan emailnya valid & terdaftar
+            'member_emails.*'   => 'email|exists:users_magang,email',
         ], [
             'member_emails.*.exists' => 'Email anggota :input tidak ditemukan di sistem. Pastikan mereka sudah mendaftar akun.',
         ]);
@@ -40,10 +58,9 @@ class ApplicationMagangController extends Controller
          * STEP 2 — AMBIL DATA DASAR & KONVERSI EMAIL KE ID
          * ===============================================================
          */
-        $leaderId = Auth::guard('magang')->id();
         $vacancyId = $request->vacancy_id;
-
         $memberIds = [];
+
         if ($request->has('member_emails') && !empty($request->member_emails)) {
             $memberIds = UserMagang::whereIn('email', $request->member_emails)
                 ->pluck('id')
@@ -68,7 +85,7 @@ class ApplicationMagangController extends Controller
          * ===============================================================
          */
         try {
-            return DB::transaction(function () use ($request, $leaderId, $vacancyId, $memberIds, $totalOrang) {
+            return DB::transaction(function () use ($request, $leaderId, $vacancyId, $memberIds, $totalOrang, $profile) {
 
                 /**
                  * ===========================================================
@@ -109,11 +126,9 @@ class ApplicationMagangController extends Controller
                  * BUSINESS RULE 3 — CEK MIN & MAX MEMBER
                  * ===========================================================
                  */
-                // Jika mode Hybrid dan dia daftar sendiri (Individu), loloskan pengecekan minimal anggota kelompok
                 if ($vacancy->registration_mode === 'hybrid' && $totalOrang == 1) {
                     // Lolos (tidak melakukan pengecekan min/max di bawah)
                 } else {
-                    // Untuk mode Kelompok, atau Hybrid yang mengundang teman
                     if ($totalOrang < $vacancy->min_members) {
                         throw new \Exception("Pendaftaran kelompok mewajibkan minimal {$vacancy->min_members} orang.");
                     }
@@ -156,12 +171,12 @@ class ApplicationMagangController extends Controller
                  * BUSINESS RULE 6 — CEK USER BUSY
                  * ===========================================================
                  */
-                $users = UserMagang::whereIn('id', $memberIds)->pluck('username', 'id');
+                $users = UserMagang::whereIn('id', $memberIds)->pluck('username', 'id'); // Diubah dari username ke name agar lebih umum
 
                 foreach ($memberIds as $userId) {
                     if ($this->isUserBusy($userId)) {
                         $nama = $users[$userId] ?? 'User';
-                        throw new \Exception("Anda '$nama' masih terdaftar pada pengajuan lain yang aktif.");
+                        throw new \Exception("Pendaftaran Gagal: '$nama' masih terdaftar pada pengajuan lain yang aktif.");
                     }
                 }
 
@@ -182,31 +197,25 @@ class ApplicationMagangController extends Controller
 
                 /**
                  * ===========================================================
-                 * BUSINESS RULE 8 — CEK KELENGKAPAN DOKUMEN (CV & PROPOSAL)
+                 * BUSINESS RULE 8 — CEK KELENGKAPAN DOKUMEN (UPGRADED)
                  * ===========================================================
                  */
-                // 1. Cek kelengkapan dokumen Ketua (Leader)
-                $leaderProfile = \App\Models\ProfileMagang::where('user_id', $leaderId)->first();
-
-                if (!$leaderProfile || empty($leaderProfile->cv_file_path)) {
-                    throw new \Exception('Pendaftaran gagal! Anda belum mengunggah CV. Silakan lengkapi di menu Profil.');
+                // 1. Cek proposal khusus untuk jalur Penelitian (Ketuanya)
+                if ($vacancy->type === 'penelitian' && empty($profile->proposal_file_path)) {
+                    throw new \Exception('Untuk jalur penelitian, Anda wajib mengunggah File Proposal di menu Profil Anda sebelum melamar.');
                 }
 
-                // 2. Cek proposal khusus untuk jalur Penelitian
-                if ($vacancy->type === 'penelitian' && empty($leaderProfile->proposal_file_path)) {
-                    throw new \Exception('Untuk jalur penelitian, Anda wajib mengunggah File Proposal di menu Profil Anda.');
-                }
-
-                // 3. Cek CV Anggota (jika mendaftar secara kelompok)
+                // 2. Cek Kelengkapan Profil Anggota (jika mendaftar secara kelompok)
                 if ($totalOrang > 1) {
                     foreach ($memberIds as $userId) {
-                        if ($userId === $leaderId) continue;
+                        if ($userId === $leaderId) continue; // Skip ketua karena sudah di cek di Step 0
 
                         $memberProfile = \App\Models\ProfileMagang::where('user_id', $userId)->first();
 
-                        if (!$memberProfile || empty($memberProfile->cv_file_path)) {
+                        // SEKARANG MENGECEK SELURUH PROFIL ANGGOTA (NIM, CV, dll)
+                        if (!$memberProfile || !$memberProfile->isComplete()) {
                             $memberName = $users[$userId] ?? 'Anggota';
-                            throw new \Exception("Pendaftaran gagal! Anggota '$memberName' belum mengunggah CV di profilnya.");
+                            throw new \Exception("Pendaftaran gagal! Anggota '$memberName' belum melengkapi Profil atau belum mengunggah CV.");
                         }
                     }
                 }
@@ -252,9 +261,8 @@ class ApplicationMagangController extends Controller
                  * SUCCESS RESPONSE
                  * ===========================================================
                  */
-                return redirect()
-                    ->route('dashboard.index')
-                    ->with('success', 'Pendaftaran berhasil! Silakan menunggu verifikasi admin.');
+                // Kita tetap di halaman lowongan, tapi kirim sinyal 'success_apply'
+                return back()->with('success_apply', 'Pendaftaran berhasil! Silakan menunggu verifikasi admin.');
             });
         } catch (\Exception $e) {
             /**

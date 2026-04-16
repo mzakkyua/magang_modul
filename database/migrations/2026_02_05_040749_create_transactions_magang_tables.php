@@ -70,10 +70,10 @@ return new class extends Migration
         // 4. Certificates (Manual Upload)
         Schema::create('certificates_magang', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('member_id')->constrained('application_members_magang')->onDelete('cascade');
-            $table->string('certificate_number', 100)->unique();
-            $table->string('file_path'); // Upload Manual
-            $table->timestamp('uploaded_at')->useCurrent();
+            $table->foreignId('user_id')->constrained('users_magang')->cascadeOnDelete();
+            $table->string('title');
+            $table->string('file');
+            $table->timestamps();
         });
     }
 

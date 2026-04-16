@@ -1,4 +1,4 @@
-@extends('layouts.layoutlanding')
+@extends('layouts.landing')
 
 @section('content')
     <div class="bg-gray-50 min-h-screen py-12">
@@ -15,17 +15,21 @@
 
             {{-- ===================== SUMMARY CARDS ===================== --}}
             @php
-                // STEP: Hitung ringkasan status dari koleksi yang ada
+                // FIX: Hitung ringkasan status secara spesifik per nilai status
+                // Sebelumnya $pending pakai whereNotIn sehingga completed & resigned ikut terhitung
                 $total = $applications->count();
+                $pending = $applications->whereIn('status', ['pending', 'verified', 'interview'])->count();
                 $accepted = $applications->where('status', 'accepted')->count();
                 $rejected = $applications->where('status', 'rejected')->count();
-                $pending = $applications->whereNotIn('status', ['accepted', 'rejected'])->count();
+                $completed = $applications->where('status', 'completed')->count();
+                $resigned = $applications->where('status', 'resigned')->count();
             @endphp
 
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
 
                 {{-- Total --}}
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
+                <div
+                    class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3 col-span-2 md:col-span-1 lg:col-span-1">
                     <div class="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center shrink-0">
                         <i class="bi bi-collection text-gray-500 text-base"></i>
                     </div>
@@ -57,6 +61,17 @@
                     </div>
                 </div>
 
+                {{-- Selesai --}}
+                <div class="bg-white rounded-2xl border border-teal-100 shadow-sm p-4 flex items-center gap-3">
+                    <div class="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center shrink-0">
+                        <i class="bi bi-award text-teal-500 text-base"></i>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-extrabold text-teal-600 leading-none">{{ $completed }}</p>
+                        <p class="text-xs text-gray-400 mt-0.5 font-medium">Selesai</p>
+                    </div>
+                </div>
+
                 {{-- Ditolak --}}
                 <div class="bg-white rounded-2xl border border-red-100 shadow-sm p-4 flex items-center gap-3">
                     <div class="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center shrink-0">
@@ -65,6 +80,17 @@
                     <div>
                         <p class="text-2xl font-extrabold text-red-500 leading-none">{{ $rejected }}</p>
                         <p class="text-xs text-gray-400 mt-0.5 font-medium">Ditolak</p>
+                    </div>
+                </div>
+
+                {{-- Mundur --}}
+                <div class="bg-white rounded-2xl border border-orange-100 shadow-sm p-4 flex items-center gap-3">
+                    <div class="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center shrink-0">
+                        <i class="bi bi-person-walking text-orange-400 text-base"></i>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-extrabold text-orange-500 leading-none">{{ $resigned }}</p>
+                        <p class="text-xs text-gray-400 mt-0.5 font-medium">Mundur</p>
                     </div>
                 </div>
 
@@ -108,10 +134,12 @@
 
                             @forelse($applications as $index => $app)
                                 @php
-                                    // STEP: Tentukan warna aksen row berdasarkan status
+                                    // FIX: Tambahkan warna aksen untuk completed & resigned
                                     $rowAccent = match ($app->status) {
                                         'accepted' => 'border-l-4 border-l-emerald-400',
+                                        'completed' => 'border-l-4 border-l-teal-400',
                                         'rejected' => 'border-l-4 border-l-red-400',
+                                        'resigned' => 'border-l-4 border-l-orange-400',
                                         default => 'border-l-4 border-l-amber-400',
                                     };
                                 @endphp
@@ -151,31 +179,42 @@
                                         </span>
                                     </td>
 
-                                    {{-- Status Badge --}}
+                                    {{-- Status Badge — DESKTOP --}}
+                                    {{-- FIX: Tambahkan @elseif untuk 'completed' dan 'resigned'
+                                         Sebelumnya keduanya jatuh ke @else → tampil "Menunggu Review" --}}
                                     <td class="px-6 py-4 text-center">
                                         @if ($app->status == 'accepted')
-                                            <div class="inline-flex flex-col items-center gap-1">
-                                                <span
-                                                    class="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wide border border-emerald-200 flex items-center gap-1.5">
-                                                    <i class="bi bi-check-circle-fill text-[10px]"></i> Diterima
-                                                </span>
-                                            </div>
-                                        @elseif($app->status == 'rejected')
+                                            <span
+                                                class="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wide border border-emerald-200 flex items-center gap-1.5 justify-center w-fit mx-auto">
+                                                <i class="bi bi-check-circle-fill text-[10px]"></i> Diterima
+                                            </span>
+                                        @elseif ($app->status == 'completed')
+                                            <span
+                                                class="bg-teal-50 text-teal-600 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wide border border-teal-200 flex items-center gap-1.5 justify-center w-fit mx-auto">
+                                                <i class="bi bi-award-fill text-[10px]"></i> Selesai
+                                            </span>
+                                        @elseif ($app->status == 'rejected')
                                             <span
                                                 class="bg-red-50 text-red-500 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wide border border-red-200 flex items-center gap-1.5 justify-center w-fit mx-auto">
                                                 <i class="bi bi-x-circle-fill text-[10px]"></i> Ditolak
                                             </span>
-                                        @elseif($app->status == 'interview')
+                                        @elseif ($app->status == 'resigned')
+                                            <span
+                                                class="bg-orange-50 text-orange-500 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wide border border-orange-200 flex items-center gap-1.5 justify-center w-fit mx-auto">
+                                                <i class="bi bi-person-walking text-[10px]"></i> Mengundurkan Diri
+                                            </span>
+                                        @elseif ($app->status == 'interview')
                                             <span
                                                 class="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wide border border-blue-200 flex items-center gap-1.5 justify-center w-fit mx-auto">
                                                 <i class="bi bi-camera-video-fill text-[10px]"></i> Interview
                                             </span>
-                                        @elseif($app->status == 'verified')
+                                        @elseif ($app->status == 'verified')
                                             <span
                                                 class="bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wide border border-indigo-200 flex items-center gap-1.5 justify-center w-fit mx-auto">
                                                 <i class="bi bi-shield-check text-[10px]"></i> Terverifikasi
                                             </span>
                                         @else
+                                            {{-- pending atau status tak terduga --}}
                                             <span
                                                 class="bg-amber-50 text-amber-600 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wide border border-amber-200 flex items-center gap-1.5 justify-center w-fit mx-auto">
                                                 <i class="bi bi-clock-fill text-[10px]"></i> Menunggu Review
@@ -208,7 +247,6 @@
                 </div>
 
                 {{-- ===================== MOBILE: CARD LIST ===================== --}}
-                {{-- Tabel kurang nyaman di mobile, jadi di-render sebagai card --}}
                 <div class="md:hidden divide-y divide-gray-50">
 
                     @forelse($applications as $index => $app)
@@ -229,28 +267,40 @@
                                     </div>
                                 </div>
 
-                                {{-- Badge status --}}
+                                {{-- Badge status — MOBILE --}}
+                                {{-- FIX: Sama seperti desktop, tambahkan case completed & resigned --}}
                                 @if ($app->status == 'accepted')
                                     <span
                                         class="shrink-0 bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border border-emerald-200 flex items-center gap-1">
                                         <i class="bi bi-check-circle-fill"></i> Diterima
                                     </span>
-                                @elseif($app->status == 'rejected')
+                                @elseif ($app->status == 'completed')
+                                    <span
+                                        class="shrink-0 bg-teal-50 text-teal-600 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border border-teal-200 flex items-center gap-1">
+                                        <i class="bi bi-award-fill"></i> Selesai
+                                    </span>
+                                @elseif ($app->status == 'rejected')
                                     <span
                                         class="shrink-0 bg-red-50 text-red-500 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border border-red-200 flex items-center gap-1">
                                         <i class="bi bi-x-circle-fill"></i> Ditolak
                                     </span>
-                                @elseif($app->status == 'interview')
+                                @elseif ($app->status == 'resigned')
+                                    <span
+                                        class="shrink-0 bg-orange-50 text-orange-500 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border border-orange-200 flex items-center gap-1">
+                                        <i class="bi bi-person-walking"></i> Mundur
+                                    </span>
+                                @elseif ($app->status == 'interview')
                                     <span
                                         class="shrink-0 bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border border-blue-200 flex items-center gap-1">
                                         <i class="bi bi-camera-video-fill"></i> Interview
                                     </span>
-                                @elseif($app->status == 'verified')
+                                @elseif ($app->status == 'verified')
                                     <span
                                         class="shrink-0 bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border border-indigo-200 flex items-center gap-1">
                                         <i class="bi bi-shield-check"></i> Terverifikasi
                                     </span>
                                 @else
+                                    {{-- pending atau status tak terduga --}}
                                     <span
                                         class="shrink-0 bg-amber-50 text-amber-600 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border border-amber-200 flex items-center gap-1">
                                         <i class="bi bi-clock-fill"></i> Review
@@ -285,6 +335,7 @@
             </div>
 
             {{-- ===================== KETERANGAN STATUS ===================== --}}
+            {{-- FIX: Tambahkan badge Selesai & Mengundurkan Diri agar legend lengkap --}}
             <div class="mt-6 bg-white rounded-2xl border border-gray-100 shadow-sm px-6 py-4">
                 <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Keterangan Status</p>
                 <div class="flex flex-wrap gap-3">
@@ -305,8 +356,16 @@
                         <i class="bi bi-check-circle-fill text-[10px]"></i> Diterima — Selamat!
                     </span>
                     <span
+                        class="bg-teal-50 text-teal-600 px-3 py-1.5 rounded-full text-[11px] font-bold border border-teal-200 flex items-center gap-1.5">
+                        <i class="bi bi-award-fill text-[10px]"></i> Selesai — Magang telah rampung
+                    </span>
+                    <span
                         class="bg-red-50 text-red-500 px-3 py-1.5 rounded-full text-[11px] font-bold border border-red-200 flex items-center gap-1.5">
                         <i class="bi bi-x-circle-fill text-[10px]"></i> Ditolak
+                    </span>
+                    <span
+                        class="bg-orange-50 text-orange-500 px-3 py-1.5 rounded-full text-[11px] font-bold border border-orange-200 flex items-center gap-1.5">
+                        <i class="bi bi-person-walking text-[10px]"></i> Mengundurkan Diri
                     </span>
                 </div>
             </div>

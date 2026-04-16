@@ -80,12 +80,19 @@ class ApplicationVerificationController extends Controller
      * - Filter status pelamar (optional)
      * - Pagination (10 data per halaman)
      *
-     * PERUBAHAN:
+     * PERUBAHAN DARI VERSI SEBELUMNYA:
      * - Ditambahkan $statusCounts yang di-scope ke divisi admin.
      *   Sebelumnya dihitung di Blade (@php block) tanpa filter divisi,
      *   sehingga semua admin dari semua divisi melihat angka yang sama.
      *   Sekarang pola-nya sama dengan VacancyMagangController@index:
      *   gunakan base query → clone → hitung per status.
+     *
+     * - Ditambahkan filter $search (nama / email pelamar).
+     *   $statusCounts SENGAJA tidak ikut filter search agar angka
+     *   summary cards tetap stabil saat admin mengetik di search bar.
+     *
+     * - Ditambahkan withQueryString() pada paginate agar ?search=...
+     *   dan ?status=... ikut terbawa ke link halaman 2, 3, dst.
      *
      * ==================================================================
      */
@@ -124,10 +131,13 @@ class ApplicationVerificationController extends Controller
 
         /*
         ==============================================================
-        3. HITUNG STATUS COUNTS (SCOPE SAMA DENGAN FILTER DIVISI)
+        3. HITUNG STATUS COUNTS (SCOPE DIVISI SAJA — TIDAK IKUT SEARCH)
         ==============================================================
-        Variabel ini dikirim ke Blade untuk stats cards dan tab badges.
-        Menggantikan @php block di Blade yang query tanpa filter divisi.
+        Variabel ini dikirim ke Blade untuk stats cards dan dropdown badges.
+
+        CATATAN: $statusCounts sengaja TIDAK ikut filter search agar
+        angka kartu tidak berubah saat admin mengetik nama di search bar.
+        Admin tetap bisa melihat total keseluruhan per status.
         */
         $statusCounts = [
             'pending'   => (clone $base)->where('status', 'pending')->count(),
@@ -141,7 +151,7 @@ class ApplicationVerificationController extends Controller
 
         /*
         ==============================================================
-        4. QUERY DATA UNTUK TABEL (DENGAN FILTER STATUS OPSIONAL)
+        4. QUERY DATA UNTUK TABEL
         ==============================================================
         Eager loading digunakan untuk menghindari N+1 query.
         */
@@ -154,7 +164,18 @@ class ApplicationVerificationController extends Controller
             $query->where('status', $request->status);
         }
 
-        $data = $query->paginate(10);
+        // STEP: Filter pencarian nama / email pelamar (ketua lamaran)
+        // BUSINESS LOGIC: search by nama atau email user yang menjadi leader lamaran
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('leader', function ($q) use ($search) {
+                $q->where('username', 'like', "%{$search}%")  // ← fix
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        // withQueryString() memastikan ?status=...&search=... ikut terbawa ke link pagination
+        $data = $query->paginate(10)->withQueryString();
 
         return view('admin.applications.index', compact('data', 'statusCounts'));
     }
@@ -277,7 +298,7 @@ class ApplicationVerificationController extends Controller
     ==============================================================
     */
         $request->validate([
-            'status' => 'required|in:verified,interview,accepted,rejected,resigned,completed',
+            'status' => 'required|in:pending,verified,interview,accepted,rejected,resigned,completed',
             'admin_feedback' => 'required_if:status,rejected,resigned|nullable|string|max:500',
         ], [
             'admin_feedback.required_if' =>
@@ -307,6 +328,32 @@ class ApplicationVerificationController extends Controller
                 return back()->with(
                     'error',
                     'Gagal memulihkan status! Kuota lowongan ini sudah penuh.'
+                );
+            }
+        }
+
+        /*
+==============================================================
+4.5. GUARD: TIDAK BOLEH COMPLETED SEBELUM SEMUA DINILAI
+==============================================================
+Cek apakah semua member lamaran sudah memiliki assessment.
+Jika ada yang belum, tolak perubahan status ke completed.
+*/
+        if ($request->status === 'completed') {
+
+            $totalMembers = $app->members()->count();
+
+            $dinilaiCount = \App\Models\AssessmentMagang::whereIn(
+                'member_id',
+                $app->members()->pluck('id')
+            )->count();
+
+            if ($dinilaiCount < $totalMembers) {
+                $belumDinilai = $totalMembers - $dinilaiCount;
+
+                return back()->with(
+                    'error',
+                    "Tidak dapat menyelesaikan magang! Masih ada {$belumDinilai} peserta yang belum dinilai. Silakan lengkapi penilaian di menu Penilaian terlebih dahulu."
                 );
             }
         }

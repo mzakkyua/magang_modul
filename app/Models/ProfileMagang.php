@@ -50,12 +50,17 @@ class ProfileMagang extends Model
      * =====================================================
      * HELPER: PROFILE COMPLETENESS
      * =====================================================
+     * Fungsi ini sekarang mengecek SEMUA kolom wajib
      */
     public function isComplete()
     {
         return $this->full_name &&
+            $this->nim_nisn &&
             $this->institution_name &&
+            $this->education_level &&
             $this->major &&
-            $this->cv_file_path;
+            $this->phone_number &&
+            $this->address &&
+            $this->cv_file_path; // CV Wajib, Proposal opsional
     }
 }

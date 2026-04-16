@@ -219,16 +219,19 @@
         </div>
     </section>
 
+
     {{-- ===================== TIMELINE & CALENDAR SECTION ===================== --}}
-    <section class="bg-linear-to-br from-slate-50 via-blue-50/30 to-slate-100 py-20">
+    <section class="bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 py-20">
         <div id="timeline-wrapper"
             class="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 items-start px-4 md:px-6 transition-all duration-500">
 
-            {{-- KOLOM KIRI: TEKS & VERTICAL TIMELINE --}}
-            <div id="text-section" class="flex flex-col gap-6">
+            {{-- ============================================================
+             KOLOM KIRI: TIMELINE STEPS
+             ============================================================ --}}
+            <div id="text-section">
 
-                {{-- Header Timeline --}}
-                <div>
+                {{-- Header --}}
+                <div class="mb-6">
                     <span class="text-blue-600 font-semibold text-xs uppercase tracking-widest">Jadwal Kegiatan</span>
                     <h2 class="text-3xl md:text-4xl font-extrabold text-gray-800 mt-2 mb-3">Timeline Magang</h2>
                     <p class="text-gray-500 text-sm leading-relaxed mb-5">
@@ -236,31 +239,28 @@
                         samping.
                     </p>
 
-                    {{-- View Toggle Buttons --}}
+                    {{-- View Toggle --}}
                     <div class="inline-flex bg-white p-1 rounded-xl shadow-sm border border-gray-200">
-                        <button onclick="changeView('compact')" id="btn-compact"
-                            class="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white transition-all shadow-sm shadow-blue-600/30">
-                            <i class="bi bi-layout-text-sidebar mr-1"></i> Simpel
+                        <button onclick="tlChangeView('compact')" id="btn-compact"
+                            class="px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 text-white transition-all shadow-sm shadow-blue-600/30 flex items-center gap-1.5">
+                            <i class="bi bi-layout-text-sidebar"></i> Simpel
                         </button>
-                        <button onclick="changeView('detailed')" id="btn-detailed"
-                            class="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition-all">
-                            <i class="bi bi-zoom-in mr-1"></i> Zoom In
+                        <button onclick="tlChangeView('detailed')" id="btn-detailed"
+                            class="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition-all flex items-center gap-1.5">
+                            <i class="bi bi-zoom-in"></i> Zoom In
                         </button>
                     </div>
                 </div>
 
-                {{-- VERTICAL TIMELINE (JIKA DITERIMA) --}}
+                {{-- ── PHP: Cari lamaran accepted ── --}}
                 @php
-                    // Logika mencari lamaran yang 'accepted' untuk user yang sedang login (baik sebagai ketua maupun anggota)
                     $userId = Auth::guard('magang')->id();
                     $acceptedMember = \App\Models\ApplicationMemberMagang::where('user_id', $userId)
-                        ->whereHas('application', function ($q) {
-                            $q->where('status', 'accepted');
-                        })
+                        ->whereHas('application', fn($q) => $q->where('status', 'accepted'))
                         ->with('application.vacancy')
                         ->first();
 
-                    $activeApplication = $acceptedMember ? $acceptedMember->application : null;
+                    $activeApplication = $acceptedMember?->application;
                 @endphp
 
                 @if ($activeApplication)
@@ -269,121 +269,140 @@
                         $now = \Carbon\Carbon::now();
                         $startDate = \Carbon\Carbon::parse($vacancy->start_date);
                         $endDate = \Carbon\Carbon::parse($vacancy->end_date);
-
                         $isStarted = $now->gte($startDate);
                         $isFinished = $now->gt($endDate);
                     @endphp
 
-                    {{-- Timeline Card --}}
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
+                    {{-- Journey header card --}}
+                    <div
+                        class="flex items-center gap-3 bg-gradient-to-r from-blue-50 to-emerald-50 border border-blue-100 rounded-2xl px-4 py-3.5 mb-5">
+                        <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shrink-0">
+                            <i class="bi bi-layers-fill text-white text-sm"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-bold text-gray-800 truncate">Status Perjalanan Anda</p>
+                            <p class="text-xs text-gray-500 truncate">{{ $vacancy->division_name }}</p>
+                        </div>
+                        <span class="text-xs font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded-full shrink-0">
+                            {{ $isFinished ? '4/4' : ($isStarted ? '3/4' : '2/4') }} Selesai
+                        </span>
+                    </div>
 
-                        {{-- Card Header --}}
-                        <div class="flex items-center gap-3 pb-4 mb-6 border-b border-gray-100">
-                            <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
-                                <i class="bi bi-geo-alt-fill text-blue-600"></i>
+                    {{-- Steps --}}
+                    <div class="flex flex-col tl-steps-wrap">
+
+                        {{-- STEP 1: Diterima ── selalu done ── --}}
+                        <div class="flex items-stretch gap-0">
+                            <div class="tl-gutter">
+                                <div class="tl-num tl-done">
+                                    <i class="bi bi-check text-white" style="font-size:11px;font-weight:900;"></i>
+                                </div>
+                                <div class="tl-line tl-line-done"></div>
                             </div>
-                            <div>
-                                <h3 class="font-bold text-gray-800 text-sm">Status Perjalanan Anda</h3>
-                                <p class="text-xs text-gray-500">{{ $vacancy->division_name }}</p>
+                            <div class="tl-card tl-card-done">
+                                <div class="tl-card-header">
+                                    <span class="tl-card-title">Diterima</span>
+                                    <span class="tl-badge tl-badge-done">&#10003; Selesai</span>
+                                </div>
+                                <p class="tl-card-desc">
+                                    Selamat! Anda telah lolos seleksi di <strong
+                                        class="text-gray-700">{{ $vacancy->division_name }}</strong>.
+                                </p>
                             </div>
                         </div>
 
-                        {{-- Vertical Timeline Steps --}}
-                        <div class="relative border-l-2 border-blue-100 ml-1.75 space-y-8">
-
-                            {{-- STEP 1: DITERIMA --}}
-                            <div class="relative pl-8">
-                                {{-- BUGFIX: -left-2.25 tidak valid, ganti ke -left-[9px] --}}
-                                <div
-                                    class="absolute -left-2.25 top-0 w-4 h-4 rounded-full bg-green-500 ring-4 ring-green-50 shadow-sm">
-                                </div>
-                                <div class="flex items-center gap-2 mb-1">
-                                    <h4 class="text-sm font-bold text-gray-900">Diterima</h4>
-                                    <span
-                                        class="text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">✓
-                                        Selesai</span>
-                                </div>
-                                <p class="text-xs text-gray-500">Selamat! Anda telah lolos seleksi di <strong
-                                        class="text-gray-700">{{ $vacancy->division_name }}</strong>.</p>
-                            </div>
-
-                            {{-- STEP 2: PERSIAPAN --}}
-                            <div class="relative pl-8">
-                                {{-- BUGFIX: -left-2.25top-0 ada typo, ganti ke -left-[9px] top-0 --}}
-                                <div
-                                    class="absolute -left-2.25 top-0 w-4 h-4 rounded-full {{ $isStarted ? 'bg-green-500 ring-4 ring-green-50' : 'bg-blue-500 ring-4 ring-blue-50 animate-pulse' }} shadow-sm">
-                                </div>
-                                <div class="flex items-center gap-2 mb-1">
-                                    <h4 class="text-sm font-bold {{ $isStarted ? 'text-gray-900' : 'text-blue-700' }}">
-                                        Persiapan Magang</h4>
+                        {{-- STEP 2: Persiapan ── done jika sudah started ── --}}
+                        <div class="flex items-stretch gap-0">
+                            <div class="tl-gutter">
+                                <div class="tl-num {{ $isStarted ? 'tl-done' : 'tl-active' }}">
                                     @if ($isStarted)
-                                        <span
-                                            class="text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">✓
-                                            Selesai</span>
+                                        <i class="bi bi-check text-white" style="font-size:11px;font-weight:900;"></i>
                                     @else
-                                        <span
-                                            class="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">●
-                                            Sekarang</span>
+                                        2
                                     @endif
                                 </div>
-                                <p class="text-xs text-gray-500">
+                                <div class="tl-line {{ $isStarted ? 'tl-line-active' : 'tl-line-empty' }}"></div>
+                            </div>
+                            <div class="tl-card {{ $isStarted ? 'tl-card-done' : 'tl-card-active' }}">
+                                <div class="tl-card-header">
+                                    <span class="tl-card-title">Persiapan Magang</span>
+                                    @if ($isStarted)
+                                        <span class="tl-badge tl-badge-done">&#10003; Selesai</span>
+                                    @else
+                                        <span class="tl-badge tl-badge-active">&#9679; Sekarang</span>
+                                    @endif
+                                </div>
+                                <p class="tl-card-desc">
                                     @if ($isStarted)
                                         Masa persiapan telah selesai.
                                     @else
                                         Mulai pada <strong
-                                            class="text-gray-700">{{ $startDate->format('d M Y') }}</strong>.
+                                            class="text-gray-700">{{ $startDate->translatedFormat('d F Y') }}</strong>.
                                     @endif
                                 </p>
                             </div>
+                        </div>
 
-                            {{-- STEP 3: PELAKSANAAN --}}
-                            <div class="relative pl-8">
+                        {{-- STEP 3: Pelaksanaan ── --}}
+                        <div class="flex items-stretch gap-0">
+                            <div class="tl-gutter">
                                 <div
-                                    class="absolute -left-2.25 top-0 w-4 h-4 rounded-full {{ $isFinished ? 'bg-green-500 ring-4 ring-green-50' : ($isStarted ? 'bg-blue-500 ring-4 ring-blue-50 animate-pulse' : 'bg-gray-200 ring-4 ring-white') }} shadow-sm">
-                                </div>
-                                <div class="flex items-center gap-2 mb-1">
-                                    <h4
-                                        class="text-sm font-bold {{ $isFinished ? 'text-gray-900' : ($isStarted ? 'text-blue-700' : 'text-gray-400') }}">
-                                        Pelaksanaan Magang
-                                    </h4>
+                                    class="tl-num {{ $isFinished ? 'tl-done' : ($isStarted ? 'tl-active' : 'tl-pending') }}">
                                     @if ($isFinished)
-                                        <span
-                                            class="text-xs bg-green-100 text-green-700 font-semibold px-2 py-0.5 rounded-full">✓
-                                            Selesai</span>
-                                    @elseif ($isStarted)
-                                        <span
-                                            class="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">●
-                                            Berlangsung</span>
+                                        <i class="bi bi-check text-white" style="font-size:11px;font-weight:900;"></i>
+                                    @else
+                                        3
                                     @endif
                                 </div>
-                                <p class="text-xs {{ $isStarted && !$isFinished ? 'text-gray-600' : 'text-gray-400' }}">
+                                <div class="tl-line tl-line-empty"></div>
+                            </div>
+                            <div
+                                class="tl-card {{ $isFinished ? 'tl-card-done' : ($isStarted ? 'tl-card-active' : 'tl-card-pending') }}">
+                                <div class="tl-card-header">
+                                    <span
+                                        class="tl-card-title {{ !$isStarted && !$isFinished ? 'tl-muted' : '' }}">Pelaksanaan
+                                        Magang</span>
+                                    @if ($isFinished)
+                                        <span class="tl-badge tl-badge-done">&#10003; Selesai</span>
+                                    @elseif($isStarted)
+                                        <span class="tl-badge tl-badge-active">&#9679; Berlangsung</span>
+                                    @endif
+                                </div>
+                                <p class="tl-card-desc {{ !$isStarted && !$isFinished ? 'tl-muted-text' : '' }}">
                                     @if ($isFinished)
                                         Pelaksanaan magang telah selesai.
-                                    @elseif ($isStarted)
+                                    @elseif($isStarted)
                                         Sedang berlangsung hingga <strong
-                                            class="text-gray-700">{{ $endDate->format('d M Y') }}</strong>.
+                                            class="tl-highlight">{{ $endDate->translatedFormat('d F Y') }}</strong>.
                                     @else
                                         Menunggu waktu pelaksanaan dimulai.
                                     @endif
                                 </p>
                             </div>
+                        </div>
 
-                            {{-- STEP 4: SELESAI & PENILAIAN --}}
-                            <div class="relative pl-8">
-                                <div
-                                    class="absolute -left-2.25 top-0 w-4 h-4 rounded-full {{ $isFinished ? 'bg-blue-500 ring-4 ring-blue-50 animate-pulse' : 'bg-gray-200 ring-4 ring-white' }} shadow-sm">
-                                </div>
-                                <div class="flex items-center gap-2 mb-1">
-                                    <h4 class="text-sm font-bold {{ $isFinished ? 'text-blue-700' : 'text-gray-400' }}">
-                                        Selesai & Penilaian
-                                    </h4>
+                        {{-- STEP 4: Selesai & Penilaian ── --}}
+                        <div class="flex items-stretch gap-0">
+                            <div class="tl-gutter">
+                                <div class="tl-num {{ $isFinished ? 'tl-active' : 'tl-pending' }}">
                                     @if ($isFinished)
-                                        <span
-                                            class="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">●
-                                            Sekarang</span>
+                                        <i class="bi bi-star-fill text-white" style="font-size:9px;"></i>
+                                    @else
+                                        4
                                     @endif
                                 </div>
-                                <p class="text-xs text-gray-400">
+                            </div>
+                            <div class="tl-card {{ $isFinished ? 'tl-card-active' : 'tl-card-pending' }}">
+                                <div class="tl-card-header">
+                                    <span class="tl-card-title {{ !$isFinished ? 'tl-muted' : '' }}">Selesai &amp;
+                                        Penilaian</span>
+                                    @if ($isFinished)
+                                        <span class="tl-badge tl-badge-active">&#9679; Sekarang</span>
+                                    @else
+                                        <span class="tl-badge tl-badge-pending">Menunggu</span>
+                                    @endif
+                                </div>
+                                <p class="tl-card-desc tl-muted-text">
                                     @if ($isFinished)
                                         Cek menu <strong class="text-blue-600">Penilaian</strong> untuk melihat hasil Anda.
                                     @else
@@ -391,15 +410,15 @@
                                     @endif
                                 </p>
                             </div>
-
                         </div>
-                    </div>
+
+                    </div>{{-- /tl-steps-wrap --}}
                 @else
-                    {{-- Empty State: Belum Diterima --}}
+                    {{-- Empty state ── belum ada lamaran accepted ── --}}
                     <div class="bg-white rounded-2xl border border-blue-100 shadow-sm p-8 text-center">
                         <div
-                            class="w-16 h-16 bg-blue-50 text-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl border border-blue-100">
-                            <i class="bi bi-hourglass-split"></i>
+                            class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-100">
+                            <i class="bi bi-hourglass-split text-blue-400 text-xl"></i>
                         </div>
                         <h3 class="text-sm font-bold text-gray-700 mb-2">Belum Ada Kegiatan Aktif</h3>
                         <p class="text-xs text-gray-400 leading-relaxed max-w-xs mx-auto">
@@ -412,9 +431,12 @@
                     </div>
                 @endif
 
-            </div>
+            </div>{{-- /text-section --}}
 
-            {{-- KOLOM KANAN: CALENDAR --}}
+
+            {{-- ============================================================
+             KOLOM KANAN: CALENDAR (partial tetap terpisah)
+             ============================================================ --}}
             <div id="calendar-container"
                 class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 transition-all duration-500 sticky top-20">
                 @include('partials.calendar')
@@ -422,6 +444,10 @@
 
         </div>
     </section>
+
+
+
+
 
     {{-- ===================== GALLERY SECTION ===================== --}}
     <section class="py-20 bg-white" id="gallery">
@@ -517,8 +543,35 @@
                 });
 
             });
-        </script>
 
+            // JS Toggle View 
+
+            function tlChangeView(mode) {
+                const wrapper = document.getElementById('timeline-wrapper');
+                const btnC = document.getElementById('btn-compact');
+                const btnD = document.getElementById('btn-detailed');
+
+                if (mode === 'detailed') {
+                    wrapper.classList.remove('md:grid-cols-2');
+                    wrapper.classList.add('grid-cols-1');
+                    btnD.classList.add('bg-blue-600', 'text-white', 'shadow-sm', 'shadow-blue-600/30');
+                    btnD.classList.remove('text-gray-500');
+                    btnC.classList.remove('bg-blue-600', 'text-white', 'shadow-sm', 'shadow-blue-600/30');
+                    btnC.classList.add('text-gray-500');
+                } else {
+                    wrapper.classList.add('md:grid-cols-2');
+                    wrapper.classList.remove('grid-cols-1');
+                    btnC.classList.add('bg-blue-600', 'text-white', 'shadow-sm', 'shadow-blue-600/30');
+                    btnC.classList.remove('text-gray-500');
+                    btnD.classList.remove('bg-blue-600', 'text-white', 'shadow-sm', 'shadow-blue-600/30');
+                    btnD.classList.add('text-gray-500');
+                }
+            }
+        </script>
+    @endpush
+
+    {{-- ── CSS Timeline Steps ── --}}
+    @push('style')
         <style>
             /* SECTION: Tab button state styling */
             .active-tab {
@@ -535,6 +588,152 @@
             .inactive-tab:hover {
                 background-color: #e2e8f0;
                 color: #374151;
+            }
+        </style>
+
+        <style>
+            /* Gutter kiri: nomor + konektor */
+            .tl-gutter {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: 38px;
+                flex-shrink: 0;
+                margin-right: 14px;
+            }
+
+            .tl-num {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 11.5px;
+                font-weight: 800;
+                flex-shrink: 0;
+                z-index: 1;
+            }
+
+            .tl-done {
+                background: #10b981;
+                color: #fff;
+                box-shadow: 0 0 0 4px #d1fae5;
+            }
+
+            .tl-active {
+                background: #2563eb;
+                color: #fff;
+                box-shadow: 0 0 0 4px #dbeafe;
+            }
+
+            .tl-pending {
+                background: #f1f5f9;
+                color: #94a3b8;
+                border: 1.5px dashed #cbd5e1;
+            }
+
+            /* Konektor */
+            .tl-line {
+                width: 2px;
+                flex: 1;
+                min-height: 12px;
+                margin: 4px 0;
+                border-radius: 2px;
+            }
+
+            .tl-line-done {
+                background: #10b981;
+            }
+
+            .tl-line-active {
+                background: repeating-linear-gradient(to bottom,
+                        #2563eb 0px, #2563eb 5px,
+                        transparent 5px, transparent 10px);
+            }
+
+            .tl-line-empty {
+                background: #e2e8f0;
+            }
+
+            /* Step card */
+            .tl-card {
+                flex: 1;
+                padding: 11px 15px;
+                border-radius: 12px;
+                margin-bottom: 10px;
+                border: 1px solid transparent;
+            }
+
+            .tl-card-done {
+                background: #f0fdf4;
+                border-color: #bbf7d0;
+            }
+
+            .tl-card-active {
+                background: #eff6ff;
+                border-color: #bfdbfe;
+            }
+
+            .tl-card-pending {
+                background: #fafafa;
+                border-color: #f1f5f9;
+            }
+
+            .tl-card-header {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 4px;
+            }
+
+            .tl-card-title {
+                font-size: 13px;
+                font-weight: 800;
+                color: #0f172a;
+            }
+
+            .tl-muted {
+                color: #94a3b8 !important;
+            }
+
+            .tl-muted-text {
+                color: #cbd5e1 !important;
+            }
+
+            .tl-highlight {
+                color: #2563eb;
+            }
+
+            /* Badge */
+            .tl-badge {
+                font-size: 9.5px;
+                font-weight: 700;
+                padding: 2px 8px;
+                border-radius: 20px;
+                margin-left: auto;
+                white-space: nowrap;
+            }
+
+            .tl-badge-done {
+                background: #dcfce7;
+                color: #16a34a;
+            }
+
+            .tl-badge-active {
+                background: #dbeafe;
+                color: #2563eb;
+            }
+
+            .tl-badge-pending {
+                background: #f1f5f9;
+                color: #94a3b8;
+            }
+
+            .tl-card-desc {
+                font-size: 11.5px;
+                color: #64748b;
+                line-height: 1.5;
             }
         </style>
     @endpush

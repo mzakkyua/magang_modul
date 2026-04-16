@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('events', function (Blueprint $table) {
+        Schema::create('events_magang', function (Blueprint $table) {
             $table->id();
             $table->string('title');
             $table->date('start_date');
@@ -20,5 +20,10 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->timestamps();
         });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('events_magang');
     }
 };

@@ -62,7 +62,7 @@ class CalendarController extends Controller
             // Cari lamaran yang statusnya 'accepted'
             $acceptedMember = \App\Models\ApplicationMemberMagang::where('user_id', $userId)
                 ->whereHas('application', function ($q) {
-                    $q->whereIn('status', ['accepted', 'completed']);
+                    $q->where('status', 'accepted');
                 })
                 ->with('application.vacancy')
                 ->first();

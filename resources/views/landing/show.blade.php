@@ -326,7 +326,6 @@
     </div>
 
     {{-- ===================== MODAL LAMARAN ===================== --}}
-    {{-- Logic Blade tidak berubah, hanya visual modal yang diperbaiki --}}
     @if (Auth::guard('magang')->check())
         <div id="applicationModal" tabindex="-1" aria-hidden="true"
             class="fixed top-0 left-0 right-0 z-50 hidden w-full p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full bg-black/60 backdrop-blur-sm">
@@ -363,7 +362,9 @@
                             </p>
                         </div>
 
-                        <form action="{{ route('applications.store') }}" method="POST" class="space-y-4">
+                        {{-- TAMBAHKAN ID PADA FORM --}}
+                        <form id="form-lamaran" action="{{ route('applications.store') }}" method="POST"
+                            class="space-y-4">
                             @csrf
                             <input type="hidden" name="vacancy_id" value="{{ $vacancy->id }}">
 
@@ -452,10 +453,10 @@
                                     placeholder="Kenapa Anda tertarik dengan posisi ini?"></textarea>
                             </div>
 
-                            {{-- Submit --}}
-                            <button type="submit"
+                            {{-- TAMBAHKAN ID PADA TOMBOL SUBMIT --}}
+                            <button type="submit" id="btn-submit"
                                 class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2 shadow-md shadow-blue-600/30">
-                                <i class="bi bi-send-fill"></i> Kirim Lamaran
+                                <i class="bi bi-send-fill"></i> <span id="btn-text">Kirim Lamaran</span>
                             </button>
 
                         </form>
@@ -465,88 +466,146 @@
         </div>
     @endif
 
-    {{-- ===================== SCRIPTS ===================== --}}
-    <script type="module">
-        // SECTION: Character counter untuk form penelitian
-        document.addEventListener('DOMContentLoaded', function() {
+    @push('scripts')
+        {{-- ===================== SCRIPTS ===================== --}}
+        <script type="module">
+            document.addEventListener('DOMContentLoaded', function() {
 
-            // STEP: Counter judul penelitian
-            const titleInput = document.getElementById('research_title');
-            const titleCounter = document.getElementById('title_counter');
-            if (titleInput && titleCounter) {
-                titleInput.addEventListener('input', function() {
-                    titleCounter.textContent = this.value.length + ' / 255 karakter';
-                });
-            }
+                // ===============================================================
+                // SECTION: SWEETALERT NOTIFICATIONS (DENGAN MANUAL REDIRECT)
+                // ===============================================================
 
-            // STEP: Counter abstrak penelitian
-            const abstractInput = document.getElementById('research_abstract');
-            const abstractCounter = document.getElementById('abstract_counter');
-            if (abstractInput && abstractCounter) {
-                abstractInput.addEventListener('input', function() {
-                    abstractCounter.textContent = this.value.length + ' / 1000 karakter';
-                });
-            }
-        });
-
-        // SECTION: Tambah anggota kelompok
-        const container = document.getElementById('members-container');
-        const addBtn = document.getElementById('add-member-btn');
-        const maxMembers = {{ $vacancy->max_members ?? 1 }} - 1;
-
-        if (container && addBtn) {
-            addBtn.addEventListener('click', function() {
-                const currentInputs = container.querySelectorAll('.member-input').length;
-                if (currentInputs >= maxMembers) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Batas Maksimal',
-                        text: `Lowongan ini maksimal ${maxMembers + 1} orang (termasuk Anda).`,
+                // 1. Tangkap Sinyal Sukses Melamar
+                @if (session('success_apply'))
+                    window.Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil Terdaftar!',
+                        text: "{!! session('success_apply') !!}",
                         confirmButtonColor: '#2563EB',
+                        confirmButtonText: 'Oke', // Tombol untuk pindah halaman
+                        allowOutsideClick: false // User tidak bisa klik di luar kotak
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Redirect manual ke dashboard saat tombol diklik
+                            window.location.href = "{{ route('dashboard.index') }}";
+                        }
                     });
-                    return;
-                }
-                const div = document.createElement('div');
-                div.className = 'flex gap-2 member-input';
-                div.innerHTML = `
-                    <input type="email" name="member_emails[]" required
-                        class="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                        placeholder="email.anggota@contoh.com">
-                    <button type="button" onclick="this.parentElement.remove()"
-                        class="px-3 py-2.5 bg-red-50 text-red-500 rounded-xl border border-red-100 hover:bg-red-100 transition flex-shrink-0"
-                        title="Hapus anggota ini">
-                        <i class="bi bi-trash text-sm"></i>
-                    </button>
-                `;
-                container.appendChild(div);
-            });
-        }
+                @endif
 
-        // SECTION: Hybrid mode toggle (individu/kelompok)
-        const hybridSelect = document.getElementById('hybrid-mode-select');
-        const groupArea = document.getElementById('group-input-area');
-        const membersContainerEl = document.getElementById('members-container');
-
-        if (hybridSelect && groupArea && membersContainerEl) {
-            hybridSelect.addEventListener('change', function() {
-                const isKelompok = this.value === 'kelompok';
-                const inputs = membersContainerEl.querySelectorAll('input[name="member_emails[]"]');
-                if (isKelompok) {
-                    groupArea.classList.remove('hidden');
-                    inputs.forEach(input => {
-                        input.disabled = false;
-                        input.required = true;
+                // 2. Tangkap Sinyal Error
+                @if (session('error'))
+                    window.Swal.fire({
+                        icon: 'error',
+                        title: 'Pendaftaran Gagal',
+                        text: "{!! session('error') !!}",
+                        confirmButtonColor: '#DC2626',
                     });
-                } else {
-                    groupArea.classList.add('hidden');
-                    inputs.forEach(input => {
-                        input.disabled = true;
-                        input.required = false;
+                @endif
+
+
+                // ===============================================================
+                // SECTION: ANTI-SPAM SUBMIT LAMARAN
+                // ===============================================================
+                const formLamaran = document.getElementById('form-lamaran');
+                const btnSubmit = document.getElementById('btn-submit');
+                const btnText = document.getElementById('btn-text');
+
+                if (formLamaran && btnSubmit) {
+                    formLamaran.addEventListener('submit', function() {
+                        btnSubmit.disabled = true;
+                        btnSubmit.classList.add('opacity-70', 'cursor-not-allowed');
+                        btnSubmit.innerHTML =
+                            '<i class="bi bi-arrow-repeat animate-spin text-lg"></i> <span>Sedang Mengirim...</span>';
                     });
                 }
-            });
-        }
-    </script>
+
+
+                // ===============================================================
+                // SECTION: CHARACTER COUNTER PENELITIAN
+                // ===============================================================
+                const titleInput = document.getElementById('research_title');
+                const titleCounter = document.getElementById('title_counter');
+                if (titleInput && titleCounter) {
+                    titleInput.addEventListener('input', function() {
+                        titleCounter.textContent = this.value.length + ' / 255 karakter';
+                    });
+                }
+
+                const abstractInput = document.getElementById('research_abstract');
+                const abstractCounter = document.getElementById('abstract_counter');
+                if (abstractInput && abstractCounter) {
+                    abstractInput.addEventListener('input', function() {
+                        abstractCounter.textContent = this.value.length + ' / 1000 karakter';
+                    });
+                }
+
+
+                // ===============================================================
+                // SECTION: TAMBAH ANGGOTA KELOMPOK
+                // ===============================================================
+                const container = document.getElementById('members-container');
+                const addBtn = document.getElementById('add-member-btn');
+                const maxMembers = {{ $vacancy->max_members ?? 1 }} - 1;
+
+                if (container && addBtn) {
+                    addBtn.addEventListener('click', function() {
+                        const currentInputs = container.querySelectorAll('.member-input').length;
+                        if (currentInputs >= maxMembers) {
+                            window.Swal.fire({
+                                icon: 'warning',
+                                title: 'Batas Maksimal',
+                                text: `Lowongan ini maksimal ${maxMembers + 1} orang (termasuk Anda).`,
+                                confirmButtonColor: '#2563EB',
+                            });
+                            return;
+                        }
+                        const div = document.createElement('div');
+                        div.className = 'flex gap-2 member-input';
+                        div.innerHTML = `
+                        <input type="email" name="member_emails[]" required
+                            class="block w-full px-4 py-2.5 text-sm text-gray-900 bg-white rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                            placeholder="email.anggota@contoh.com">
+                        <button type="button" onclick="this.parentElement.remove()"
+                            class="px-3 py-2.5 bg-red-50 text-red-500 rounded-xl border border-red-100 hover:bg-red-100 transition flex-shrink-0"
+                            title="Hapus anggota ini">
+                            <i class="bi bi-trash text-sm"></i>
+                        </button>
+                    `;
+                        container.appendChild(div);
+                    });
+                }
+
+
+                // ===============================================================
+                // SECTION: HYBRID MODE TOGGLE (INDIVIDU/KELOMPOK)
+                // ===============================================================
+                const hybridSelect = document.getElementById('hybrid-mode-select');
+                const groupArea = document.getElementById('group-input-area');
+                const membersContainerEl = document.getElementById('members-container');
+
+                if (hybridSelect && groupArea && membersContainerEl) {
+                    hybridSelect.addEventListener('change', function() {
+                        const isKelompok = this.value === 'kelompok';
+                        const inputs = membersContainerEl.querySelectorAll('input[name="member_emails[]"]');
+                        if (isKelompok) {
+                            groupArea.classList.remove('hidden');
+                            inputs.forEach(input => {
+                                input.disabled = false;
+                                input.required = true;
+                            });
+                        } else {
+                            groupArea.classList.add('hidden');
+                            inputs.forEach(input => {
+                                input.disabled = true;
+                                input.required = false;
+                            });
+                        }
+                    });
+                }
+
+            }); // END OF DOMContentLoaded
+        </script>
+    @endpush
 
 </body>
 

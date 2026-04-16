@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Certificate extends Model
 {
+    protected $table = 'certificates_magang';
     protected $fillable = ['user_id', 'title', 'file'];
 
     // Ubah tujuan relasinya ke model UserMagang

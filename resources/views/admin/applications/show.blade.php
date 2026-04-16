@@ -173,9 +173,7 @@
                         <i class="bi bi-geo-alt-fill text-green-500"></i> Pantauan Status Magang Pelamar
                     </h3>
 
-                    {{-- MENGGUNAKAN LIST AGAR ANTI NABRAK & LEBIH RAPI --}}
                     <ol class="relative border-l-2 border-gray-200 ml-3">
-
                         {{-- STEP 1: DITERIMA --}}
                         <li class="mb-8 ml-6">
                             <div class="absolute w-4 h-4 bg-green-500 rounded-full -left-2.25 top-1 ring-4 ring-green-100">
@@ -251,7 +249,6 @@
                                 @endif
                             </p>
                         </li>
-
                     </ol>
                 </div>
             @endif
@@ -259,17 +256,8 @@
         </div>
 
         {{-- ================================================================
-RIGHT SIDEBAR: KEPUTUSAN VERIFIKASI
-================================================================
-Menggabungkan 2 versi:
-- Versi lama  : tombol TERIMA / TOLAK / RESIGN + status display
-- Versi baru  : alur sequential (pending→verified→interview→accepted)
-                + manual override select
-
-Semua route, form method, hidden input, id, class JS (form-approve,
-form-reject, form-resign-intern, action-form, btn-trigger-resign)
-TIDAK DIUBAH — hanya visual yang diupgrade & disatukan.
-================================================================ --}}
+        RIGHT SIDEBAR: KEPUTUSAN VERIFIKASI
+        ================================================================ --}}
 
         <div class="lg:col-span-1">
             <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden sticky top-0">
@@ -287,17 +275,16 @@ TIDAK DIUBAH — hanya visual yang diupgrade & disatukan.
                     {{-- ── STATUS SAAT INI ── --}}
                     <div
                         class="rounded-xl border p-4 text-center
-                {{ $application->status === 'accepted' ? 'bg-emerald-50 border-emerald-200' : '' }}
-                {{ $application->status === 'rejected' ? 'bg-red-50 border-red-200' : '' }}
-                {{ $application->status === 'resigned' ? 'bg-orange-50 border-orange-200' : '' }}
-                {{ $application->status === 'completed' ? 'bg-teal-50 border-teal-200' : '' }}
-                {{ in_array($application->status, ['pending', 'verified', 'interview']) ? 'bg-amber-50 border-amber-200' : '' }}">
+                        {{ $application->status === 'accepted' ? 'bg-emerald-50 border-emerald-200' : '' }}
+                        {{ $application->status === 'rejected' ? 'bg-red-50 border-red-200' : '' }}
+                        {{ $application->status === 'resigned' ? 'bg-orange-50 border-orange-200' : '' }}
+                        {{ $application->status === 'completed' ? 'bg-teal-50 border-teal-200' : '' }}
+                        {{ in_array($application->status, ['pending', 'verified', 'interview']) ? 'bg-amber-50 border-amber-200' : '' }}">
 
                         <p class="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">
                             Status Saat Ini
                         </p>
 
-                        {{-- Badge status besar --}}
                         @php
                             $statusConfig = [
                                 'pending' => [
@@ -341,9 +328,7 @@ TIDAK DIUBAH — hanya visual yang diupgrade & disatukan.
 
                         <div class="flex items-center justify-center gap-2">
                             <span
-                                class="w-2 h-2 rounded-full {{ $cfg['dot'] }}
-                                 {{ in_array($application->status, ['pending', 'verified', 'interview']) ? 'animate-pulse' : '' }}">
-                            </span>
+                                class="w-2 h-2 rounded-full {{ $cfg['dot'] }} {{ in_array($application->status, ['pending', 'verified', 'interview']) ? 'animate-pulse' : '' }}"></span>
                             <span class="text-lg font-extrabold {{ $cfg['color'] }}">
                                 {{ $cfg['label'] }}
                             </span>
@@ -362,82 +347,85 @@ TIDAK DIUBAH — hanya visual yang diupgrade & disatukan.
                         @endif
                     </div>
 
-                    {{-- ────────────────────────────────────────
-            BAGIAN 1: AKSI SELANJUTNYA (Sequential Flow)
-            Tampilkan hanya satu tombol sesuai status saat ini.
-            Logic @if chain dari dokumen 10 — tidak diubah.
-            ──────────────────────────────────────── --}}
+                    {{-- ── BAGIAN 1: AKSI SELANJUTNYA ── --}}
                     <div>
                         <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2.5">
                             Aksi Selanjutnya
                         </p>
 
                         @if ($application->status === 'pending')
-                            {{-- Verifikasi dokumen --}}
                             <form action="{{ route('admin.applications.update-status', $application->id) }}"
                                 method="POST" class="form-approve action-form"
                                 data-name="{{ $application->members->first()->user->name ?? 'Pelamar ini' }}">
                                 @csrf @method('PATCH')
                                 <input type="hidden" name="status" value="verified">
                                 <button type="submit"
-                                    class="action-btn w-full flex items-center justify-center gap-2
-                                   bg-blue-50 text-blue-600 border border-blue-200 font-bold py-2.5 rounded-xl
-                                   hover:bg-blue-600 hover:text-white hover:border-blue-600 hover:shadow-md hover:shadow-blue-600/25
-                                   transition-all duration-200 text-sm">
+                                    class="action-btn w-full flex items-center justify-center gap-2 bg-blue-50 text-blue-600 border border-blue-200 font-bold py-2.5 rounded-xl hover:bg-blue-600 hover:text-white hover:border-blue-600 hover:shadow-md hover:shadow-blue-600/25 transition-all duration-200 text-sm">
                                     <i class="bi bi-patch-check"></i> Verifikasi Dokumen
                                 </button>
                             </form>
                         @elseif ($application->status === 'verified')
-                            {{-- Panggil wawancara --}}
                             <form action="{{ route('admin.applications.update-status', $application->id) }}"
                                 method="POST" class="action-form"
                                 data-name="{{ $application->members->first()->user->name ?? 'Pelamar ini' }}">
                                 @csrf @method('PATCH')
                                 <input type="hidden" name="status" value="interview">
                                 <button type="submit"
-                                    class="action-btn w-full flex items-center justify-center gap-2
-                                   bg-indigo-50 text-indigo-600 border border-indigo-200 font-bold py-2.5 rounded-xl
-                                   hover:bg-indigo-600 hover:text-white hover:border-indigo-600 hover:shadow-md hover:shadow-indigo-600/25
-                                   transition-all duration-200 text-sm">
+                                    class="action-btn w-full flex items-center justify-center gap-2 bg-indigo-50 text-indigo-600 border border-indigo-200 font-bold py-2.5 rounded-xl hover:bg-indigo-600 hover:text-white hover:border-indigo-600 hover:shadow-md hover:shadow-indigo-600/25 transition-all duration-200 text-sm">
                                     <i class="bi bi-camera-video"></i> Panggil Wawancara
                                 </button>
                             </form>
                         @elseif ($application->status === 'interview')
-                            {{-- Terima pemagang --}}
                             <form action="{{ route('admin.applications.update-status', $application->id) }}"
                                 method="POST" class="form-approve action-form"
                                 data-name="{{ $application->members->first()->user->name ?? 'Pelamar ini' }}">
                                 @csrf @method('PATCH')
                                 <input type="hidden" name="status" value="accepted">
                                 <button type="submit"
-                                    class="action-btn w-full flex items-center justify-center gap-2
-                                   bg-emerald-600 text-white font-bold py-2.5 rounded-xl
-                                   hover:bg-emerald-700 shadow-md shadow-emerald-600/25 hover:shadow-emerald-600/40
-                                   transition-all duration-200 text-sm">
+                                    class="action-btn w-full flex items-center justify-center gap-2 bg-emerald-600 text-white font-bold py-2.5 rounded-xl hover:bg-emerald-700 shadow-md shadow-emerald-600/25 hover:shadow-emerald-600/40 transition-all duration-200 text-sm">
                                     <i class="bi bi-check-circle-fill"></i> Terima Pemagang
                                 </button>
                             </form>
                         @elseif ($application->status === 'accepted')
-                            {{-- Selesaikan magang --}}
-                            <form action="{{ route('admin.applications.update-status', $application->id) }}"
-                                method="POST" class="action-form"
-                                data-name="{{ $application->members->first()->user->name ?? 'Pelamar ini' }}">
-                                @csrf @method('PATCH')
-                                <input type="hidden" name="status" value="completed">
-                                <button type="submit"
-                                    class="action-btn w-full flex items-center justify-center gap-2
-                                   bg-teal-600 text-white font-bold py-2.5 rounded-xl
-                                   hover:bg-teal-700 shadow-md shadow-teal-600/25 hover:shadow-teal-600/40
-                                   transition-all duration-200 text-sm">
-                                    <i class="bi bi-award-fill"></i> Selesaikan Magang
+                            @php
+                                $memberIds = $application->members->pluck('id');
+                                $totalMembers = $memberIds->count();
+                                $dinilaiCount = \App\Models\AssessmentMagang::whereIn('member_id', $memberIds)->count();
+                                $semuaDinilai = $dinilaiCount >= $totalMembers;
+                                $belumDinilai = $totalMembers - $dinilaiCount;
+                            @endphp
+
+                            @if ($semuaDinilai)
+                                <form action="{{ route('admin.applications.update-status', $application->id) }}"
+                                    method="POST" id="form-complete-action">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="status" value="completed">
+                                    <button type="button" onclick="confirmSelesaiMagang()"
+                                        class="w-full flex items-center justify-center gap-2 bg-teal-600 text-white font-bold py-2.5 rounded-xl hover:bg-teal-700 shadow-md shadow-teal-600/25 hover:shadow-teal-600/40 transition-all duration-200 text-sm">
+                                        <i class="bi bi-award-fill"></i> Selesaikan Magang
+                                    </button>
+                                </form>
+                            @else
+                                <div class="rounded-xl border border-amber-200 bg-amber-50 p-3">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <i class="bi bi-exclamation-triangle-fill text-amber-500 text-sm"></i>
+                                        <p class="text-xs font-bold text-amber-700">Penilaian Belum Lengkap</p>
+                                    </div>
+                                    <p class="text-[11px] text-amber-600 leading-relaxed mb-3">
+                                        Masih <strong>{{ $belumDinilai }} peserta</strong> belum dinilai.
+                                    </p>
+                                    <a href="{{ route('admin.assessments.index') }}"
+                                        class="w-full flex items-center justify-center gap-2 bg-amber-500 text-white font-bold py-2 rounded-xl hover:bg-amber-600 transition-all duration-200 text-xs">
+                                        <i class="bi bi-pencil-square"></i> Buka Penilaian
+                                    </a>
+                                </div>
+                                <button type="button" disabled
+                                    class="mt-2 w-full flex items-center justify-center gap-2 bg-gray-100 text-gray-400 font-bold py-2.5 rounded-xl cursor-not-allowed text-sm border border-gray-200">
+                                    <i class="bi bi-lock-fill text-xs"></i> Selesaikan Magang
                                 </button>
-                            </form>
-                        @else
-                            {{-- Status terminal: rejected / resigned / completed --}}
-                            <div class="bg-gray-50 border border-gray-200 rounded-xl p-3 text-center">
-                                <p class="text-xs text-gray-400 font-medium">Alur normal telah selesai.</p>
-                            </div>
-                        @endif
+                            @endif
+                        @endif {{-- INI ADALAH @endif YANG SEBELUMNYA HILANG --}}
 
                         {{-- ── TOLAK (muncul selama belum rejected / completed) ── --}}
                         @if (!in_array($application->status, ['rejected', 'completed', 'resigned']))
@@ -448,21 +436,13 @@ TIDAK DIUBAH — hanya visual yang diupgrade & disatukan.
                                 <input type="hidden" name="status" value="rejected">
                                 <input type="hidden" name="admin_feedback">
                                 <button type="submit"
-                                    class="action-btn w-full flex items-center justify-center gap-2
-                                   bg-white text-red-500 border border-red-200 font-bold py-2.5 rounded-xl
-                                   hover:bg-red-600 hover:text-white hover:border-red-600 hover:shadow-md hover:shadow-red-600/20
-                                   transition-all duration-200 text-sm">
+                                    class="action-btn w-full flex items-center justify-center gap-2 bg-white text-red-500 border border-red-200 font-bold py-2.5 rounded-xl hover:bg-red-600 hover:text-white hover:border-red-600 hover:shadow-md hover:shadow-red-600/20 transition-all duration-200 text-sm">
                                     <i class="bi bi-x-circle"></i> Tolak Lamaran
                                 </button>
                             </form>
                         @endif
 
-                        {{-- ── RESIGN (hanya jika accepted) ── --}}
-                        {{--
-                    id="form-resign-intern-action", class="form-resign-intern",
-                    id="btn-trigger-resign", type="button" — semua TIDAK DIUBAH.
-                    JavaScript menggunakan ID dan class ini untuk inject admin_feedback.
-                --}}
+                        {{-- ── RESIGN ── --}}
                         @if ($application->status === 'accepted')
                             <div class="mt-2">
                                 <form action="{{ route('admin.applications.update-status', $application->id) }}"
@@ -471,10 +451,7 @@ TIDAK DIUBAH — hanya visual yang diupgrade & disatukan.
                                     @csrf @method('PATCH')
                                     <input type="hidden" name="status" value="resigned">
                                     <button type="button" id="btn-trigger-resign"
-                                        class="w-full flex items-center justify-center gap-2
-                                       bg-white text-orange-500 border border-orange-200 font-bold py-2.5 rounded-xl
-                                       hover:bg-orange-500 hover:text-white hover:border-orange-500
-                                       transition-all duration-200 text-sm">
+                                        class="w-full flex items-center justify-center gap-2 bg-white text-orange-500 border border-orange-200 font-bold py-2.5 rounded-xl hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all duration-200 text-sm">
                                         <i class="bi bi-person-walking"></i> Mengundurkan Diri
                                     </button>
                                 </form>
@@ -482,10 +459,7 @@ TIDAK DIUBAH — hanya visual yang diupgrade & disatukan.
                         @endif
                     </div>
 
-                    {{-- ────────────────────────────────────────
-            BAGIAN 2: OVERRIDE MANUAL
-            Logic select + route dari dokumen 10 — tidak diubah.
-            ──────────────────────────────────────── --}}
+                    {{-- ── BAGIAN 2: OVERRIDE MANUAL ── --}}
                     <div class="pt-5 border-t border-gray-100">
                         <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2.5">
                             Ubah Status Manual
@@ -495,14 +469,9 @@ TIDAK DIUBAH — hanya visual yang diupgrade & disatukan.
                             class="flex gap-2">
                             @csrf @method('PATCH')
                             <select name="status"
-                                class="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-medium
-                               text-gray-700 bg-white outline-none appearance-none cursor-pointer
-                               hover:border-blue-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-100
-                               transition-all duration-200
-                               bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22M6%208l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')]
-                               bg-position-[right_10px_center] bg-no-repeat bg-size-[14px]">
-                                <option value="pending" {{ $application->status == 'pending' ? 'selected' : '' }}>
-                                    Pending</option>
+                                class="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-medium text-gray-700 bg-white outline-none appearance-none cursor-pointer hover:border-blue-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all duration-200 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22M6%208l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-position-[right_10px_center] bg-no-repeat bg-size-[14px]">
+                                <option value="pending" {{ $application->status == 'pending' ? 'selected' : '' }}>Pending
+                                </option>
                                 <option value="verified" {{ $application->status == 'verified' ? 'selected' : '' }}>
                                     Verified</option>
                                 <option value="interview" {{ $application->status == 'interview' ? 'selected' : '' }}>
@@ -517,12 +486,10 @@ TIDAK DIUBAH — hanya visual yang diupgrade & disatukan.
                                     Completed</option>
                             </select>
                             <button type="submit"
-                                class="bg-gray-900 hover:bg-gray-700 text-white px-4 py-2.5 rounded-xl
-                               text-sm font-bold transition-all duration-200 shrink-0">
+                                class="bg-gray-900 hover:bg-gray-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 shrink-0">
                                 Ubah
                             </button>
                         </form>
-
                         <p class="text-[10px] text-gray-400 mt-2 leading-relaxed">
                             Gunakan jika ada pembatalan, kesalahan sistem, atau kondisi di luar alur normal.
                         </p>
@@ -531,8 +498,7 @@ TIDAK DIUBAH — hanya visual yang diupgrade & disatukan.
                     {{-- ── KEMBALI ── --}}
                     <div class="pt-4 border-t border-gray-50 text-center">
                         <a href="{{ route('admin.applications.index') }}"
-                            class="inline-flex items-center gap-1.5 text-sm text-gray-400
-                           hover:text-blue-600 font-medium transition-colors duration-150">
+                            class="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-600 font-medium transition-colors duration-150">
                             <i class="bi bi-arrow-left text-xs"></i> Kembali ke Daftar Lamaran
                         </a>
                     </div>
@@ -547,4 +513,25 @@ TIDAK DIUBAH — hanya visual yang diupgrade & disatukan.
 
 @push('scripts')
     @vite(['resources/js/admin/delete-confirm.js'])
+
+    {{-- Script khusus untuk Selesaikan Magang --}}
+    <script>
+        function confirmSelesaiMagang() {
+            Swal.fire({
+                title: "Selesaikan Magang?",
+                text: "Status pemagang akan diubah menjadi Selesai. Pastikan semua penilaian sudah benar.",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#0f766e", // Warna teal-700
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Ya, Selesaikan!",
+                cancelButtonText: "Batal"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Bypass semua script JS lain dan submit langsung
+                    document.getElementById('form-complete-action').submit();
+                }
+            });
+        }
+    </script>
 @endpush
