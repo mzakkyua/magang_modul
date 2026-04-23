@@ -18,13 +18,27 @@ class CertificateController extends Controller
     public function create()
     {
         // 1. Ambil data admin yang sedang login
-        $adminId = Auth::id();
+        $adminId  = Auth::id();
         $hakAkses = MagangAccessRight::where('user_id', $adminId)->first();
 
-        // 2. Query dasar: Cari user yang lamarannya 'accepted'
+        // 2. Query dasar: Cari user yang lamarannya 'accepted' atau 'completed'
         $usersQuery = UserMagang::whereHas('applicationMembers.application', function ($query) {
             $query->whereIn('status', ['accepted', 'completed']);
-        });
+        })
+            /*
+        ==============================================================
+        PERUBAHAN: FILTER USER YANG SUDAH ADA PENILAIANNYA
+        ==============================================================
+        Sebelumnya semua peserta accepted/completed muncul di dropdown.
+        Sekarang hanya peserta yang sudah diisi nilainya (ada record
+        di tabel assessments_magang melalui relasi applicationMembers)
+        yang akan tampil sebagai opsi penerima sertifikat.
+
+        Alasannya: sertifikat sebaiknya baru diberikan setelah
+        penilaian selesai diinput, bukan sebelumnya.
+        ==============================================================
+        */
+            ->whereHas('applicationMembers.assessment');
 
         // 3. FILTER DIVISI: Jika bukan superadmin, filter berdasarkan divisinya
         if ($hakAkses && $hakAkses->role !== 'superadmin') {
@@ -34,8 +48,8 @@ class CertificateController extends Controller
             });
         }
 
-        // 4. Eksekusi query
-        $users = $usersQuery->get();
+        // 4. Eksekusi query — sertakan profile agar full_name bisa diakses tanpa N+1
+        $users = $usersQuery->with('profile')->get();
 
         return view('admin.certificate.create', compact('users'));
     }
@@ -43,17 +57,17 @@ class CertificateController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'user_id' => 'required|exists:users_magang,id', // Tambahan: Pastikan user valid
-            'title' => 'required|string|max:255',
-            'file' => 'required|mimes:pdf,jpg,jpeg,png|max:2048'
+            'user_id' => 'required|exists:users_magang,id',
+            'title'   => 'required|string|max:255',
+            'file'    => 'required|mimes:pdf,jpg,jpeg,png|max:2048'
         ]);
 
         $filePath = $request->file('file')->store('certificates', 'public');
 
         Certificate::create([
             'user_id' => $request->user_id,
-            'title' => $request->title,
-            'file' => $filePath
+            'title'   => $request->title,
+            'file'    => $filePath
         ]);
 
         return back()->with('success', 'Sertifikat berhasil diupload');
@@ -63,7 +77,6 @@ class CertificateController extends Controller
 
     public function index()
     {
-        // Menampilkan daftar sertifikat milik user yang sedang login
         $certificates = Certificate::where('user_id', Auth::id())->latest()->get();
         return view('magang.sertifikat.index', compact('certificates'));
     }
@@ -72,21 +85,16 @@ class CertificateController extends Controller
     {
         $cert = Certificate::findOrFail($id);
 
-        // Keamanan: Cek apakah user yang login berhak mendownload sertifikat ini
-        // (Bisa dilewati jika yang mendownload adalah admin, disesuaikan dengan role sistemmu)
         if ($cert->user_id != Auth::id()) {
             abort(403, 'Akses ditolak: Ini bukan sertifikat Anda.');
         }
 
-        // PERBAIKAN 2: Mengatasi Error Intelephense & Cek Ketersediaan File
         $filePath = storage_path('app/public/' . $cert->file);
 
-        // Jika file fisiknya hilang/terhapus, jangan sampai sistem crash (Error 500)
         if (!file_exists($filePath)) {
             abort(404, 'Mohon maaf, file sertifikat fisik tidak ditemukan di server.');
         }
 
-        // Ini cara yang ramah IDE (Intelephense tidak akan komplain)
         return response()->download($filePath);
     }
 
@@ -94,7 +102,6 @@ class CertificateController extends Controller
     {
         $cert = Certificate::findOrFail($id);
 
-        // Keamanan: Cek apakah user yang login berhak melihat sertifikat ini
         if ($cert->user_id != Auth::id()) {
             abort(403, 'Akses ditolak: Ini bukan sertifikat Anda.');
         }
@@ -105,9 +112,6 @@ class CertificateController extends Controller
             abort(404, 'Mohon maaf, file sertifikat fisik tidak ditemukan di server.');
         }
 
-        // PERBEDAANNYA DI SINI:
-        // Gunakan response()->file() agar file dibuka di browser (untuk iframe preview)
-        // Kalau response()->download(), file akan langsung terunduh.
         return response()->file($filePath);
     }
 }

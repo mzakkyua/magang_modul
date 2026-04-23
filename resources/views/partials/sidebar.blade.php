@@ -124,15 +124,21 @@
             Penilaian
         </a>
 
-        {{-- BUGFIX: diseragamkan ke pattern yang sama --}}
-        <a href="{{ route('admin.calendar.index') }}"
-            class="flex items-center px-3 py-2.5 mb-0.5 rounded-xl font-semibold transition-all duration-150
-            {{ request()->routeIs('admin.calendar*')
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
-            <i class="bi bi-calendar-check mr-2.5 text-base"></i>
-            Jadwal Kegiatan
-        </a>
+        {{--
+            Jadwal Kegiatan: HANYA superadmin yang bisa lihat dan akses.
+            Admin divisi biasa tidak ditampilkan link ini di sidebar,
+            dan controller juga memblokir akses langsung via URL.
+        --}}
+        @if ($isSuperAdmin)
+            <a href="{{ route('admin.calendar.index') }}"
+                class="flex items-center px-3 py-2.5 mb-0.5 rounded-xl font-semibold transition-all duration-150
+                {{ request()->routeIs('admin.calendar*')
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
+                <i class="bi bi-calendar-check mr-2.5 text-base"></i>
+                Jadwal Kegiatan
+            </a>
+        @endif
 
         {{-- MENU SERTIFIKAT & NILAI --}}
         <a href="{{ route('admin.certificate.create') }}"

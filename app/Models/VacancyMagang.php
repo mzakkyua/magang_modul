@@ -94,16 +94,11 @@ class VacancyMagang extends Model
      */
     public function getSisaKuota()
     {
-        // Hitung jumlah pelamar yang sedang aktif
-        $terpakai = $this->applications()
-            ->whereIn('status', ['pending', 'verified', 'interview', 'accepted'])
-            ->count();
+        $terpakai = $this->active_applications_count ?? 0;
 
-        // Hitung sisa
         $sisa = $this->quota_slots - $terpakai;
 
-        // Pastikan angkanya tidak minus (jika ada kesalahan data)
-        return $sisa > 0 ? $sisa : 0;
+        return max($sisa, 0);
     }
 
     /**

@@ -124,21 +124,14 @@ class LandingController extends Controller
          */
 
         $vacanciesMagang = (clone $baseQuery)
-
+            ->withCount([
+                'applications as active_applications_count' => function ($q) {
+                    $q->whereIn('status', ['pending', 'verified', 'interview', 'accepted']);
+                }
+            ])
             ->where('type', 'magang')
-
-            /**
-             * Urutkan dari yang terbaru
-             */
-
             ->latest()
-
-            /**
-             * Batasi hanya 20 data
-             */
-
             ->limit(20)
-
             ->get();
 
 
@@ -152,11 +145,13 @@ class LandingController extends Controller
          */
 
         $vacanciesPenelitian = (clone $baseQuery)
-
+            ->withCount([
+                'applications as active_applications_count' => function ($q) {
+                    $q->whereIn('status', ['pending', 'verified', 'interview', 'accepted']);
+                }
+            ])
             ->where('type', 'penelitian')
-
             ->latest()
-
             ->get();
 
 

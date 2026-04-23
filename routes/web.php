@@ -171,6 +171,9 @@ Route::middleware('auth:magang')->group(function () {
 
     Route::delete('/profile/delete-cv', [ProfileMagangController::class, 'deleteCv'])
         ->name('profile.delete.cv');
+
+    Route::get('/nilai', [DashboardMagangController::class, 'nilai'])
+        ->name('nilai');
 });
 
 

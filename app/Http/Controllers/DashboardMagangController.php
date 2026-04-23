@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\VacancyMagang;
+use App\Models\ApplicationMemberMagang;
 
 class DashboardMagangController extends Controller
 {
@@ -33,6 +34,35 @@ class DashboardMagangController extends Controller
      *
      * ============================================================
      */
+
+    /**
+     * ============================================================
+     * MENU NILAI
+     * ============================================================
+     * Menampilkan halaman nilai magang peserta yang sedang login.
+     *
+     * Relasi yang dipakai:
+     * UserMagang → applicationMembers → application (accepted) → assessment
+     */
+    public function nilai()
+    {
+        $userId = Auth::guard('magang')->id();
+
+        // STEP: Cari member record peserta yang lamarannya accepted/completed
+        // Eager load assessment dan vacancy sekaligus agar tidak N+1
+        $member = ApplicationMemberMagang::where('user_id', $userId)
+            ->whereHas('application', function ($q) {
+                $q->whereIn('status', ['accepted', 'completed']);
+            })
+            ->with([
+                'assessment',
+                'application.vacancy',
+            ])
+            ->first();
+
+        // Mengarah ke folder resources/views/nilai/index.blade.php
+        return view('magang.nilai.index', compact('member'));
+    }
 
     public function index(Request $request)
     {

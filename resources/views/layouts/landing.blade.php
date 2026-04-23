@@ -8,10 +8,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/admin/delete-confirm.js'])
 
-    {{-- Bootstrap Icons --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-
-    {{-- Google Fonts: Plus Jakarta Sans --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
@@ -20,6 +17,8 @@
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
+            /* FIX: Ganti bg-gray-50 ke bg-white agar tidak muncul celah abu di antara section */
+            background-color: #ffffff;
         }
 
         /* ── NAVBAR: animated gradient bottom border ── */
@@ -105,10 +104,17 @@
         .btn-shimmer:hover::before {
             left: 100%;
         }
+
+        /* ── GUEST DROPDOWN: CSS hover ── */
+        .guest-dropdown-group:hover .guest-dropdown-panel {
+            display: block;
+        }
     </style>
 </head>
 
-<body class="bg-gray-50 text-gray-800">
+{{-- FIX: Hapus class bg-gray-50 dari body agar tidak ada celah abu antar section --}}
+
+<body class="text-gray-800">
 
     {{-- ===================== NAVBAR ===================== --}}
     <nav id="main-navbar"
@@ -116,15 +122,12 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
 
-
-                {{-- LOGIKA LINK LOGO DINAMIS --}}
                 @php
-                    $logoUrl = url('/'); // Default ke halaman depan (Landing Page)
-
+                    $logoUrl = url('/');
                     if (Auth::guard('magang')->check()) {
-                        $logoUrl = route('dashboard.index'); // Ke Dashboard Mahasiswa
+                        $logoUrl = route('dashboard.index');
                     } elseif (Auth::guard('web')->check()) {
-                        $logoUrl = route('admin.dashboard'); // Ke Dashboard Admin
+                        $logoUrl = route('admin.dashboard');
                     }
                 @endphp
 
@@ -136,10 +139,12 @@
                     <span class="text-xl font-extrabold text-blue-600 tracking-tight">SINAKERTRANS</span>
                 </a>
 
-                {{-- Desktop Navigation --}}
+                {{-- ═══════════════════════════════════════
+                DESKTOP NAVIGATION
+                ═══════════════════════════════════════ --}}
                 <div class="hidden md:flex items-center gap-3">
 
-                    {{-- CEK 1: APAKAH YANG LOGIN ITU ADMIN? --}}
+                    {{-- ── ADMIN ── --}}
                     @if (Auth::guard('web')->check())
                         <span class="text-sm text-gray-500 mr-1">Halo, <strong
                                 class="text-gray-800">Admin</strong></span>
@@ -148,11 +153,10 @@
                             <i class="bi bi-speedometer2"></i> Dashboard Admin
                         </a>
 
-                        {{-- CEK 2: APAKAH YANG LOGIN ITU PESERTA MAGANG? --}}
+                        {{-- ── PESERTA MAGANG (logged in) ── --}}
                     @elseif(Auth::guard('magang')->check())
                         <div class="flex items-center gap-8">
 
-                            {{-- Menu Navigasi --}}
                             <ul class="flex gap-6 items-center font-semibold text-sm text-[#37517e]">
                                 <li>
                                     <a href="{{ route('dashboard.index') }}"
@@ -173,23 +177,27 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="/sertifikat"
+                                    <a href="{{ route('certificate.index') }}"
                                         class="nav-slide-link transition-colors duration-200 hover:text-blue-600 {{ request()->is('sertifikat') ? 'text-blue-600 active' : '' }}">
                                         Sertifikat
                                     </a>
                                 </li>
+                                <li>
+                                    <a href="{{ route('nilai') }}"
+                                        class="nav-slide-link transition-colors duration-200 hover:text-blue-600 {{ request()->is('nilai') ? 'text-blue-600 active' : '' }}">
+                                        Nilai
+                                    </a>
+                                </li>
                             </ul>
 
-                            {{-- Divider vertikal tipis --}}
                             <div class="w-px h-5 bg-gray-200"></div>
 
                             {{-- Profile Dropdown --}}
                             <div class="profile-dropdown-group relative">
-                                {{-- Trigger Button --}}
                                 <div
                                     class="flex items-center gap-2.5 cursor-pointer px-3 py-2 rounded-xl border border-transparent hover:bg-blue-50/70 hover:border-blue-100 transition-all duration-200">
                                     <div
-                                        class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center border-2 border-blue-100 group-hover:border-blue-500 transition-all duration-200">
+                                        class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center border-2 border-blue-100 transition-all duration-200">
                                         <i class="bi bi-person-fill text-blue-600 text-sm"></i>
                                     </div>
                                     <div class="text-left">
@@ -203,7 +211,6 @@
                                         class="bi bi-chevron-down text-[10px] text-gray-400 transition-transform duration-200"></i>
                                 </div>
 
-                                {{-- Dropdown Panel --}}
                                 <div class="profile-dropdown-panel absolute right-0 hidden pt-2 w-56 z-50">
                                     <div
                                         class="bg-white/95 backdrop-blur-sm border border-gray-100 rounded-2xl shadow-2xl shadow-gray-200/80 py-1.5 overflow-hidden">
@@ -229,11 +236,48 @@
                                     </div>
                                 </div>
                             </div>
-
                         </div>
 
-                        {{-- CEK 3: JIKA BELUM LOGIN (TAMU) --}}
+                        {{-- ── GUEST (belum login) — Navbar dengan navigasi section ── --}}
                     @else
+                        {{-- Nav links ke section-section di landing page --}}
+                        <ul class="flex gap-6 items-center font-semibold text-sm text-gray-600 mr-2">
+                            <li>
+                                <a href="#home"
+                                    class="nav-slide-link transition-colors duration-200 hover:text-blue-600">
+                                    Beranda
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#lowongan"
+                                    class="nav-slide-link transition-colors duration-200 hover:text-blue-600">
+                                    Lowongan
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#about"
+                                    class="nav-slide-link transition-colors duration-200 hover:text-blue-600">
+                                    Tentang Kami
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#gallery"
+                                    class="nav-slide-link transition-colors duration-200 hover:text-blue-600">
+                                    Galeri
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#footer"
+                                    class="nav-slide-link transition-colors duration-200 hover:text-blue-600">
+                                    Kontak
+                                </a>
+                            </li>
+                        </ul>
+
+                        {{-- Divider --}}
+                        <div class="w-px h-5 bg-gray-200 mx-1"></div>
+
+                        {{-- CTA Buttons --}}
                         <a href="{{ route('login') }}"
                             class="text-blue-600 border border-blue-200 px-5 py-2 rounded-full font-semibold text-sm hover:bg-blue-50 hover:border-blue-400 transition-all duration-200">
                             Masuk
@@ -255,7 +299,9 @@
             </div>
         </div>
 
-        {{-- ===================== MOBILE MENU ===================== --}}
+        {{-- ═══════════════════════════════════════
+        MOBILE MENU
+        ═══════════════════════════════════════ --}}
         <div id="mobile-menu" class="hidden md:hidden border-t border-gray-100/80 bg-white/95 backdrop-blur-xl">
             <div class="px-4 py-4 space-y-1">
 
@@ -265,7 +311,6 @@
                         <i class="bi bi-speedometer2"></i> Dashboard Admin
                     </a>
                 @elseif(Auth::guard('magang')->check())
-                    {{-- User Info Card --}}
                     <div class="flex items-center gap-3 px-3 py-3 mb-3 rounded-2xl border border-blue-100"
                         style="background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);">
                         <div
@@ -279,7 +324,6 @@
                             <p class="text-xs text-blue-500 font-medium uppercase tracking-wide">Peserta Magang</p>
                         </div>
                     </div>
-
                     <a href="{{ route('dashboard.index') }}"
                         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-100 text-sm font-medium transition-colors">
                         <i class="bi bi-house text-blue-500"></i> Home
@@ -292,9 +336,13 @@
                         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-100 text-sm font-medium transition-colors">
                         <i class="bi bi-card-checklist text-blue-500"></i> Status
                     </a>
-                    <a href="/sertifikat"
+                    <a href="{{ route('certificate.index') }}"
                         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-100 text-sm font-medium transition-colors">
                         <i class="bi bi-award text-blue-500"></i> Sertifikat
+                    </a>
+                    <a href="{{ route('nilai') }}"
+                        class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-100 text-sm font-medium transition-colors">
+                        <i class="bi bi-bar-chart text-blue-500"></i> Nilai
                     </a>
                     <a href="{{ route('profile.edit') }}"
                         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-100 text-sm font-medium transition-colors">
@@ -310,6 +358,29 @@
                         </form>
                     </div>
                 @else
+                    {{-- Guest mobile: section links dulu, baru CTA --}}
+                    <div class="pb-2 mb-2 border-b border-gray-100">
+                        <a href="#home"
+                            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-100 text-sm font-medium transition-colors">
+                            <i class="bi bi-house text-blue-500"></i> Beranda
+                        </a>
+                        <a href="#lowongan"
+                            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-100 text-sm font-medium transition-colors">
+                            <i class="bi bi-briefcase text-blue-500"></i> Lowongan
+                        </a>
+                        <a href="#about"
+                            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-100 text-sm font-medium transition-colors">
+                            <i class="bi bi-info-circle text-blue-500"></i> Tentang Kami
+                        </a>
+                        <a href="#gallery"
+                            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-100 text-sm font-medium transition-colors">
+                            <i class="bi bi-images text-blue-500"></i> Galeri
+                        </a>
+                        <a href="#footer"
+                            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-100 text-sm font-medium transition-colors">
+                            <i class="bi bi-envelope text-blue-500"></i> Kontak
+                        </a>
+                    </div>
                     <a href="{{ route('login') }}"
                         class="block text-center px-4 py-2.5 rounded-xl border border-blue-200 text-blue-600 font-semibold text-sm hover:bg-blue-50 transition-colors">
                         Masuk
@@ -332,11 +403,9 @@
         <footer id="footer" class="text-white pt-14 pb-8 text-sm relative overflow-hidden"
             style="background-color: #060d1f;">
 
-            {{-- Top gradient accent line --}}
             <div class="absolute top-0 left-0 right-0 h-px"
                 style="background: linear-gradient(90deg, transparent, #2563eb 30%, #6366f1 60%, transparent);"></div>
 
-            {{-- Background ambient glow --}}
             <div class="absolute top-0 right-0 w-96 h-96 pointer-events-none opacity-100"
                 style="background: radial-gradient(circle, rgba(37,99,235,0.05) 0%, transparent 70%); transform: translate(20%, -30%);">
             </div>
@@ -347,7 +416,6 @@
             <div class="container mx-auto px-4 relative z-10">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
 
-                    {{-- Kolom 1: Identitas --}}
                     <div>
                         <a href="/" class="flex items-center gap-2.5 mb-4 w-fit">
                             <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shrink-0"
@@ -370,51 +438,37 @@
                             </p>
                         </div>
                         <div class="flex gap-2 mt-5">
-                            <a href="#"
-                                class="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5"
-                                style="border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.04); color: #475569;"
-                                onmouseover="this.style.borderColor='rgba(37,99,235,0.4)'; this.style.background='rgba(37,99,235,0.12)'; this.style.color='#60a5fa';"
-                                onmouseout="this.style.borderColor='rgba(255,255,255,0.07)'; this.style.background='rgba(255,255,255,0.04)'; this.style.color='#475569';">
-                                <i class="bi bi-twitter text-sm"></i>
-                            </a>
-                            <a href="#"
-                                class="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5"
-                                style="border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.04); color: #475569;"
-                                onmouseover="this.style.borderColor='rgba(37,99,235,0.4)'; this.style.background='rgba(37,99,235,0.12)'; this.style.color='#60a5fa';"
-                                onmouseout="this.style.borderColor='rgba(255,255,255,0.07)'; this.style.background='rgba(255,255,255,0.04)'; this.style.color='#475569';">
-                                <i class="bi bi-facebook text-sm"></i>
-                            </a>
-                            <a href="#"
-                                class="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5"
-                                style="border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.04); color: #475569;"
-                                onmouseover="this.style.borderColor='rgba(37,99,235,0.4)'; this.style.background='rgba(37,99,235,0.12)'; this.style.color='#60a5fa';"
-                                onmouseout="this.style.borderColor='rgba(255,255,255,0.07)'; this.style.background='rgba(255,255,255,0.04)'; this.style.color='#475569';">
-                                <i class="bi bi-instagram text-sm"></i>
-                            </a>
+                            @foreach (['twitter', 'facebook', 'instagram'] as $social)
+                                <a href="#"
+                                    class="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 hover:-translate-y-0.5"
+                                    style="border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.04); color: #475569;"
+                                    onmouseover="this.style.borderColor='rgba(37,99,235,0.4)'; this.style.background='rgba(37,99,235,0.12)'; this.style.color='#60a5fa';"
+                                    onmouseout="this.style.borderColor='rgba(255,255,255,0.07)'; this.style.background='rgba(255,255,255,0.04)'; this.style.color='#475569';">
+                                    <i class="bi bi-{{ $social }} text-sm"></i>
+                                </a>
+                            @endforeach
                         </div>
                     </div>
 
-                    {{-- Kolom 2: Useful Links --}}
                     <div>
                         <h4 class="text-[10px] font-bold uppercase tracking-widest mb-4 pb-3"
                             style="color: #64748b; border-bottom: 1px solid rgba(255,255,255,0.05);">
                             Useful Links
                         </h4>
                         <ul class="space-y-2.5">
-                            <li><a href="#" class="text-xs transition-colors duration-150 hover:text-blue-400"
-                                    style="color: #475569;">Home</a></li>
+                            <li><a href="#home" class="text-xs transition-colors duration-150 hover:text-blue-400"
+                                    style="color: #475569;">Beranda</a></li>
                             <li><a href="#about" class="text-xs transition-colors duration-150 hover:text-blue-400"
                                     style="color: #475569;">Tentang Kami</a></li>
-                            <li><a href="#services" class="text-xs transition-colors duration-150 hover:text-blue-400"
-                                    style="color: #475569;">Layanan</a></li>
-                            <li><a href="#" class="text-xs transition-colors duration-150 hover:text-blue-400"
-                                    style="color: #475569;">Terms of Service</a></li>
+                            <li><a href="#lowongan" class="text-xs transition-colors duration-150 hover:text-blue-400"
+                                    style="color: #475569;">Lowongan</a></li>
+                            <li><a href="#gallery" class="text-xs transition-colors duration-150 hover:text-blue-400"
+                                    style="color: #475569;">Galeri</a></li>
                             <li><a href="#" class="text-xs transition-colors duration-150 hover:text-blue-400"
                                     style="color: #475569;">Privacy Policy</a></li>
                         </ul>
                     </div>
 
-                    {{-- Kolom 3: Layanan Kami --}}
                     <div>
                         <h4 class="text-[10px] font-bold uppercase tracking-widest mb-4 pb-3"
                             style="color: #64748b; border-bottom: 1px solid rgba(255,255,255,0.05);">
@@ -432,7 +486,6 @@
                         </ul>
                     </div>
 
-                    {{-- Kolom 4: Newsletter --}}
                     <div>
                         <h4 class="text-[10px] font-bold uppercase tracking-widest mb-4 pb-3"
                             style="color: #64748b; border-bottom: 1px solid rgba(255,255,255,0.05);">
@@ -454,7 +507,6 @@
 
                 </div>
 
-                {{-- Footer Bottom --}}
                 <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3"
                     style="border-top: 1px solid rgba(255,255,255,0.04);">
                     <p class="text-xs" style="color: #334155;">
@@ -466,14 +518,12 @@
                         Sistem Manajemen Magang
                     </span>
                 </div>
-
             </div>
         </footer>
     @endif
 
     {{-- ===================== MOBILE MENU SCRIPT ===================== --}}
     <script>
-        // SECTION: Mobile hamburger toggle
         const mobileBtn = document.getElementById('mobile-menu-btn');
         const mobileMenu = document.getElementById('mobile-menu');
         const hamburgerIcon = document.getElementById('hamburger-icon');
@@ -485,6 +535,27 @@
                 hamburgerIcon.classList.toggle('bi-x-lg');
             });
         }
+
+        // SECTION: Smooth scroll untuk anchor links navbar guest
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    e.preventDefault();
+                    // Kompensasi tinggi navbar (64px) saat scroll ke section
+                    const navbarH = document.getElementById('main-navbar').offsetHeight;
+                    const top = target.getBoundingClientRect().top + window.pageYOffset - navbarH;
+                    window.scrollTo({
+                        top,
+                        behavior: 'smooth'
+                    });
+                    // Tutup mobile menu jika terbuka
+                    mobileMenu.classList.add('hidden');
+                    hamburgerIcon.classList.add('bi-list');
+                    hamburgerIcon.classList.remove('bi-x-lg');
+                }
+            });
+        });
     </script>
 
     @stack('script')
