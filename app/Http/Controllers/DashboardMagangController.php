@@ -107,7 +107,7 @@ class DashboardMagangController extends Controller
          * profile belum ada.
          */
 
-        $isSMK = optional($user->profile)->education_level === 'siswa_smk';
+        $isSMK = optional($user->profile)->education_level === 'SMK';
 
 
 

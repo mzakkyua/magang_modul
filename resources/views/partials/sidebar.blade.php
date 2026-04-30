@@ -141,7 +141,7 @@
         @endif
 
         {{-- MENU SERTIFIKAT & NILAI --}}
-        <a href="{{ route('admin.certificate.create') }}"
+        <a href="{{ route('admin.certificates.create') }}"
             class="flex items-center px-3 py-2.5 mb-0.5 rounded-xl font-semibold transition-all duration-150
             {{ request()->routeIs('admin.certificate*')
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'

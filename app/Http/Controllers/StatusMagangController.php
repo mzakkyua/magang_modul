@@ -58,7 +58,7 @@ class StatusMagangController extends Controller
         $applications = ApplicationMagang::query()
             ->where('leader_user_id', $user->id)
             ->with('vacancy')
-            ->orderBy('submission_date', 'desc')
+            ->orderBy('created_at', 'desc')
             ->orderBy('id', 'desc')
             ->paginate(10); // lebih scalable dibanding get()
 

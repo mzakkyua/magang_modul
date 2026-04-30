@@ -3,13 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 use Illuminate\Validation\Rule;
+use Illuminate\Http\Request;
+use Carbon\Carbon;
+
+
 
 /**
  * ======================================================================
@@ -199,150 +202,63 @@ class AdminProfileController extends Controller
    */
   public function update(Request $request)
   {
-
-    /**
-     * --------------------------------------------------------------
-     * STEP 1
-     * MENGAMBIL USER YANG SEDANG LOGIN
-     * --------------------------------------------------------------
-     */
     /** @var \App\Models\User $user */
     $user = Auth::user();
 
-
-    /**
-     * --------------------------------------------------------------
-     * STEP 2
-     * VALIDASI INPUT
-     * --------------------------------------------------------------
-     *
-     * Validasi memastikan data yang dikirim user sesuai aturan.
-     *
-     * Aturan penting:
-     *
-     * - Email harus unik kecuali milik user sendiri.
-     * - Password baru minimal 8 karakter.
-     * - Password baru harus dikonfirmasi.
-     * - Foto profil maksimal 2MB.
-     */
     $request->validate([
       'name'  => 'required|string|max:255',
-
       'email' => [
         'required',
         'email',
         Rule::unique('users')->ignore($user->id)
       ],
-
       'current_password' => 'nullable|required_with:new_password',
-
       'new_password' => 'nullable|required_with:current_password|min:8|confirmed',
-
-      'photo' => ['nullable', 'image', 'max:2048'],
-    ], [
-      'current_password.required_with' =>
-      'Mohon isi Password Lama jika ingin mengganti password.',
-
-      'new_password.required_with' =>
-      'Mohon isi Password Baru jika Password Lama sudah diisi.',
+      'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
     ]);
 
+    DB::transaction(function () use ($request, $user) {
 
-    /**
-     * --------------------------------------------------------------
-     * STEP 3
-     * HAPUS FOTO PROFIL (JIKA DIMINTA USER)
-     * --------------------------------------------------------------
-     */
-    if ($request->input('delete_photo') == '1') {
+      if ($request->filled('new_password')) {
+        if (!Hash::check($request->current_password, $user->password)) {
+          throw \Illuminate\Validation\ValidationException::withMessages([
+            'current_password' => 'Password lama salah!'
+          ]);
+        }
 
-      if (
-        $user->profile_photo_path &&
-        Storage::disk('public')->exists($user->profile_photo_path)
-      ) {
-        Storage::disk('public')->delete($user->profile_photo_path);
+        $user->password = Hash::make($request->new_password);
       }
 
-      $user->profile_photo_path = null;
-    }
+      if ($request->hasFile('photo')) {
+        $oldPhoto = $user->profile_photo_path;
 
+        $newPath = $request->file('photo')
+          ->store('profile-photos', 'public');
 
-    /**
-     * --------------------------------------------------------------
-     * STEP 4
-     * UPLOAD FOTO PROFIL BARU
-     * --------------------------------------------------------------
-     */
-    if ($request->hasFile('photo')) {
+        $user->profile_photo_path = $newPath;
 
-      /**
-       * Hapus foto lama jika ada
-       */
-      if (
-        $user->profile_photo_path &&
-        Storage::disk('public')->exists($user->profile_photo_path)
-      ) {
-        Storage::disk('public')->delete($user->profile_photo_path);
+        if ($oldPhoto && Storage::disk('public')->exists($oldPhoto)) {
+          Storage::disk('public')->delete($oldPhoto);
+        }
       }
 
-      /**
-       * Simpan foto baru
-       */
-      $user->profile_photo_path = $request->file('photo')
-        ->store('profile-photos', 'public');
-    }
+      if ($request->input('delete_photo') == '1') {
+        if (
+          $user->profile_photo_path &&
+          Storage::disk('public')->exists($user->profile_photo_path)
+        ) {
+          Storage::disk('public')->delete($user->profile_photo_path);
+        }
 
-
-    /**
-     * --------------------------------------------------------------
-     * STEP 5
-     * UPDATE PASSWORD (OPSIONAL)
-     * --------------------------------------------------------------
-     *
-     * Password hanya diupdate jika user mengisi field
-     * new_password.
-     */
-    if ($request->filled('new_password')) {
-
-      /**
-       * Cek apakah password lama benar
-       */
-      if (!Hash::check($request->current_password, $user->password)) {
-
-        return back()->withErrors([
-          'current_password' => 'Password lama salah!'
-        ]);
+        $user->profile_photo_path = null;
       }
 
-      /**
-       * Hash password baru sebelum disimpan
-       */
-      $user->password = Hash::make($request->new_password);
-    }
+      $user->name = trim($request->name);
+      $user->email = strtolower(trim($request->email));
 
+      $user->save();
+    });
 
-    /**
-     * --------------------------------------------------------------
-     * STEP 6
-     * UPDATE DATA UTAMA USER
-     * --------------------------------------------------------------
-     */
-    $user->name  = $request->name;
-    $user->email = $request->email;
-
-
-    /**
-     * Simpan perubahan ke database
-     */
-    $user->save();
-
-
-    /**
-     * --------------------------------------------------------------
-     * STEP 7
-     * REDIRECT KEMBALI KE HALAMAN PROFIL
-     * --------------------------------------------------------------
-     */
     return back()->with('success', 'Profil berhasil diperbarui!');
   }
 }

@@ -10,14 +10,6 @@ class ApplicationMemberMagang extends Model
 
     /**
      * =====================================================
-     * TIMESTAMP
-     * =====================================================
-     * Tabel tidak menggunakan created_at / updated_at
-     */
-    public $timestamps = false;
-
-    /**
-     * =====================================================
      * MASS ASSIGNMENT
      * =====================================================
      */
@@ -32,10 +24,9 @@ class ApplicationMemberMagang extends Model
      * STATUS CONSTANT
      * =====================================================
      */
-    const STATUS_PENDING   = 'pending';
-    const STATUS_ACTIVE    = 'active';
-    const STATUS_COMPLETED = 'completed';
-    const STATUS_REJECTED  = 'rejected';
+    public const STATUS_ACTIVE = 'active';
+    public const STATUS_DROPPED_OUT = 'dropped_out';
+    public const STATUS_FINISHED = 'finished';
 
     /**
      * =====================================================
@@ -76,7 +67,7 @@ class ApplicationMemberMagang extends Model
      */
     public function certificate()
     {
-        return $this->hasOne(CertificateMagang::class, 'member_id');
+        return $this->hasOne(Certificate::class, 'user_id', 'user_id');
     }
 
     /**
@@ -84,8 +75,8 @@ class ApplicationMemberMagang extends Model
      * HELPER: STATUS CHECK
      * =====================================================
      */
-    public function isCompleted()
+    public function isFinished(): bool
     {
-        return $this->individual_status === self::STATUS_COMPLETED;
+        return $this->individual_status === self::STATUS_FINISHED;
     }
 }

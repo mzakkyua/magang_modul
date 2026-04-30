@@ -25,7 +25,7 @@ class MagangAccessRight extends Model
      * =====================================================
      */
     const ROLE_SUPERADMIN = 'superadmin';
-    const ROLE_DIVISION_ADMIN = 'admin divisi';
+    const ROLE_DIVISION_ADMIN = 'admin_bidang';
 
     /**
      * =====================================================

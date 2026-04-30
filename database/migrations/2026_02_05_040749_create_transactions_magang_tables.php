@@ -17,7 +17,7 @@ return new class extends Migration
             // --- REVISI KHUSUS PENELITIAN ---
             $table->text('research_abstract')->nullable(); // Abstrak (NEW)
             // --------------------------------
-            $table->timestamp('submission_date')->useCurrent();
+            $table->timestamps();
 
             // Logic Kuota: Rejected = Restock
             $table->enum('status', ['pending', 'verified', 'interview', 'accepted', 'rejected', 'resigned', 'completed'])
@@ -73,6 +73,17 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users_magang')->cascadeOnDelete();
             $table->string('title');
             $table->string('file');
+
+            // Audit fields
+            $table->unsignedBigInteger('uploaded_by_admin_id')->nullable();
+            $table->timestamp('uploaded_at')->nullable();
+            $table->timestamp('replaced_at')->nullable();
+
+            $table->foreign('uploaded_by_admin_id')
+                ->references('id')
+                ->on('users')
+                ->nullOnDelete();
+
             $table->timestamps();
         });
     }

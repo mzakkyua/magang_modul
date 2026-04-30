@@ -42,7 +42,7 @@
                         </div>
 
                         {{-- Tombol Download --}}
-                        <a href="{{ route('certificate.download', $cert->id) }}"
+                        <a href="{{ route('certificates.download', $cert->id) }}"
                             class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm shadow-blue-600/20 shrink-0">
                             <i class="bi bi-download text-xs"></i>
                             Unduh
@@ -56,11 +56,11 @@
 
                             @if ($isImage)
                                 {{-- Preview Gambar --}}
-                                <img src="{{ route('certificate.view', $cert->id) }}" alt="{{ $cert->title }}"
+                                <img src="{{ route('certificates.view', $cert->id) }}" alt="{{ $cert->title }}"
                                     class="w-full h-full object-contain">
                             @else
                                 {{-- Preview PDF via iframe --}}
-                                <iframe src="{{ route('certificate.view', $cert->id) }}" class="w-full h-full border-0">
+                                <iframe src="{{ route('certificates.view', $cert->id) }}" class="w-full h-full border-0">
                                 </iframe>
                             @endif
 
@@ -83,7 +83,7 @@
                                 <i class="bi bi-info-circle mr-1"></i>
                                 Klik unduh untuk menyimpan sertifikat ke perangkat kamu.
                             </p>
-                            <a href="{{ route('certificate.view', $cert->id) }}" target="_blank"
+                            <a href="{{ route('certificates.view', $cert->id) }}" target="_blank"
                                 class="text-xs text-blue-500 hover:text-blue-700 font-semibold flex items-center gap-1 transition">
                                 <i class="bi bi-box-arrow-up-right text-[10px]"></i>
                                 Buka di tab baru

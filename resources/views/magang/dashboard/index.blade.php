@@ -196,7 +196,7 @@
     </section>
 
     {{-- ===================== TIMELINE & CALENDAR SECTION ===================== --}}
-    <section class="bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 py-20">
+    <section class="bg-linear-to-br from-slate-50 via-blue-50/30 to-slate-100 py-20">
         <div id="timeline-wrapper"
             class="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 items-start px-4 md:px-6 transition-all duration-500">
 
@@ -242,7 +242,7 @@
                     @endphp
 
                     <div
-                        class="flex items-center gap-3 bg-gradient-to-r from-blue-50 to-emerald-50 border border-blue-100 rounded-2xl px-4 py-3.5 mb-5">
+                        class="flex items-center gap-3 bg-linear-to-r from-blue-50 to-emerald-50 border border-blue-100 rounded-2xl px-4 py-3.5 mb-5">
                         <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shrink-0">
                             <i class="bi bi-layers-fill text-white text-sm"></i>
                         </div>

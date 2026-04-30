@@ -172,10 +172,10 @@
                                     {{-- Tanggal --}}
                                     <td class="px-6 py-4 text-center">
                                         <span class="text-sm text-gray-600 font-medium block">
-                                            {{ $app->submission_date->format('d F Y') }}
+                                            {{ $app->created_at->format('d F Y') }}
                                         </span>
                                         <span class="text-xs text-gray-400">
-                                            {{ $app->submission_date->format('H:i') }} WIB
+                                            {{ $app->created_at->format('H:i') }} WIB
                                         </span>
                                     </td>
 
@@ -312,7 +312,7 @@
                             {{-- Tanggal di bawah --}}
                             <div class="flex items-center gap-1.5 text-xs text-gray-400 pl-12">
                                 <i class="bi bi-calendar3 text-[10px]"></i>
-                                {{ $app->submission_date->format('d F Y, H:i') }} WIB
+                                {{ $app->created_at->format('d F Y, H:i') }} WIB
                             </div>
                         </div>
 

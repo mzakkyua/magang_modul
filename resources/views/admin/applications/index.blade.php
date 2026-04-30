@@ -250,10 +250,10 @@
                             {{-- Tanggal --}}
                             <td class="px-6 py-4">
                                 <p class="text-sm text-gray-700 font-medium">
-                                    {{ \Carbon\Carbon::parse($app->submission_date)->format('d M Y') }}
+                                    {{ \Carbon\Carbon::parse($app->created_at)->format('d M Y') }}
                                 </p>
                                 <p class="text-xs text-gray-400">
-                                    {{ \Carbon\Carbon::parse($app->submission_date)->format('H:i') }} WIB
+                                    {{ \Carbon\Carbon::parse($app->created_at)->format('H:i') }} WIB
                                 </p>
                             </td>
 

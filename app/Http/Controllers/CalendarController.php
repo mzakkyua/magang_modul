@@ -4,87 +4,102 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\MagangAccessRight;
+use App\Models\ApplicationMemberMagang;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 
 class CalendarController extends Controller
 {
-
     /**
      * ===============================================================
      * HELPER: CEK SUPERADMIN
      * ===============================================================
-     * Digunakan oleh method admin-facing (indexAdmin, store, update, destroy).
-     * Jika bukan superadmin → abort 403.
-     *
-     * Method index() dan fetch() TIDAK menggunakan helper ini karena
-     * keduanya juga dipakai oleh peserta magang (dashboard kalender).
+     * Digunakan oleh halaman / fitur admin calendar.
      */
     private function authorizeSuperAdmin(): void
     {
-        $hakAkses = MagangAccessRight::where('user_id', Auth::id())->first();
+        $hakAkses = request()->attributes->get('magang_access');
 
-        if (!$hakAkses || $hakAkses->role !== 'superadmin') {
+        if (!$hakAkses || !$hakAkses->isSuperAdmin()) {
             abort(403, 'Fitur Jadwal Kegiatan hanya dapat diakses oleh Super Admin.');
         }
     }
 
-
-
     /**
      * ===============================================================
-     * CALENDAR PAGE (PESERTA)
+     * CALENDAR PAGE (PESERTA / UMUM)
      * ===============================================================
-     * Menampilkan halaman kalender untuk peserta magang.
-     * Tidak diproteksi superadmin karena dipakai di dashboard peserta.
      */
     public function index()
     {
-        return view('calender');
+        return view('partials.calendar');
     }
-
-
 
     /**
      * ===============================================================
      * FETCH EVENTS (API)
      * ===============================================================
-     * Mengambil daftar event untuk ditampilkan di calendar frontend.
-     * Tidak diproteksi superadmin karena dipakai peserta juga.
+     * Dipakai peserta untuk dashboard kalender.
      */
     public function fetch()
     {
         $events = [];
 
-        // 1. AMBIL EVENT GLOBAL (Yang diinput Admin)
-        $globalEvents = \App\Models\Event::all();
+        /**
+         * ===========================================================
+         * 1. EVENT GLOBAL
+         * ===========================================================
+         */
+        $globalEvents = Event::select(
+            'id',
+            'title',
+            'start_date',
+            'end_date',
+            'color',
+            'description'
+        )->get();
+
         foreach ($globalEvents as $event) {
             $events[] = [
                 'id'    => 'global-' . $event->id,
                 'title' => '📌 ' . $event->title,
-                'start' => \Carbon\Carbon::parse($event->start_date)->format('Y-m-d'),
-                'end'   => $event->end_date ? \Carbon\Carbon::parse($event->end_date)->addDay()->format('Y-m-d') : null,
-                'color' => $event->color ?? '#3b82f6',
+                'start' => $event->start_date
+                    ? \Carbon\Carbon::parse($event->start_date)->format('Y-m-d')
+                    : null,
+                'end'   => $event->end_date
+                    ? \Carbon\Carbon::parse($event->end_date)->addDay()->format('Y-m-d')
+                    : null,
+                'color' => $event->color ?: '#3b82f6',
                 'extendedProps' => [
                     'description' => $event->description,
-                    'type' => 'global'
-                ]
+                    'type'        => 'global',
+                ],
             ];
         }
 
-        // 2. CEK EVENT MAGANG USER (Jika Login sebagai peserta)
-        if (auth()->guard('magang')->check()) {
-            $userId = auth()->guard('magang')->id();
+        /**
+         * ===========================================================
+         * 2. EVENT MAGANG PESERTA LOGIN
+         * ===========================================================
+         */
+        if (Auth::guard('magang')->check()) {
+            $userId = Auth::guard('magang')->id();
 
-            $acceptedMember = \App\Models\ApplicationMemberMagang::where('user_id', $userId)
+            $acceptedMember = ApplicationMemberMagang::with([
+                'application.vacancy:id,title,division_name,start_date,end_date'
+            ])
+                ->where('user_id', $userId)
                 ->whereHas('application', function ($q) {
                     $q->where('status', 'accepted');
                 })
-                ->with('application.vacancy')
+                ->latest('application_id')
                 ->first();
 
-            if ($acceptedMember && $acceptedMember->application->vacancy) {
+            if (
+                $acceptedMember &&
+                $acceptedMember->application &&
+                $acceptedMember->application->vacancy
+            ) {
                 $vacancy = $acceptedMember->application->vacancy;
 
                 $events[] = [
@@ -96,8 +111,8 @@ class CalendarController extends Controller
                     'display' => 'block',
                     'extendedProps' => [
                         'description' => 'Masa magang Anda di ' . $vacancy->division_name,
-                        'type' => 'internship'
-                    ]
+                        'type'        => 'internship',
+                    ],
                 ];
             }
         }
@@ -105,34 +120,25 @@ class CalendarController extends Controller
         return response()->json($events);
     }
 
-
-
     /**
      * ===============================================================
      * ADMIN CALENDAR PAGE
      * ===============================================================
-     * Menampilkan halaman manajemen kalender.
-     * HANYA superadmin — admin divisi biasa → 403.
      */
     public function indexAdmin()
     {
-        // STEP: Blokir akses jika bukan superadmin
         $this->authorizeSuperAdmin();
 
         return view('admin.calendar.index');
     }
 
-
-
     /**
      * ===============================================================
      * CREATE EVENT
      * ===============================================================
-     * HANYA superadmin — admin divisi biasa → 403.
      */
     public function store(Request $request)
     {
-        // STEP: Blokir akses jika bukan superadmin
         $this->authorizeSuperAdmin();
 
         $validated = $request->validate([
@@ -145,20 +151,19 @@ class CalendarController extends Controller
 
         Event::create($validated);
 
-        return response()->json(['success' => true]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Event berhasil ditambahkan.',
+        ]);
     }
-
-
 
     /**
      * ===============================================================
      * UPDATE EVENT
      * ===============================================================
-     * HANYA superadmin — admin divisi biasa → 403.
      */
     public function update(Request $request, Event $event)
     {
-        // STEP: Blokir akses jika bukan superadmin
         $this->authorizeSuperAdmin();
 
         $validated = $request->validate([
@@ -171,24 +176,26 @@ class CalendarController extends Controller
 
         $event->update($validated);
 
-        return response()->json(['success' => true]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Event berhasil diperbarui.',
+        ]);
     }
-
-
 
     /**
      * ===============================================================
      * DELETE EVENT
      * ===============================================================
-     * HANYA superadmin — admin divisi biasa → 403.
      */
     public function destroy(Event $event)
     {
-        // STEP: Blokir akses jika bukan superadmin
         $this->authorizeSuperAdmin();
 
         $event->delete();
 
-        return response()->json(['success' => true]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Event berhasil dihapus.',
+        ]);
     }
 }

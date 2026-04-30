@@ -1,5 +1,3 @@
-console.log("vacancy.js LOADED");
-console.log("checkDuration fired", startDate?.value, endDate?.value);
 import Swal from "sweetalert2";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -29,46 +27,67 @@ document.addEventListener("DOMContentLoaded", () => {
     const dayCountEl = document.getElementById("dayCount");
 
     // =====================================================
-    // MODE PENDAFTARAN (LOGIC TETAP)
+    // MODE PENDAFTARAN
     // =====================================================
     function toggleMemberInputs() {
         if (!regMode) return;
 
-        if (regMode.value !== "individu") {
-            syncMinMax();
-        }
-
-        // 🔑 SINKRONISASI KE INPUT HIDDEN
+        // sync hidden input
         if (hiddenRegMode) {
             hiddenRegMode.value = regMode.value;
         }
 
+        // ===============================
+        // MODE INDIVIDU
+        // ===============================
         if (regMode.value === "individu") {
             minDiv?.classList.add("hidden");
             maxDiv?.classList.add("hidden");
 
-            if (minInput) minInput.value = 1;
-            if (maxInput) maxInput.value = 1;
-        } else {
-            minDiv?.classList.remove("hidden");
-            maxDiv?.classList.remove("hidden");
-
             if (minInput) {
-                minInput.min = 2;
-                if (minInput.value < 2) minInput.value = 2;
+                minInput.min = 1;
+                minInput.value = 1;
+                minInput.required = false;
             }
 
             if (maxInput) {
-                maxInput.min = 2;
-                if (maxInput.value < minInput.value) {
-                    maxInput.value = minInput.value;
-                }
+                maxInput.min = 1;
+                maxInput.value = 1;
+                maxInput.required = false;
+            }
+
+            return;
+        }
+
+        // ===============================
+        // MODE KELOMPOK / HYBRID
+        // ===============================
+        minDiv?.classList.remove("hidden");
+        maxDiv?.classList.remove("hidden");
+
+        if (minInput) {
+            minInput.min = 2;
+            minInput.required = true;
+
+            if (parseInt(minInput.value || 0) < 2) {
+                minInput.value = 2;
             }
         }
+
+        if (maxInput) {
+            maxInput.min = 2;
+            maxInput.required = true;
+
+            if (parseInt(maxInput.value || 0) < parseInt(minInput.value || 2)) {
+                maxInput.value = minInput.value;
+            }
+        }
+
+        syncMinMax();
     }
 
     // =====================================================
-    // TIPE PROGRAM (KHUSUS CREATE, LOGIC SAMA)
+    // TIPE PROGRAM
     // =====================================================
     function handleTypeChange() {
         if (!typeSelect || !regMode) return;
@@ -79,6 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
             regMode.value = "individu";
             regMode.classList.add("pointer-events-none", "bg-gray-100");
             hint?.classList.remove("hidden");
+
             toggleMemberInputs();
         } else {
             regMode.classList.remove("pointer-events-none", "bg-gray-100");
@@ -87,25 +107,97 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // =====================================================
-    // CEK DURASI MAGANG (LOGIC SAMA)
+    // DURASI MAGANG
     // =====================================================
     function checkDuration() {
         if (!startDate?.value || !endDate?.value || !dateWarning) return;
 
         const start = new Date(startDate.value);
         const end = new Date(endDate.value);
+
         const diffDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
 
-        if (diffDays > 0 && diffDays < 30) {
+        // ===============================
+        // END DATE < START DATE
+        // ===============================
+        if (diffDays < 0) {
             dateWarning.classList.remove("hidden");
-            if (dayCountEl) dayCountEl.innerText = diffDays;
-        } else {
-            dateWarning.classList.add("hidden");
+            dateWarning.classList.remove(
+                "bg-amber-50",
+                "border-amber-200",
+                "text-amber-700",
+            );
+            dateWarning.classList.add(
+                "bg-red-50",
+                "border-red-200",
+                "text-red-700",
+            );
+
+            dateWarning.innerHTML = `
+            <i class="bi bi-x-circle-fill text-red-500 shrink-0 mt-0.5"></i>
+            <p>Tanggal selesai tidak boleh sebelum tanggal mulai.</p>
+        `;
+            return;
         }
+
+        // ===============================
+        // SAME DAY
+        // ===============================
+        if (diffDays === 0) {
+            dateWarning.classList.remove("hidden");
+            dateWarning.classList.remove(
+                "bg-amber-50",
+                "border-amber-200",
+                "text-amber-700",
+            );
+            dateWarning.classList.add(
+                "bg-red-50",
+                "border-red-200",
+                "text-red-700",
+            );
+
+            dateWarning.innerHTML = `
+            <i class="bi bi-x-circle-fill text-red-500 shrink-0 mt-0.5"></i>
+            <p>Tanggal mulai dan selesai tidak boleh sama.</p>
+        `;
+            return;
+        }
+
+        // ===============================
+        // SHORT DURATION
+        // ===============================
+        if (diffDays < 30) {
+            dateWarning.classList.remove("hidden");
+            dateWarning.classList.remove(
+                "bg-red-50",
+                "border-red-200",
+                "text-red-700",
+            );
+            dateWarning.classList.add(
+                "bg-amber-50",
+                "border-amber-200",
+                "text-amber-700",
+            );
+
+            dateWarning.innerHTML = `
+            <i class="bi bi-exclamation-triangle-fill text-amber-500 shrink-0 mt-0.5"></i>
+            <p>
+                Perhatian: Durasi magang sangat singkat
+                (<strong>${diffDays}</strong> hari).
+                Pastikan tanggal sudah benar.
+            </p>
+        `;
+            return;
+        }
+
+        // ===============================
+        // NORMAL
+        // ===============================
+        dateWarning.classList.add("hidden");
     }
 
     // =====================================================
-    // SUBMIT FORM (CREATE & EDIT)
+    // SUBMIT FORM
     // =====================================================
     btnSubmit.addEventListener("click", (e) => {
         e.preventDefault();
@@ -129,35 +221,36 @@ document.addEventListener("DOMContentLoaded", () => {
                 btnSubmit.disabled = true;
                 btnSubmit.innerText =
                     mode === "edit" ? "Mengupdate..." : "Menyimpan...";
+
                 form.submit();
             }
         });
     });
 
+    // =====================================================
+    // SYNC MIN MAX
+    // =====================================================
     function syncMinMax() {
-        if (!minInput || !maxInput) return;
+        if (!minInput || !maxInput || !regMode) return;
         if (regMode.value === "individu") return;
 
         const min = parseInt(minInput.value || 0);
         const max = parseInt(maxInput.value || 0);
 
-        // min minimal 2
         if (min < 2) {
             minInput.value = 2;
             return;
         }
 
-        // ⬆️ AUTO NAIKKAN MAX JIKA DI BAWAH MIN
         if (max < min) {
             maxInput.value = min;
         }
 
-        // batasi spinner max
         maxInput.min = min;
     }
 
     // =====================================================
-    // EVENT LISTENER
+    // EVENT
     // =====================================================
     minInput?.addEventListener("input", syncMinMax);
     maxInput?.addEventListener("input", syncMinMax);
@@ -167,6 +260,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     typeSelect?.addEventListener("change", handleTypeChange);
+
     startDate?.addEventListener("change", checkDuration);
     endDate?.addEventListener("change", checkDuration);
 

@@ -37,7 +37,7 @@
 
             {{-- FORM --}}
             {{-- enctype="multipart/form-data" WAJIB ada — tidak diubah --}}
-            <form action="{{ route('admin.certificate.store') }}" method="POST" enctype="multipart/form-data"
+            <form action="{{ route('admin.certificates.store') }}" method="POST" enctype="multipart/form-data"
                 id="certForm">
                 @csrf
 

@@ -9,8 +9,11 @@
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/admin/delete-confirm.js'])
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
+
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
 
@@ -165,19 +168,13 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="{{ request()->is('/') ? '#aboutus' : '/#aboutus' }}"
-                                        class="nav-slide-link transition-colors duration-200 hover:text-blue-600">
-                                        Tentang Kami
-                                    </a>
-                                </li>
-                                <li>
                                     <a href="{{ route('status') }}"
                                         class="nav-slide-link transition-colors duration-200 hover:text-blue-600 {{ request()->is('status*') ? 'text-blue-600 active' : '' }}">
                                         Status
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="{{ route('certificate.index') }}"
+                                    <a href="{{ route('certificates.index') }}"
                                         class="nav-slide-link transition-colors duration-200 hover:text-blue-600 {{ request()->is('sertifikat') ? 'text-blue-600 active' : '' }}">
                                         Sertifikat
                                     </a>
@@ -336,7 +333,7 @@
                         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-100 text-sm font-medium transition-colors">
                         <i class="bi bi-card-checklist text-blue-500"></i> Status
                     </a>
-                    <a href="{{ route('certificate.index') }}"
+                    <a href="{{ route('certificates.index') }}"
                         class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-700 hover:bg-gray-100 text-sm font-medium transition-colors">
                         <i class="bi bi-award text-blue-500"></i> Sertifikat
                     </a>
@@ -557,6 +554,8 @@
             });
         });
     </script>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     @stack('script')
     @stack('style')

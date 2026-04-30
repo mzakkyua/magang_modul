@@ -177,7 +177,7 @@
 
                                 {{-- Tanggal --}}
                                 <td class="px-6 py-3.5 text-sm text-gray-500">
-                                    {{ $item->submission_date?->format('d M Y') ?? '-' }}
+                                    {{ $item->created_at?->format('d M Y') ?? '-' }}
                                 </td>
 
                                 {{-- Status --}}

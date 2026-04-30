@@ -4,74 +4,25 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\ApplicationMemberMagang; // Peserta magang (unit penilaian)
-use App\Models\AssessmentMagang;        // Nilai resmi peserta
-use App\Models\MagangAccessRight;       // SK penunjukan / hak akses admin
+use App\Models\ApplicationMemberMagang;
+use App\Models\AssessmentMagang;
+use App\Models\MagangAccessRight;
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\DashboardCache;
 
-/**
- * =========================================================
- * CONTROLLER: AssessmentController
- * =========================================================
- * TANGGUNG JAWAB:
- * - Menampilkan daftar peserta magang yang dapat dinilai
- * - Menampilkan form penilaian per peserta
- * - Menyimpan & memperbarui nilai peserta
- *
- * PRINSIP UTAMA:
- * - Penilaian bersifat PERORANGAN (bukan per kelompok)
- * - Admin hanya boleh menilai peserta dari divisinya
- *
- * KEAMANAN & PRIVASI:
- * - Akses divisi diverifikasi di setiap endpoint
- * - Mencegah manipulasi URL & request API
- *
- * DAMPAK SISTEM:
- * - Data nilai bersifat resmi & sensitif
- * - Perubahan nilai memengaruhi dashboard statistik
- *
- * POTENSI MIGRASI:
- * - Logic penilaian → Service Layer
- * - Hak akses → Policy / Middleware
- * =========================================================
- */
 class AssessmentController extends Controller
 {
     /**
      * =====================================================
      * METHOD: index()
      * =====================================================
-     * TUJUAN:
-     * - Menampilkan daftar peserta yang:
-     *   - Sudah diterima magang (status: accepted)
-     *   - Bisa dinilai oleh admin
-     *
-     * FITUR:
-     * - Filter otomatis berdasarkan divisi admin
-     * - Pencarian nama peserta (optional)
-     * =====================================================
+     * Menampilkan daftar peserta yang sudah accepted
+     * dan dapat dinilai oleh admin sesuai hak akses.
      */
     public function index(Request $request)
     {
-        /* =====================================================
-         * 1. AMBIL DATA ADMIN LOGIN & HAK AKSES
-         * ===================================================== */
-        $userId = Auth::id();
-        $hakAkses = MagangAccessRight::where('user_id', $userId)->first();
+        $hakAkses = $this->getHakAkses();
 
-        // Safety check: admin harus punya SK penunjukan
-        if (!$hakAkses) {
-            abort(403, 'Anda tidak memiliki hak akses penilaian.');
-        }
-
-        /* =====================================================
-         * 2. QUERY DASAR: PESERTA YANG SUDAH DITERIMA
-         * =====================================================
-         * - Target penilaian adalah ApplicationMemberMagang
-         * - Hanya peserta dengan status lamaran "accepted"
-         * - Eager loading untuk efisiensi query
-         * ===================================================== */
         $query = ApplicationMemberMagang::with([
             'user.profile',
             'application.vacancy',
@@ -81,29 +32,32 @@ class AssessmentController extends Controller
                 $q->where('status', 'accepted');
             });
 
-        /* =====================================================
-         * 3. FILTER DIVISI (BERDASARKAN SK PENUNJUKAN)
-         * =====================================================
-         * - Superadmin → bebas akses
-         * - Admin bidang → hanya peserta divisinya
-         * ===================================================== */
-        if ($hakAkses->role !== 'superadmin') {
+        /**
+         * Filter divisi:
+         * Superadmin bebas lihat semua.
+         * Admin bidang hanya divisinya.
+         */
+        if (!$hakAkses->isSuperAdmin()) {
             $query->whereHas('application.vacancy', function ($q) use ($hakAkses) {
                 $q->where('division_name', $hakAkses->division_name);
             });
         }
 
-        /* =====================================================
-         * 4. FITUR PENCARIAN NAMA PESERTA (OPTIONAL)
-         * ===================================================== */
+        /**
+         * Search nama peserta
+         */
         if ($request->filled('search')) {
-            $search = $request->search;
+            $search = trim($request->search);
+
             $query->whereHas('user.profile', function ($q) use ($search) {
                 $q->where('full_name', 'like', "%{$search}%");
             });
         }
 
-        $members = $query->paginate(10);
+        $members = $query
+            ->orderByDesc('id')
+            ->paginate(10)
+            ->withQueryString();
 
         return view('admin.assessments.index', compact('members'));
     }
@@ -112,31 +66,16 @@ class AssessmentController extends Controller
      * =====================================================
      * METHOD: create()
      * =====================================================
-     * TUJUAN:
-     * - Menampilkan form penilaian untuk satu peserta
-     * - Mendukung mode edit jika nilai sudah ada
-     *
-     * SECURITY:
-     * - Akses divisi diverifikasi sebelum data ditampilkan
-     * =====================================================
+     * Menampilkan form penilaian / edit nilai peserta.
      */
     public function create($member_id)
     {
-        /*
-    ==============================================================
-    1. VALIDASI AKSES + AMBIL DATA PESERTA
-    ==============================================================
-    checkAccess sekarang mengembalikan object member
-    sehingga tidak perlu query ulang.
-    */
         $member = $this->checkAccess($member_id);
 
-        /*
-    ==============================================================
-    2. CEK APAKAH PESERTA SUDAH PERNAH DINILAI
-    ==============================================================
-    */
-        $existingAssessment = AssessmentMagang::where('member_id', $member_id)->first();
+        $existingAssessment = AssessmentMagang::where(
+            'member_id',
+            $member_id
+        )->first();
 
         return view(
             'admin.assessments.create',
@@ -148,64 +87,44 @@ class AssessmentController extends Controller
      * =====================================================
      * METHOD: store()
      * =====================================================
-     * TUJUAN:
-     * - Menyimpan atau memperbarui nilai peserta
-     *
-     * ATURAN BISNIS:
-     * - Skor dalam rentang 0–100
-     * - Skor akhir = rata-rata 3 komponen
-     *
-     * KEAMANAN:
-     * - Hak akses dicek ulang (anti API abuse)
-     * =====================================================
+     * Simpan / update nilai peserta.
      */
     public function store(Request $request, $member_id)
     {
-        /*
-    ==============================================================
-    1. VALIDASI AKSES + AMBIL DATA PESERTA
-    ==============================================================
-    */
         $member = $this->checkAccess($member_id);
 
-        /*
-    ==============================================================
-    2. VALIDASI INPUT NILAI
-    ==============================================================
-    */
         $request->validate([
             'score_behavior'    => 'required|numeric|min:0|max:100',
             'score_discipline'  => 'required|numeric|min:0|max:100',
             'score_performance' => 'required|numeric|min:0|max:100',
-            'evaluation_notes'  => 'nullable|string',
-            'additional_notes'  => 'nullable|string',
+            'evaluation_notes'  => 'nullable|string|max:2000',
+            'additional_notes'  => 'nullable|string|max:2000',
         ]);
 
-        /*
-    ==============================================================
-    3. HITUNG SKOR AKHIR
-    ==============================================================
-    */
-        $finalScore = (
-            $request->score_behavior +
-            $request->score_discipline +
-            $request->score_performance
-        ) / 3;
+        /**
+         * Hitung nilai akhir
+         */
+        $finalScore = round(
+            (
+                $request->score_behavior +
+                $request->score_discipline +
+                $request->score_performance
+            ) / 3,
+            2
+        );
 
-        /*
-    ==============================================================
-    4. AMBIL NAMA PENILAI
-    ==============================================================
-    */
-        $namaPenilai = Auth::user()->name ?? 'Admin Magang';
+        /** @var \App\Models\User $admin */
+        $admin = Auth::user();
 
-        /*
-    ==============================================================
-    5. SIMPAN NILAI (UPSERT)
-    ==============================================================
-    */
+        $namaPenilai = $admin->name ?? 'Admin Magang';
+
+        /**
+         * Upsert penilaian
+         */
         AssessmentMagang::updateOrCreate(
-            ['member_id' => $member_id],
+            [
+                'member_id' => $member->id
+            ],
             [
                 'assessor_name'     => $namaPenilai,
                 'score_behavior'    => $request->score_behavior,
@@ -217,6 +136,9 @@ class AssessmentController extends Controller
             ]
         );
 
+        /**
+         * Refresh dashboard stats
+         */
         DashboardCache::clear();
 
         return redirect()
@@ -229,77 +151,56 @@ class AssessmentController extends Controller
 
     /**
      * =====================================================
-     * HELPER: checkAccess()
+     * HELPER: getHakAkses()
      * =====================================================
-     * TUJUAN:
-     * - Memastikan admin hanya menilai peserta divisinya
-     *
-     * DIPAKAI OLEH:
-     * - create()
-     * - store()
-     *
-     * KEAMANAN:
-     * - Mencegah penilaian lintas divisi
-     * =====================================================
+     * Ambil hak akses dari middleware cache.
      */
-    private function checkAccess($memberId)
+    private function getHakAkses(): MagangAccessRight
     {
-        /*
-    ==============================================================
-    1. AMBIL DATA ADMIN LOGIN
-    ==============================================================
-    */
-        $userId = Auth::id();
+        $hakAkses = request()->attributes->get('magang_access');
 
-        $hakAkses = MagangAccessRight::where('user_id', $userId)->first();
-
-        /*
-    ==============================================================
-    2. VALIDASI ADMIN MEMILIKI HAK AKSES
-    ==============================================================
-    */
         if (!$hakAkses) {
             abort(403, 'Anda tidak memiliki hak akses penilaian.');
         }
 
-        /*
-    ==============================================================
-    3. AMBIL DATA PESERTA TARGET
-    ==============================================================
-    Eager loading digunakan untuk menghindari query tambahan
-    ketika mengakses divisi vacancy.
-    */
+        return $hakAkses;
+    }
+
+    /**
+     * =====================================================
+     * HELPER: checkAccess()
+     * =====================================================
+     * Pastikan admin hanya menilai peserta divisinya.
+     */
+    private function checkAccess($memberId): ApplicationMemberMagang
+    {
+        $hakAkses = $this->getHakAkses();
+
         $targetMember = ApplicationMemberMagang::with([
             'user.profile',
             'application.vacancy'
         ])->findOrFail($memberId);
 
-        /*
-    ==============================================================
-    4. SUPERADMIN → BEBAS AKSES
-    ==============================================================
-    */
-        if ($hakAkses->role === 'superadmin') {
+        /**
+         * Superadmin bebas akses
+         */
+        if ($hakAkses->isSuperAdmin()) {
             return $targetMember;
         }
 
-        /*
-    ==============================================================
-    5. VALIDASI DIVISI ADMIN
-    ==============================================================
-    */
-        if ($hakAkses->division_name !== $targetMember->application->vacancy->division_name) {
+        /**
+         * Admin bidang hanya divisinya
+         */
+        if (
+            $hakAkses->division_name !==
+            $targetMember->application->vacancy->division_name
+        ) {
             abort(
                 403,
                 'AKSES DITOLAK: Anda tidak berhak menilai peserta dari divisi lain.'
             );
         }
 
-        /*
-    ==============================================================
-    6. RETURN DATA PESERTA
-    ==============================================================
-    */
         return $targetMember;
     }
 }

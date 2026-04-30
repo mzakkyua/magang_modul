@@ -45,15 +45,19 @@ class VacancyMagang extends Model
      * CONSTANT DOMAIN VALUE
      * =====================================================
      */
-    const TYPE_MAGANG = 'magang';
+    const TYPE_PENELITIAN = 'penelitian';
     const TYPE_RESEARCH = 'penelitian';
+    const TYPE_MAGANG = 'magang';
 
     const MODE_INDIVIDUAL = 'individu';
+    const MODE_KELOMPOK = 'kelompok';
+    const MODE_INDIVIDU = 'individu';
     const MODE_GROUP = 'kelompok';
     const MODE_HYBRID = 'hybrid';
 
-    const STATUS_OPEN = 'open';
+    const STATUS_ARCHIVED = 'archived';
     const STATUS_CLOSED = 'closed';
+    const STATUS_OPEN = 'open';
 
     /**
      * =====================================================
@@ -109,7 +113,12 @@ class VacancyMagang extends Model
 
     public function isOpen()
     {
-        return $this->status === self::STATUS_OPEN;
+        return $this->status === VacancyMagang::STATUS_OPEN;
+    }
+
+    public function isArchived(): bool
+    {
+        return $this->status === self::STATUS_ARCHIVED;
     }
 
     public function hasStarted()

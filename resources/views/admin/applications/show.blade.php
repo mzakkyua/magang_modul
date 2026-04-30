@@ -24,7 +24,7 @@
 
                     <span class="bg-gray-100 px-2 py-1 rounded text-gray-600">
                         <i class="bi bi-calendar mr-1"></i>
-                        Daftar: {{ \Carbon\Carbon::parse($application->submission_date)->format('d M Y') }}
+                        Daftar: {{ \Carbon\Carbon::parse($application->created_at)->format('d M Y') }}
                     </span>
 
                     <span class="bg-gray-100 px-2 py-1 rounded text-gray-600 uppercase font-bold text-xs">
