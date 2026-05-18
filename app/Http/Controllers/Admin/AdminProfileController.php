@@ -217,48 +217,127 @@ class AdminProfileController extends Controller
       'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
     ]);
 
-    DB::transaction(function () use ($request, $user) {
+    $newPhotoPath = null;
+    $oldPhotoToDelete = null;
 
-      if ($request->filled('new_password')) {
-        if (!Hash::check($request->current_password, $user->password)) {
-          throw \Illuminate\Validation\ValidationException::withMessages([
-            'current_password' => 'Password lama salah!'
-          ]);
+    try {
+
+      DB::transaction(function () use (
+        $request,
+        $user,
+        &$newPhotoPath,
+        &$oldPhotoToDelete
+      ) {
+
+        /**
+         * ----------------------------------------------------------
+         * UPDATE PASSWORD
+         * ----------------------------------------------------------
+         */
+        if ($request->filled('new_password')) {
+
+          if (!Hash::check($request->current_password, $user->password)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+              'current_password' => 'Password lama salah!'
+            ]);
+          }
+
+          $user->password = Hash::make($request->new_password);
         }
 
-        $user->password = Hash::make($request->new_password);
-      }
+        /**
+         * ----------------------------------------------------------
+         * HANDLE UPLOAD FOTO BARU
+         * ----------------------------------------------------------
+         *
+         * Upload file baru terlebih dahulu.
+         * Tapi file lama BELUM dihapus.
+         */
+        if ($request->hasFile('photo')) {
 
-      if ($request->hasFile('photo')) {
-        $oldPhoto = $user->profile_photo_path;
+          $newPhotoPath = $request->file('photo')
+            ->store('profile-photos', 'public');
 
-        $newPath = $request->file('photo')
-          ->store('profile-photos', 'public');
+          /**
+           * Simpan foto lama untuk dihapus nanti
+           * setelah transaction sukses.
+           */
+          $oldPhotoToDelete = $user->profile_photo_path;
 
-        $user->profile_photo_path = $newPath;
-
-        if ($oldPhoto && Storage::disk('public')->exists($oldPhoto)) {
-          Storage::disk('public')->delete($oldPhoto);
+          /**
+           * Update path baru ke model.
+           */
+          $user->profile_photo_path = $newPhotoPath;
         }
-      }
 
-      if ($request->input('delete_photo') == '1') {
-        if (
-          $user->profile_photo_path &&
-          Storage::disk('public')->exists($user->profile_photo_path)
-        ) {
-          Storage::disk('public')->delete($user->profile_photo_path);
+        /**
+         * ----------------------------------------------------------
+         * HANDLE DELETE FOTO
+         * ----------------------------------------------------------
+         */
+        if ($request->input('delete_photo') == '1') {
+
+          if ($user->profile_photo_path) {
+            $oldPhotoToDelete = $user->profile_photo_path;
+          }
+
+          $user->profile_photo_path = null;
         }
 
-        $user->profile_photo_path = null;
+        /**
+         * ----------------------------------------------------------
+         * UPDATE DATA PROFIL
+         * ----------------------------------------------------------
+         */
+        $user->name = trim($request->name);
+
+        $user->email = strtolower(
+          trim($request->email)
+        );
+
+        /**
+         * ----------------------------------------------------------
+         * SAVE DATABASE
+         * ----------------------------------------------------------
+         */
+        $user->save();
+      });
+
+      /**
+       * --------------------------------------------------------------
+       * HAPUS FILE LAMA
+       * --------------------------------------------------------------
+       *
+       * Dilakukan SETELAH transaction sukses.
+       */
+      if (
+        $oldPhotoToDelete &&
+        Storage::disk('public')->exists($oldPhotoToDelete)
+      ) {
+        Storage::disk('public')->delete($oldPhotoToDelete);
       }
 
-      $user->name = trim($request->name);
-      $user->email = strtolower(trim($request->email));
+      return back()->with(
+        'success',
+        'Profil berhasil diperbarui!'
+      );
+    } catch (\Throwable $e) {
 
-      $user->save();
-    });
+      /**
+       * --------------------------------------------------------------
+       * CLEANUP FILE BARU JIKA TRANSACTION GAGAL
+       * --------------------------------------------------------------
+       *
+       * Mencegah orphan file.
+       */
+      if (
+        $newPhotoPath &&
+        Storage::disk('public')->exists($newPhotoPath)
+      ) {
+        Storage::disk('public')->delete($newPhotoPath);
+      }
 
-    return back()->with('success', 'Profil berhasil diperbarui!');
+      throw $e;
+    }
   }
 }

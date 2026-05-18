@@ -206,13 +206,10 @@
         </div>
     </section>
 
+    {{-- ===================== DIVISION CAPACITY SECTION ===================== --}}
+    @include('components.division-capacity-landing')
+
     {{-- ===================== ABOUT SECTION — MODERN CLEAN REDESIGN ===================== --}}
-    {{--
-        KONSEP: Tipografi sebagai elemen visual utama.
-        Layout: 2 kolom — kiri narasi + angka besar, kanan foto tunggal bersih + satu baris pilar.
-        Warna: Putih bersih, aksen biru hanya pada border dan angka.
-        Tidak ada badge melayang, tidak ada card bertumpuk.
-    --}}
     <section class="bg-white py-24 border-t border-gray-100" id="about">
         <div class="max-w-7xl mx-auto px-6">
 

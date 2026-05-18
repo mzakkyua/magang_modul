@@ -29,47 +29,104 @@ class StatusMagangController extends Controller
 
     public function index()
     {
-
         /**
          * ===========================================================
          * STEP 1 — AMBIL USER LOGIN
          * ===========================================================
          */
-
         $user = Auth::guard('magang')->user();
 
-
-
         /**
          * ===========================================================
-         * STEP 2 — AMBIL DATA LAMARAN USER
+         * STEP 2 — AMBIL DATA LAMARAN
          * ===========================================================
          *
-         * Filtering berdasarkan:
-         * leader_user_id
+         * User dapat melihat:
          *
-         * Eager loading:
-         * vacancy
+         * 1. Lamaran sebagai ketua
+         * 2. Lamaran sebagai anggota kelompok
          *
-         * Tujuannya untuk menghindari N+1 query
+         * Tetapi:
+         * - ownership utama tetap di ketua
+         * - anggota hanya bersifat read-only visibility
          *
+         * Tujuan:
+         * - UX lebih jelas
+         * - anggota tetap tahu statusnya
+         * - tidak mengubah business flow existing
+         * ===========================================================
          */
-
         $applications = ApplicationMagang::query()
+
+            /**
+             * -------------------------------------------------------
+             * SEBAGAI KETUA
+             * -------------------------------------------------------
+             */
             ->where('leader_user_id', $user->id)
-            ->with('vacancy')
-            ->orderBy('created_at', 'desc')
-            ->orderBy('id', 'desc')
-            ->paginate(10); // lebih scalable dibanding get()
 
+            /**
+             * -------------------------------------------------------
+             * ATAU SEBAGAI ANGGOTA
+             * -------------------------------------------------------
+             */
+            ->orWhereHas('members', function ($query) use ($user) {
 
+                $query->where(
+                    'user_id',
+                    $user->id
+                );
+            })
+
+            /**
+             * -------------------------------------------------------
+             * EAGER LOAD
+             * -------------------------------------------------------
+             */
+            ->with([
+                'vacancy',
+                'members.user.profile',
+            ])
+
+            /**
+             * -------------------------------------------------------
+             * SORTING
+             * -------------------------------------------------------
+             */
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+
+            /**
+             * -------------------------------------------------------
+             * PAGINATION
+             * -------------------------------------------------------
+             */
+            ->paginate(10);
 
         /**
          * ===========================================================
-         * STEP 3 — RETURN VIEW
+         * STEP 3 — MAP EXTRA INFO
+         * ===========================================================
+         *
+         * Tambahkan flag:
+         * - apakah user adalah ketua
+         */
+        $applications->getCollection()->transform(function ($application) use ($user) {
+
+            $application->is_leader =
+                (int) $application->leader_user_id === (int) $user->id;
+
+            return $application;
+        });
+
+        /**
+         * ===========================================================
+         * STEP 4 — RETURN VIEW
          * ===========================================================
          */
-
-        return view('magang.status.index', compact('applications'));
+        return view(
+            'magang.status.index',
+            compact('applications')
+        );
     }
 }

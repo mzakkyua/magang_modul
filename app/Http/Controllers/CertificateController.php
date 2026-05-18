@@ -3,43 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\ApplicationMemberMagang;
 use App\Models\UserMagang;
 use App\Models\Certificate;
-use Illuminate\Http\Request;
+
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use App\Models\MagangAccessRight;
+use Illuminate\Support\Facades\DB;
 
-/**
- * ======================================================================
- * CONTROLLER: CertificateController
- * ======================================================================
- *
- * Menangani upload, download, dan view sertifikat peserta magang.
- *
- * IMPROVEMENT DARI VERSI SEBELUMNYA:
- *
- * 🔴 CRITICAL
- *   - [FIX] Filename di-randomize dengan Str::uuid()
- *   - [FIX] File lama otomatis dihapus saat admin upload ulang (replace)
- *   - [FIX] File disimpan di storage private (anti IDOR)
- *   - [FIX] download() dan view() pakai route model binding (Certificate $certificate)
- *           → Laravel otomatis 404 jika ID tidak ada, tidak perlu findOrFail() manual
- *
- * 🟠 PERFORMANCE
- *   - [FIX] Query eligible users di create() dengan eager load lengkap
- *
- * 🟡 SECURITY
- *   - [FIX] Validasi MIME ganda (extension + real MIME type)
- *   - [FIX] Audit log di semua operasi sensitif
- *
- * ======================================================================
- */
 class CertificateController extends Controller
 {
-
     // ======================================================================
     // KONFIGURASI
     // ======================================================================
@@ -57,28 +33,39 @@ class CertificateController extends Controller
 
     public function create()
     {
-        $adminId  = Auth::id();
         $hakAkses = request()->attributes->get('magang_access');
 
-        $usersQuery = UserMagang::whereHas('applicationMembers.application', function ($q) {
-            $q->whereIn('status', ['accepted', 'completed']);
+        /**
+         * Query ApplicationMemberMagang (bukan UserMagang lagi).
+         * Satu baris member = satu slot untuk sertifikat.
+         *
+         * Kondisi yang HARUS terpenuhi sebelum sertifikat bisa diterbitkan:
+         *   1. Status application = 'completed' (magang sudah diselesaikan)
+         *   2. Sudah ada assessment (nilai sudah diinput)
+         *
+         * Status 'accepted' tidak masuk — peserta masih aktif magang,
+         * belum layak menerima sertifikat.
+         */
+        $membersQuery = ApplicationMemberMagang::whereHas('application', function ($q) {
+            $q->where('status', 'completed');   // ← hanya yang sudah selesai
         })
-            ->whereHas('applicationMembers.assessment');
+            ->whereHas('assessment');           // ← dan sudah dinilai
 
+        // Admin divisi hanya lihat divisinya
         if ($hakAkses && !$hakAkses->isSuperAdmin()) {
-            $usersQuery->whereHas('applicationMembers.application.vacancy', function ($q) use ($hakAkses) {
+            $membersQuery->whereHas('application.vacancy', function ($q) use ($hakAkses) {
                 $q->where('division_name', $hakAkses->division_name);
             });
         }
 
-        $users = $usersQuery->with([
-            'profile',
-            'applicationMembers.assessment',
-            'applicationMembers.application.vacancy',
-            'certificates',
+        $members = $membersQuery->with([
+            'user.profile',
+            'application.vacancy',
+            'assessment',
+            'certificate',
         ])->get();
 
-        return view('admin.certificate.create', compact('users'));
+        return view('admin.certificate.create', compact('members'));
     }
 
 
@@ -89,9 +76,9 @@ class CertificateController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'user_id' => 'required|exists:users_magang,id',
-            'title'   => 'required|string|max:255',
-            'file'    => [
+            'application_member_id' => 'required|exists:application_members_magang,id',
+            'title'                 => 'required|string|max:255',
+            'file'                  => [
                 'required',
                 'file',
                 'mimes:'     . self::ALLOWED_MIMES,
@@ -100,37 +87,167 @@ class CertificateController extends Controller
             ],
         ]);
 
-        $uploadedFile = $request->file('file');
-        $filename     = Str::uuid() . '.' . $uploadedFile->getClientOriginalExtension();
-        $filePath     = $uploadedFile->storeAs(self::STORAGE_PATH, $filename, self::STORAGE_DISK);
+        /**
+         * ==============================================================
+         * AMBIL DATA MEMBER
+         * ==============================================================
+         */
+        $member = ApplicationMemberMagang::with('application.vacancy')
+            ->findOrFail($request->application_member_id);
 
-        $existing = Certificate::where('user_id', $request->user_id)->latest()->first();
+        /**
+         * ==============================================================
+         * GUARD: STATUS HARUS COMPLETED
+         * ==============================================================
+         */
+        if ($member->application->status !== 'completed') {
 
-        if ($existing) {
-            $this->deleteFileIfExists($existing->file);
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'Sertifikat hanya dapat diterbitkan setelah magang diselesaikan (status: Completed). Peserta ini masih berstatus aktif.'
+                );
         }
 
-        $cert = Certificate::updateOrCreate(
-            ['user_id' => $request->user_id],
-            [
-                'title'                => $request->title,
-                'file'                 => $filePath,
-                'uploaded_by_admin_id' => Auth::id(),
-                'uploaded_at'          => now(),
-                'replaced_at'          => $existing ? now() : null,
-            ]
-        );
+        /**
+         * ==============================================================
+         * CEK SERTIFIKAT EXISTING
+         * ==============================================================
+         */
+        $existing = Certificate::where(
+            'application_member_id',
+            $member->id
+        )->first();
 
-        Log::info('Sertifikat diupload oleh admin', [
-            'admin_id'       => Auth::id(),
-            'user_id'        => $request->user_id,
-            'certificate_id' => $cert->id,
-            'filename'       => $filename,
-            'replaced'       => $existing ? true : false,
-            'timestamp'      => now()->toDateTimeString(),
-        ]);
+        /**
+         * ==============================================================
+         * VARIABLE FILE
+         * ==============================================================
+         *
+         * $newFilePath
+         * → file baru yang diupload
+         *
+         * $oldFileToDelete
+         * → file lama yang akan dihapus
+         *   setelah DB transaction sukses
+         */
+        $newFilePath = null;
+        $oldFileToDelete = null;
 
-        return back()->with('success', 'Sertifikat berhasil diupload.');
+        try {
+
+            /**
+             * ==========================================================
+             * UPLOAD FILE BARU
+             * ==========================================================
+             *
+             * Upload dilakukan sebelum transaction.
+             * Jika DB gagal → file akan di-cleanup di catch.
+             */
+            $uploadedFile = $request->file('file');
+
+            $filename = Str::uuid() . '.'
+                . $uploadedFile->getClientOriginalExtension();
+
+            $newFilePath = $uploadedFile->storeAs(
+                self::STORAGE_PATH,
+                $filename,
+                self::STORAGE_DISK
+            );
+
+            /**
+             * ==========================================================
+             * DATABASE TRANSACTION
+             * ==========================================================
+             */
+            $cert = DB::transaction(function () use (
+                $request,
+                $member,
+                $existing,
+                $newFilePath,
+                &$oldFileToDelete
+            ) {
+
+                /**
+                 * ------------------------------------------------------
+                 * SIMPAN FILE LAMA UNTUK DIHAPUS NANTI
+                 * ------------------------------------------------------
+                 */
+                if ($existing && $existing->file) {
+                    $oldFileToDelete = $existing->file;
+                }
+
+                /**
+                 * ------------------------------------------------------
+                 * UPDATE ATAU CREATE
+                 * ------------------------------------------------------
+                 */
+                return Certificate::updateOrCreate(
+                    [
+                        'application_member_id' => $member->id
+                    ],
+                    [
+                        'user_id'              => $member->user_id,
+                        'title'                => $request->title,
+                        'file'                 => $newFilePath,
+                        'uploaded_by_admin_id' => Auth::id(),
+                        'uploaded_at'          => now(),
+                        'replaced_at'          => $existing ? now() : null,
+                    ]
+                );
+            });
+
+            /**
+             * ==========================================================
+             * HAPUS FILE LAMA SETELAH TRANSACTION SUKSES
+             * ==========================================================
+             */
+            if ($oldFileToDelete) {
+                $this->deleteFileIfExists($oldFileToDelete);
+            }
+
+            /**
+             * ==========================================================
+             * LOG ACTIVITY
+             * ==========================================================
+             */
+            Log::info('Sertifikat diupload oleh admin', [
+                'admin_id'              => Auth::id(),
+                'user_id'               => $member->user_id,
+                'application_member_id' => $member->id,
+                'certificate_id'        => $cert->id,
+                'filename'              => $filename,
+                'replaced'              => $existing ? true : false,
+                'vacancy'               => $member->application->vacancy->title ?? '-',
+                'timestamp'             => now()->toDateTimeString(),
+            ]);
+
+            return back()->with(
+                'success',
+                'Sertifikat berhasil diupload untuk periode magang ini.'
+            );
+        } catch (\Throwable $e) {
+
+            /**
+             * ==========================================================
+             * CLEANUP FILE BARU JIKA DB GAGAL
+             * ==========================================================
+             *
+             * Mencegah orphan file.
+             */
+            if ($newFilePath) {
+                $this->deleteFileIfExists($newFilePath);
+            }
+
+            Log::error('Gagal upload sertifikat', [
+                'admin_id' => Auth::id(),
+                'member_id' => $member->id ?? null,
+                'error' => $e->getMessage(),
+            ]);
+
+            throw $e;
+        }
     }
 
 
@@ -138,12 +255,26 @@ class CertificateController extends Controller
     // USER (PEMAGANG) — INDEX
     // ======================================================================
 
+    /**
+     * Tampilkan semua riwayat magang user beserta assessment dan sertifikat
+     * masing-masing periode. Tidak ada data yang hilang meski magang berkali-kali.
+     */
     public function index()
     {
-        $userId       = Auth::guard('magang')->id();
-        $certificates = Certificate::where('user_id', $userId)->latest()->get();
+        $userId = Auth::guard('magang')->id();
 
-        return view('magang.sertifikat.index', compact('certificates'));
+        $memberRecords = ApplicationMemberMagang::where('user_id', $userId)
+            ->whereHas('application', function ($q) {
+                $q->whereIn('status', ['accepted', 'completed', 'resigned']);
+            })
+            ->with([
+                'application.vacancy:id,title,division_name,type,start_date,end_date',
+                'certificate',
+            ])
+            ->latest()
+            ->get();
+
+        return view('magang.sertifikat.index', compact('memberRecords'));
     }
 
 
@@ -151,71 +282,59 @@ class CertificateController extends Controller
     // USER (PEMAGANG) — DOWNLOAD
     // ======================================================================
 
-    /**
-     * IMPROVEMENT: Pakai route model binding Certificate $certificate
-     * → Laravel otomatis throw 404 jika sertifikat tidak ditemukan
-     * → Tidak perlu findOrFail() manual
-     * → Ownership check tetap ada di bawah
-     */
     public function download(Certificate $certificate)
     {
-        $cert   = $certificate; // alias agar kode di bawah tidak perlu diubah
         $userId = Auth::guard('magang')->id();
 
-        if ((int) $cert->user_id !== (int) $userId) {
+        if ((int) $certificate->user_id !== (int) $userId) {
             Log::warning('Percobaan download sertifikat tidak sah', [
                 'requester_id'   => $userId,
-                'certificate_id' => $cert->id,
-                'owner_id'       => $cert->user_id,
+                'certificate_id' => $certificate->id,
+                'owner_id'       => $certificate->user_id,
             ]);
             abort(403, 'Akses ditolak: Ini bukan sertifikat Anda.');
         }
 
-        if (!Storage::disk(self::STORAGE_DISK)->exists($cert->file)) {
-            abort(404, 'Mohon maaf, file sertifikat tidak ditemukan di server.');
+        if (!Storage::disk(self::STORAGE_DISK)->exists($certificate->file)) {
+            abort(404, 'File sertifikat tidak ditemukan di server.');
         }
 
         Log::info('Sertifikat didownload', [
             'user_id'        => $userId,
-            'certificate_id' => $cert->id,
+            'certificate_id' => $certificate->id,
             'timestamp'      => now()->toDateTimeString(),
         ]);
 
-        $fullPath = Storage::disk(self::STORAGE_DISK)->path($cert->file);
-        $filename = $cert->title . '.' . pathinfo($cert->file, PATHINFO_EXTENSION);
+        $fullPath = Storage::disk(self::STORAGE_DISK)->path($certificate->file);
+        $filename = $certificate->title . '.' . pathinfo($certificate->file, PATHINFO_EXTENSION);
 
         return response()->download($fullPath, $filename);
     }
 
 
     // ======================================================================
-    // USER (PEMAGANG) — VIEW (INLINE DI BROWSER)
+    // USER (PEMAGANG) — VIEW INLINE
     // ======================================================================
 
-    /**
-     * IMPROVEMENT: Pakai route model binding Certificate $certificate
-     * → Konsisten dengan download()
-     */
     public function view(Certificate $certificate)
     {
-        $cert   = $certificate;
         $userId = Auth::guard('magang')->id();
 
-        if ((int) $cert->user_id !== (int) $userId) {
+        if ((int) $certificate->user_id !== (int) $userId) {
             Log::warning('Percobaan view sertifikat tidak sah', [
                 'requester_id'   => $userId,
-                'certificate_id' => $cert->id,
-                'owner_id'       => $cert->user_id,
+                'certificate_id' => $certificate->id,
+                'owner_id'       => $certificate->user_id,
             ]);
             abort(403, 'Akses ditolak: Ini bukan sertifikat Anda.');
         }
 
-        if (!Storage::disk(self::STORAGE_DISK)->exists($cert->file)) {
-            abort(404, 'Mohon maaf, file sertifikat tidak ditemukan di server.');
+        if (!Storage::disk(self::STORAGE_DISK)->exists($certificate->file)) {
+            abort(404, 'File sertifikat tidak ditemukan di server.');
         }
 
         return response()->file(
-            Storage::disk(self::STORAGE_DISK)->path($cert->file)
+            Storage::disk(self::STORAGE_DISK)->path($certificate->file)
         );
     }
 

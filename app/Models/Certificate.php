@@ -8,6 +8,12 @@ use Illuminate\Database\Eloquent\Model;
  * ======================================================================
  * MODEL: Certificate
  * ======================================================================
+ *
+ * PERUBAHAN dari versi sebelumnya:
+ *   - Tambah 'application_member_id' ke $fillable
+ *   - Tambah relation applicationMember() → untuk akses data periode magang
+ *   - Tambah scope forMember() → query per member
+ *   - Accessor period_label → label periode yang mudah dibaca di view
  */
 class Certificate extends Model
 {
@@ -15,24 +21,15 @@ class Certificate extends Model
 
     /**
      * ==================================================================
-     * FILLABLE — FIELD YANG BOLEH MASS ASSIGN
+     * FILLABLE
      * ==================================================================
-     *
-     * PENTING: Kolom 'file' SENGAJA tidak ada di sini.
-     * File path hanya boleh di-set secara eksplisit di controller:
-     *   $cert->file = $filePath;
-     *   $cert->save();
-     *
-     * Atau via updateOrCreate() dengan array yang dikontrol manual,
-     * BUKAN dari $request->all() atau $request->validated() langsung.
-     *
-     * Ini mencegah attacker / bug admin meng-set path aneh seperti:
-     *   file = ../../.env
-     * via manipulasi form input.
+     * 'file' SENGAJA tidak ada — set manual di controller untuk
+     * mencegah path traversal via mass assignment.
      * ==================================================================
      */
     protected $fillable = [
         'user_id',
+        'application_member_id',  // ← BARU: anchor ke periode magang spesifik
         'title',
         'file',
         'uploaded_by_admin_id',
@@ -42,20 +39,11 @@ class Certificate extends Model
 
     /**
      * ==================================================================
-     * HIDDEN — FIELD YANG DISEMBUNYIKAN DARI JSON / TOARRAY
-     * ==================================================================
-     *
-     * Raw file path tidak boleh terekspos ke:
-     * - Response API (json())
-     * - Blade {{ $cert }} atau {{ $cert->toJson() }}
-     * - Log yang mencetak model
-     *
-     * Download/view harus selalu lewat controller yang verifikasi ownership.
-     * Gunakan accessor download_url / view_url sebagai gantinya.
+     * HIDDEN — raw file path tidak boleh terekspos ke JSON / toArray
      * ==================================================================
      */
     protected $hidden = [
-        'file', // raw storage path — jangan ekspos langsung
+        'file',
     ];
 
     protected $casts = [
@@ -68,20 +56,25 @@ class Certificate extends Model
     // RELATIONS
     // ======================================================================
 
-    /**
-     * Peserta pemilik sertifikat.
-     */
+    /** Peserta pemilik sertifikat */
     public function user()
     {
         return $this->belongsTo(UserMagang::class, 'user_id');
     }
 
-    /**
-     * Admin yang mengupload sertifikat ini.
-     */
+    /** Admin yang mengupload */
     public function uploadedBy()
     {
         return $this->belongsTo(User::class, 'uploaded_by_admin_id');
+    }
+
+    /**
+     * Baris ApplicationMemberMagang yang terkait.
+     * Dari sini bisa akses: ->applicationMember->application->vacancy
+     */
+    public function applicationMember()
+    {
+        return $this->belongsTo(ApplicationMemberMagang::class, 'application_member_id');
     }
 
 
@@ -89,42 +82,48 @@ class Certificate extends Model
     // ACCESSORS
     // ======================================================================
 
-    /**
-     * URL download yang aman — selalu lewat controller (ada ownership check).
-     *
-     * CARA PAKAI DI BLADE:
-     *   <a href="{{ $cert->download_url }}">Download</a>
-     *
-     * CARA PAKAI DI API RESPONSE:
-     *   $cert->append('download_url')
-     */
+    /** URL download aman — selalu lewat controller (ada ownership check) */
     public function getDownloadUrlAttribute(): string
     {
         return route('certificates.download', $this->id);
     }
 
-    /**
-     * URL view inline (preview PDF di browser).
-     *
-     * CARA PAKAI DI BLADE:
-     *   <iframe src="{{ $cert->view_url }}"></iframe>
-     */
+    /** URL view inline */
     public function getViewUrlAttribute(): string
     {
         return route('certificates.view', $this->id);
     }
 
-    /**
-     * Apakah sertifikat ini pernah di-replace?
-     *
-     * CARA PAKAI DI BLADE:
-     *   @if($cert->is_replaced)
-     *     <span>Diganti pada {{ $cert->replaced_at->format('d M Y') }}</span>
-     *   @endif
-     */
+    /** Apakah pernah di-replace? */
     public function getIsReplacedAttribute(): bool
     {
         return !is_null($this->replaced_at);
+    }
+
+    /**
+     * Label periode untuk ditampilkan di view peserta.
+     * Contoh output: "IT • Apr 2026 – Mei 2026"
+     * Fallback ke judul sertifikat jika relasi tidak di-eager-load.
+     */
+    public function getPeriodLabelAttribute(): string
+    {
+        $member = $this->relationLoaded('applicationMember')
+            ? $this->applicationMember
+            : null;
+
+        if ($member && $member->relationLoaded('application')) {
+            $vacancy = $member->application->relationLoaded('vacancy')
+                ? $member->application->vacancy
+                : null;
+
+            if ($vacancy) {
+                $start = \Carbon\Carbon::parse($vacancy->start_date)->translatedFormat('M Y');
+                $end   = \Carbon\Carbon::parse($vacancy->end_date)->translatedFormat('M Y');
+                return "{$vacancy->division_name} • {$start} – {$end}";
+            }
+        }
+
+        return $this->title;
     }
 
 
@@ -132,24 +131,20 @@ class Certificate extends Model
     // SCOPES
     // ======================================================================
 
-    /**
-     * Sertifikat yang sudah diterbitkan (punya file).
-     *
-     * CARA PAKAI:
-     *   Certificate::issued()->get();
-     */
-    public function scopeIssued($query)
+    /** Sertifikat yang sudah diterbitkan (punya file) */
+    public function scopeIssued(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
     {
         return $query->whereNotNull('file');
     }
 
-    /**
-     * Sertifikat yang diterbitkan tahun ini.
-     *
-     * CARA PAKAI:
-     *   Certificate::thisYear()->count();
-     */
-    public function scopeThisYear($query)
+    /** Filter per member (periode magang) */
+    public function scopeForMember(\Illuminate\Database\Eloquent\Builder $query, int $memberId): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->where('application_member_id', $memberId);
+    }
+
+    /** Sertifikat tahun ini */
+    public function scopeThisYear(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
     {
         return $query->whereYear('uploaded_at', now()->year);
     }

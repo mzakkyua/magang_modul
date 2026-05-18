@@ -48,20 +48,28 @@ class DashboardMagangController extends Controller
     {
         $userId = Auth::guard('magang')->id();
 
-        // STEP: Cari member record peserta yang lamarannya accepted/completed
-        // Eager load assessment dan vacancy sekaligus agar tidak N+1
-        $member = ApplicationMemberMagang::where('user_id', $userId)
+        /**
+         * PERUBAHAN: dari ->first() menjadi ->get() + ->latest()
+         * agar semua periode magang (bukan hanya yang pertama)
+         * ditampilkan, termasuk magang ke-2, ke-3, dst.
+         *
+         * Relasi yang di-eager load:
+         * - assessment      : nilai per periode
+         * - application.vacancy : info lowongan (judul, divisi, periode)
+         */
+        $memberRecords = ApplicationMemberMagang::where('user_id', $userId)
             ->whereHas('application', function ($q) {
                 $q->whereIn('status', ['accepted', 'completed']);
             })
             ->with([
                 'assessment',
-                'application.vacancy',
+                'application.vacancy:id,title,division_name,type,start_date,end_date',
             ])
-            ->first();
+            ->latest()
+            ->get();
 
         // Mengarah ke folder resources/views/nilai/index.blade.php
-        return view('magang.nilai.index', compact('member'));
+        return view('magang.nilai.index', compact('memberRecords'));
     }
 
     public function index(Request $request)
@@ -324,7 +332,7 @@ class DashboardMagangController extends Controller
         ));
     }
 
-    public function show($id)
+    public function show(int $id)
     {
         $vacancy = VacancyMagang::where('id', $id)
             ->where('status', 'open')

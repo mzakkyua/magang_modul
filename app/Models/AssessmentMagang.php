@@ -44,11 +44,11 @@ class AssessmentMagang extends Model
     {
         static::saving(function ($model) {
 
-            $scores = [
+            $scores = array_filter([
                 $model->score_behavior,
                 $model->score_discipline,
                 $model->score_performance
-            ];
+            ], fn($score) => is_numeric($score));
 
             $model->final_score = round(array_sum($scores) / 3, 2);
         });

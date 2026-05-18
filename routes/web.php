@@ -25,10 +25,13 @@ use App\Http\Controllers\CertificateController;
 // ---------------------
 use App\Http\Controllers\Admin\VacancyMagangController;
 use App\Http\Controllers\Admin\ApplicationVerificationController;
+use App\Http\Controllers\Admin\DivisionSettingController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AssessmentController;
 use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\PegawaiController;
+use App\Http\Controllers\Admin\PesertaController;
+use App\Http\Controllers\Admin\DivisionController;
 
 // ---------------------
 // AUTH RESET PASSWORD
@@ -129,8 +132,8 @@ Route::get('/calendar', [CalendarController::class, 'index'])
     ->name('calendar');
 
 Route::get('/calendar/events', [CalendarController::class, 'fetch'])
-    ->name('calendar.events');
-
+    ->name('calendar.events')
+    ->middleware('throttle:60,1');
 
 /*
 |--------------------------------------------------------------------------
@@ -301,4 +304,50 @@ Route::prefix('admin')
             ->name('pegawai.access.store');
         Route::delete('/pegawai/{id}/access', [PegawaiController::class, 'destroyAccess'])
             ->name('pegawai.access.destroy');
+
+        // Kelola Kuota Divisi
+        Route::get('/division-settings', [DivisionSettingController::class, 'index'])
+            ->name('division-settings.index');
+
+        Route::post('/division-settings', [DivisionSettingController::class, 'store'])
+            ->name('division-settings.store');
+
+        Route::patch('/division-settings/{divisionSetting}', [DivisionSettingController::class, 'update'])
+            ->name('division-settings.update');
+
+        Route::delete('/division-settings/{divisionSetting}', [DivisionSettingController::class, 'destroy'])
+            ->name('division-settings.destroy');
+
+        // Di dalam group middleware admin
+        Route::get('/peserta', [PesertaController::class, 'index'])
+            ->name('peserta.index');
+
+        /*
+|--------------------------------------------------------------------------
+| Master Divisi Magang
+|--------------------------------------------------------------------------
+|
+| Source of truth seluruh division_name.
+| Hanya superadmin yang dapat mengelola.
+|
+*/
+        Route::prefix('divisions')
+            ->name('divisions.')
+            ->group(function () {
+
+                Route::get('/', [DivisionController::class, 'index'])
+                    ->name('index');
+
+                Route::post('/', [DivisionController::class, 'store'])
+                    ->name('store');
+
+                Route::put('/{division}', [DivisionController::class, 'update'])
+                    ->name('update');
+
+                Route::patch('/{division}/toggle-active', [DivisionController::class, 'toggleActive'])
+                    ->name('toggle-active');
+
+                Route::delete('/{division}', [DivisionController::class, 'destroy'])
+                    ->name('destroy');
+            });
     });

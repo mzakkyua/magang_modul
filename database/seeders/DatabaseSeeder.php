@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserMagangSeeder::class,
             MagangRoleSeeder::class,
+            DivisionSettingMagangSeeder::class,
         ]);
     }
 }

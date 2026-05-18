@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use App\Models\VacancyMagang;
+use App\Services\DivisionCapacityService;
 
 /**
  * ======================================================================
@@ -18,14 +19,10 @@ class LandingController extends Controller
     // ======================================================================
 
     private const CACHE_TTL_MINUTES = 10;
-
     private const CACHE_KEY_MAGANG = 'landing_vacancies_magang';
     private const CACHE_KEY_PENELITIAN = 'landing_vacancies_penelitian';
+    private const LISTING_LIMIT = 20;
 
-    /**
-     * Kolom yang dibutuhkan untuk listing card
-     * description sengaja tidak diambil
-     */
     private const LISTING_COLUMNS = [
         'id',
         'title',
@@ -42,9 +39,6 @@ class LandingController extends Controller
         'updated_at',
     ];
 
-    /**
-     * Status aplikasi yang dianggap memakai slot
-     */
     private const ACTIVE_STATUSES = [
         'pending',
         'verified',
@@ -52,12 +46,9 @@ class LandingController extends Controller
         'accepted',
     ];
 
-    /**
-     * Status lowongan valid untuk snapshot
-     */
     private const PUBLIC_STATUSES = [
-        'open',
-        'closed',
+        VacancyMagang::STATUS_OPEN,
+        VacancyMagang::STATUS_CLOSED,
     ];
 
     // ======================================================================
@@ -68,23 +59,38 @@ class LandingController extends Controller
     {
         $search = trim((string) $request->search);
 
-        /**
-         * Jika tidak ada search:
-         * pakai cache
-         *
-         * Jika ada search:
-         * query fresh dari DB
-         */
         if ($search === '') {
-            [$vacanciesMagang, $vacanciesPenelitian] = $this->getFromCache();
+            [
+                $vacanciesMagang,
+                $vacanciesPenelitian
+            ] = $this->getFromCache();
         } else {
-            [$vacanciesMagang, $vacanciesPenelitian] = $this->getFromDatabase($search);
+            [
+                $vacanciesMagang,
+                $vacanciesPenelitian
+            ] = $this->getFromDatabase($search);
         }
+
+        /**
+         * -------------------------------------------------------
+         * KAPASITAS DIVISI
+         * -------------------------------------------------------
+         *
+         * Data kapasitas per divisi untuk ditampilkan di landing.
+         * Hanya divisi yang sudah dikonfigurasi superadmin yang
+         * muncul. Menggunakan cache tersendiri (10 menit).
+         *
+         * Jika tidak ada divisi yang dikonfigurasi, $divisionCapacity
+         * akan berupa Collection kosong — section tidak ditampilkan.
+         * -------------------------------------------------------
+         */
+        $divisionCapacity = DivisionCapacityService::getAllCached();
 
         return view('landing.index', compact(
             'vacanciesMagang',
             'vacanciesPenelitian',
-            'search'
+            'search',
+            'divisionCapacity'
         ));
     }
 
@@ -92,14 +98,10 @@ class LandingController extends Controller
     // SHOW
     // ======================================================================
 
-    /**
-     * Detail lowongan publik
-     * Hanya lowongan OPEN yang bisa diakses
-     */
     public function show($id)
     {
         $vacancy = VacancyMagang::where('id', $id)
-            ->where('status', 'open')
+            ->where('status', VacancyMagang::STATUS_OPEN)
             ->firstOrFail();
 
         return view('landing.show', compact('vacancy'));
@@ -109,18 +111,15 @@ class LandingController extends Controller
     // SNAPSHOT
     // ======================================================================
 
-    /**
-     * Endpoint ringan untuk polling frontend.
-     *
-     * Aman karena hanya mengembalikan:
-     * - status
-     * - updated_at
-     *
-     * Tidak mengembalikan data sensitif.
-     */
     public function snapshot(VacancyMagang $vacancy)
     {
-        if (!in_array($vacancy->status, self::PUBLIC_STATUSES, true)) {
+        if (
+            !in_array(
+                $vacancy->status,
+                self::PUBLIC_STATUSES,
+                true
+            )
+        ) {
             abort(404);
         }
 
@@ -129,23 +128,23 @@ class LandingController extends Controller
                 'updated_at' => $vacancy->updated_at?->toDateTimeString(),
                 'status'     => $vacancy->status,
             ])
-            ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
+            ->header(
+                'Cache-Control',
+                'no-store, no-cache, must-revalidate'
+            );
     }
 
     // ======================================================================
     // PRIVATE HELPERS
     // ======================================================================
 
-    /**
-     * Ambil listing dari cache
-     */
     private function getFromCache(): array
     {
         $vacanciesMagang = Cache::remember(
             self::CACHE_KEY_MAGANG,
             now()->addMinutes(self::CACHE_TTL_MINUTES),
             fn() => $this->buildListingQuery('magang')
-                ->limit(20)
+                ->limit(self::LISTING_LIMIT)
                 ->get()
         );
 
@@ -153,6 +152,7 @@ class LandingController extends Controller
             self::CACHE_KEY_PENELITIAN,
             now()->addMinutes(self::CACHE_TTL_MINUTES),
             fn() => $this->buildListingQuery('penelitian')
+                ->limit(self::LISTING_LIMIT)
                 ->get()
         );
 
@@ -162,16 +162,14 @@ class LandingController extends Controller
         ];
     }
 
-    /**
-     * Search langsung ke database
-     */
     private function getFromDatabase(string $search): array
     {
         $vacanciesMagang = $this->buildListingQuery('magang', $search)
-            ->limit(20)
+            ->limit(self::LISTING_LIMIT)
             ->get();
 
         $vacanciesPenelitian = $this->buildListingQuery('penelitian', $search)
+            ->limit(self::LISTING_LIMIT)
             ->get();
 
         return [
@@ -180,14 +178,11 @@ class LandingController extends Controller
         ];
     }
 
-    /**
-     * Query builder reusable
-     */
     private function buildListingQuery(string $type, string $search = '')
     {
         return VacancyMagang::query()
             ->select(self::LISTING_COLUMNS)
-            ->where('status', 'open')
+            ->where('status', VacancyMagang::STATUS_OPEN)
             ->where('type', $type)
             ->withCount([
                 'applications as active_applications_count' => function ($query) {
@@ -195,12 +190,15 @@ class LandingController extends Controller
                 },
                 'applications as total_applications_count',
             ])
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('title', 'like', "%{$search}%")
-                        ->orWhere('division_name', 'like', "%{$search}%");
-                });
-            })
+            ->when(
+                $search !== '',
+                function ($query) use ($search) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('title', 'like', "%{$search}%")
+                            ->orWhere('division_name', 'like', "%{$search}%");
+                    });
+                }
+            )
             ->latest();
     }
 }

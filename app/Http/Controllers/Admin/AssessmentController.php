@@ -101,17 +101,6 @@ class AssessmentController extends Controller
             'additional_notes'  => 'nullable|string|max:2000',
         ]);
 
-        /**
-         * Hitung nilai akhir
-         */
-        $finalScore = round(
-            (
-                $request->score_behavior +
-                $request->score_discipline +
-                $request->score_performance
-            ) / 3,
-            2
-        );
 
         /** @var \App\Models\User $admin */
         $admin = Auth::user();
@@ -121,7 +110,7 @@ class AssessmentController extends Controller
         /**
          * Upsert penilaian
          */
-        AssessmentMagang::updateOrCreate(
+        $assessment = AssessmentMagang::updateOrCreate(
             [
                 'member_id' => $member->id
             ],
@@ -130,7 +119,11 @@ class AssessmentController extends Controller
                 'score_behavior'    => $request->score_behavior,
                 'score_discipline'  => $request->score_discipline,
                 'score_performance' => $request->score_performance,
-                'final_score'       => $finalScore,
+
+                /**
+                 * final_score otomatis dihitung
+                 * oleh AssessmentMagang::booted()
+                 */
                 'evaluation_notes'  => $request->evaluation_notes,
                 'additional_notes'  => $request->additional_notes,
             ]
@@ -145,7 +138,8 @@ class AssessmentController extends Controller
             ->route('admin.assessments.index')
             ->with(
                 'success',
-                'Nilai berhasil disimpan. Skor Akhir: ' . number_format($finalScore, 2)
+                'Nilai berhasil disimpan. Skor Akhir: '
+                    . number_format($assessment->final_score, 2)
             );
     }
 

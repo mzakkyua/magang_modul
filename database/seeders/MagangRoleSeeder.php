@@ -3,52 +3,154 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 use App\Models\User;
 use App\Models\MagangAccessRight;
-use Illuminate\Support\Facades\Hash;
 
 class MagangRoleSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. BUAT AKUN SUPER ADMIN (Pak Bos)
-        $super = User::create([
-            'name' => 'Bapak Kepala Dinas',
-            'email' => 'bos@dinas.go.id',
-            'password' => Hash::make('password'),
-        ]);
+        /**
+         * =====================================================
+         * SUPERADMIN
+         * =====================================================
+         *
+         * Akun root utama sistem.
+         * Dibuat via seeder sebagai bootstrap awal.
+         * =====================================================
+         */
 
-        MagangAccessRight::create([
-            'user_id' => $super->id,
-            'role' => 'superadmin',
-            'division_name' => null, // Bebas Akses
-        ]);
+        $superAdmin = User::updateOrCreate(
+            [
+                'email' => 'bos@dinas.go.id'
+            ],
+            [
+                'name' => 'Bapak Kepala Dinas',
+                'password' => Hash::make('password'),
+            ]
+        );
 
-        // 2. BUAT AKUN ADMIN BIDANG IT (Pak Zakky)
-        $adminIT = User::create([
-            'name' => 'M. Zakky (Admin IT)',
-            'email' => 'zakky@dinas.go.id',
-            'password' => Hash::make('password'),
-        ]);
+        MagangAccessRight::updateOrCreate(
+            [
+                'user_id' => $superAdmin->id
+            ],
+            [
+                'role' => 'superadmin',
+                'division_name' => null,
+            ]
+        );
 
-        MagangAccessRight::create([
-            'user_id' => $adminIT->id,
-            'role' => 'admin_bidang',
-            'division_name' => 'IT', // Terkunci di IT
-        ]);
+        /**
+         * =====================================================
+         * DUMMY ADMIN BIDANG
+         * =====================================================
+         *
+         * Hanya untuk testing development.
+         * Nantinya admin bidang akan dibuat
+         * melalui panel superadmin.
+         * =====================================================
+         */
 
-        // 3. BUAT AKUN ADMIN BIDANG KEUANGAN (Buat Tes Filter)
-        $adminKeu = User::create([
-            'name' => 'Ibu Bendahara (Admin Keuangan)',
-            'email' => 'keuangan@dinas.go.id',
-            'password' => Hash::make('password'),
-        ]);
+        $adminSekretariat = User::updateOrCreate(
+            [
+                'email' => 'sekretariat@dinas.go.id'
+            ],
+            [
+                'name' => 'Admin Sekretariat',
+                'password' => Hash::make('password'),
+            ]
+        );
 
-        MagangAccessRight::create([
-            'user_id' => $adminKeu->id,
-            'role' => 'admin_bidang',
-            'division_name' => 'Keuangan', // Terkunci di Keuangan
-        ]);
+        MagangAccessRight::updateOrCreate(
+            [
+                'user_id' => $adminSekretariat->id
+            ],
+            [
+                'role' => 'admin_bidang',
+                'division_name' => 'Sekretariat',
+            ]
+        );
+
+        $adminPelatihan = User::updateOrCreate(
+            [
+                'email' => 'pelatihan@dinas.go.id'
+            ],
+            [
+                'name' => 'Admin Pelatihan',
+                'password' => Hash::make('password'),
+            ]
+        );
+
+        MagangAccessRight::updateOrCreate(
+            [
+                'user_id' => $adminPelatihan->id
+            ],
+            [
+                'role' => 'admin_bidang',
+                'division_name' => 'Bidang Pelatihan dan Produktivitas',
+            ]
+        );
+
+        $adminPengawasan = User::updateOrCreate(
+            [
+                'email' => 'pengawasan@dinas.go.id'
+            ],
+            [
+                'name' => 'Admin Pengawasan',
+                'password' => Hash::make('password'),
+            ]
+        );
+
+        MagangAccessRight::updateOrCreate(
+            [
+                'user_id' => $adminPengawasan->id
+            ],
+            [
+                'role' => 'admin_bidang',
+                'division_name' => 'Bidang Pengawasan Ketenagakerjaan',
+            ]
+        );
+
+        $adminPenempatan = User::updateOrCreate(
+            [
+                'email' => 'penempatan@dinas.go.id'
+            ],
+            [
+                'name' => 'Admin Penempatan',
+                'password' => Hash::make('password'),
+            ]
+        );
+
+        MagangAccessRight::updateOrCreate(
+            [
+                'user_id' => $adminPenempatan->id
+            ],
+            [
+                'role' => 'admin_bidang',
+                'division_name' => 'Bidang Penempatan Perluasan Kesempatan Kerja',
+            ]
+        );
+
+        $adminHI = User::updateOrCreate(
+            [
+                'email' => 'hi@dinas.go.id'
+            ],
+            [
+                'name' => 'Admin Hubungan Industrial',
+                'password' => Hash::make('password'),
+            ]
+        );
+
+        MagangAccessRight::updateOrCreate(
+            [
+                'user_id' => $adminHI->id
+            ],
+            [
+                'role' => 'admin_bidang',
+                'division_name' => 'Bidang Hubungan Industrial',
+            ]
+        );
     }
 }

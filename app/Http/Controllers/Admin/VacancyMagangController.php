@@ -2,14 +2,19 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\VacancyMagang;
-use App\Models\MagangAccessRight;
-use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use App\Models\MagangAccessRight;
+use App\Models\VacancyMagang;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+
 use App\Helpers\DashboardCache;
+use App\Models\DivisionSetting;
+use App\Models\Division;
 
 class VacancyMagangController extends Controller
 {
@@ -38,7 +43,6 @@ class VacancyMagangController extends Controller
         $withApplicantsCount = (clone $base)->has('applications')->count();
 
         // Filter berdasarkan tab yang dipilih
-        // Default: tampilkan hanya yang aktif (open + closed), sembunyikan archived
         $activeTab = $request->query('tab', 'active');
 
         $query = (clone $base)
@@ -60,9 +64,8 @@ class VacancyMagangController extends Controller
         if ($activeTab === 'archived') {
             $query->where('status', VacancyMagang::STATUS_ARCHIVED);
         } elseif ($activeTab === 'all') {
-            // Tampilkan semua tanpa filter
+            // tampilkan semua
         } else {
-            // Default 'active': sembunyikan archived agar tidak mengotori daftar utama
             $query->whereIn('status', [
                 VacancyMagang::STATUS_OPEN,
                 VacancyMagang::STATUS_CLOSED,
@@ -91,7 +94,30 @@ class VacancyMagangController extends Controller
     {
         $this->authorize('create', VacancyMagang::class);
 
-        return view('admin.vacancies.create');
+        $hakAkses = $this->getHakAkses();
+
+        /*
+    |--------------------------------------------------------------------------
+    | Master Division Dropdown
+    |--------------------------------------------------------------------------
+    | Superadmin:
+    |   Bisa memilih divisi dari master data.
+    |
+    | Admin Divisi:
+    |   Tidak perlu dropdown karena otomatis terkunci
+    |   sesuai division_name miliknya.
+    |--------------------------------------------------------------------------
+    */
+        $divisions = $hakAkses->isSuperAdmin()
+            ? Division::active()
+            ->orderBy('name')
+            ->pluck('name', 'name')
+            : collect();
+
+        return view('admin.vacancies.create', compact(
+            'divisions',
+            'hakAkses'
+        ));
     }
 
     /**
@@ -123,7 +149,23 @@ class VacancyMagangController extends Controller
         ];
 
         if ($hakAkses->isSuperAdmin()) {
-            $rules['division_name'] = 'required|string|max:100';
+
+            /*
+    |--------------------------------------------------------------------------
+    | Division harus berasal dari master division aktif
+    |--------------------------------------------------------------------------
+    */
+            $rules['division_name'] = [
+                'required',
+                'string',
+                'max:100',
+
+                Rule::in(
+                    Division::active()
+                        ->pluck('name')
+                        ->toArray()
+                ),
+            ];
         }
 
         if ($request->registration_mode !== VacancyMagang::MODE_INDIVIDU) {
@@ -133,8 +175,22 @@ class VacancyMagangController extends Controller
 
         $request->validate($rules);
 
+        /*
+|--------------------------------------------------------------------------
+| Ambil nama resmi division dari master table
+|--------------------------------------------------------------------------
+| Mencegah:
+| - typo
+| - casing inconsistency
+| - orphan division
+|--------------------------------------------------------------------------
+*/
         $division = $hakAkses->isSuperAdmin()
-            ? $request->division_name
+
+            ? Division::where('name', $request->division_name)
+            ->firstOrFail()
+            ->name
+
             : $hakAkses->division_name;
 
         [$min, $max] = $this->resolveMemberRange(
@@ -143,25 +199,71 @@ class VacancyMagangController extends Controller
             $request->max_members
         );
 
-        $vacancy = VacancyMagang::create([
-            'title'             => $request->title,
-            'division_name'     => $division,
-            'type'              => $request->type,
-            'registration_mode' => $request->registration_mode,
-            'quota_slots'       => $request->quota_slots,
-            'min_members'       => $min,
-            'max_members'       => $max,
-            'start_date'        => $request->start_date,
-            'end_date'          => $request->end_date,
-            'description'       => $request->description,
-            'status'            => VacancyMagang::STATUS_OPEN,
-        ]);
+        /**
+         * =========================================================
+         * FIX RACE CONDITION + QUOTA VALIDATION
+         * =========================================================
+         */
+        $vacancy = null;
+
+        DB::transaction(function () use (
+            $request,
+            $division,
+            $min,
+            $max,
+            &$vacancy
+        ) {
+            /**
+             * ---------------------------------------------------------
+             * VALIDASI KAPASITAS DIVISI
+             * ✅ Menggunakan isDivisionFull() sebagai single point
+             *    of truth untuk mencegah duplikasi logic
+             * ---------------------------------------------------------
+             */
+            if ($this->isDivisionFull($division)) {
+                throw ValidationException::withMessages([
+                    'division_name' =>
+                    "Slot lowongan divisi \"{$division}\" sudah penuh. "
+                        . 'Arsipkan lowongan yang sudah selesai atau naikkan batas kuota divisi.'
+                ]);
+            }
+
+            /**
+             * ---------------------------------------------------------
+             * CREATE VACANCY
+             * ✅ Nested DB::transaction dihapus — sudah terlindungi
+             *    oleh outer transaction di atas
+             * ---------------------------------------------------------
+             */
+            $vacancy = VacancyMagang::create([
+                'title'             => $request->title,
+                'division_name'     => $division,
+                'type'              => $request->type,
+                'registration_mode' => $request->registration_mode,
+                'quota_slots'       => $request->quota_slots,
+                'min_members'       => $min,
+                'max_members'       => $max,
+                'start_date'        => $request->start_date,
+                'end_date'          => $request->end_date,
+                'description'       => $request->description,
+                'status'            => VacancyMagang::STATUS_OPEN,
+            ]);
+        });
+
+        /**
+         * ✅ FIX P1006: Docblock memberitahu Intelephense bahwa
+         *    $vacancy dijamin bertipe VacancyMagang setelah
+         *    transaction selesai sukses
+         *
+         * @var VacancyMagang $vacancy
+         */
 
         DashboardCache::clear();
 
         Log::info('Lowongan dibuat', [
-            'admin_id'   => Auth::id(),
-            'vacancy_id' => $vacancy->id,
+            'admin_id'      => Auth::id(),
+            'vacancy_id'    => $vacancy->id,
+            'division_name' => $division,
         ]);
 
         return redirect()
@@ -178,11 +280,25 @@ class VacancyMagangController extends Controller
     {
         $this->authorize('update', $vacancy);
 
+        $hakAkses     = $this->getHakAkses();
         $hasApplicant = $vacancy->applications()->exists();
+
+        /*
+    |--------------------------------------------------------------------------
+    | Master Division Dropdown
+    |--------------------------------------------------------------------------
+    */
+        $divisions = $hakAkses->isSuperAdmin()
+            ? Division::active()
+            ->orderBy('name')
+            ->pluck('name', 'name')
+            : collect();
 
         return view('admin.vacancies.edit', compact(
             'vacancy',
-            'hasApplicant'
+            'hasApplicant',
+            'divisions',
+            'hakAkses'
         ));
     }
 
@@ -210,23 +326,61 @@ class VacancyMagangController extends Controller
         ];
 
         if ($hakAkses->isSuperAdmin()) {
-            $rules['division_name'] = 'required|string|max:100';
+
+            /*
+    |--------------------------------------------------------------------------
+    | Division harus berasal dari master division aktif
+    |--------------------------------------------------------------------------
+    */
+            $rules['division_name'] = [
+                'required',
+                'string',
+                'max:100',
+
+                Rule::in(
+                    Division::active()
+                        ->pluck('name')
+                        ->toArray()
+                ),
+            ];
         }
 
         $request->validate($rules);
 
+        /*
+|--------------------------------------------------------------------------
+| Ambil nama resmi division dari master table
+|--------------------------------------------------------------------------
+| Mencegah:
+| - typo
+| - casing inconsistency
+| - orphan division
+|--------------------------------------------------------------------------
+*/
+        $newDivision = $hakAkses->isSuperAdmin()
+
+            ? Division::where('name', $request->division_name)
+            ->firstOrFail()
+            ->name
+
+            : $vacancy->division_name;
+
+        // ✅ FIX PRIORITAS 1: Deteksi apakah divisi berubah
+        //    agar bisa validasi kapasitas divisi tujuan
+        $divisionChanged = $hakAkses->isSuperAdmin()
+            && $newDivision !== $vacancy->division_name;
+
         $data = [
-            'title'       => $request->title,
-            'type'        => $request->type,
-            'description' => $request->description,
-            'start_date'  => $request->start_date,
-            'end_date'    => $request->end_date,
-            'division_name' => $hakAkses->isSuperAdmin()
-                ? $request->division_name
-                : $vacancy->division_name,
+            'title'         => $request->title,
+            'type'          => $request->type,
+            'description'   => $request->description,
+            'start_date'    => $request->start_date,
+            'end_date'      => $request->end_date,
+            'division_name' => $newDivision,
         ];
 
         if (!$hasApplicant) {
+
             $extraRules = [
                 'registration_mode' => 'required|in:' . implode(',', [
                     VacancyMagang::MODE_INDIVIDU,
@@ -257,10 +411,31 @@ class VacancyMagangController extends Controller
             ]);
         }
 
-        DB::transaction(function () use ($vacancy, $data) {
+        DB::transaction(function () use ($vacancy, $data, $newDivision, $divisionChanged) {
+
+            // Lock vacancy terlebih dahulu
             $locked = VacancyMagang::where('id', $vacancy->id)
                 ->lockForUpdate()
                 ->firstOrFail();
+
+            /**
+             * ✅ FIX PRIORITAS 1: Validasi kapasitas divisi tujuan
+             *    HANYA jika divisi benar-benar berubah.
+             *
+             * Tanpa ini, superadmin bisa memindahkan vacancy
+             * ke divisi yang sudah penuh tanpa ada error —
+             * menyebabkan occupancy overflow yang silent.
+             */
+            if ($divisionChanged) {
+
+                if ($this->isDivisionFull($newDivision)) {
+                    throw ValidationException::withMessages([
+                        'division_name' =>
+                        "Slot lowongan divisi \"{$newDivision}\" sudah penuh. "
+                            . 'Arsipkan lowongan yang sudah selesai atau naikkan batas kuota divisi.'
+                    ]);
+                }
+            }
 
             $locked->update($data);
         });
@@ -268,8 +443,10 @@ class VacancyMagangController extends Controller
         DashboardCache::clear();
 
         Log::info('Lowongan diperbarui', [
-            'admin_id'   => Auth::id(),
-            'vacancy_id' => $vacancy->id,
+            'admin_id'      => Auth::id(),
+            'vacancy_id'    => $vacancy->id,
+            'division_from' => $vacancy->division_name,
+            'division_to'   => $newDivision,
         ]);
 
         return redirect()
@@ -287,11 +464,11 @@ class VacancyMagangController extends Controller
         $this->authorize('update', $vacancy);
 
         DB::transaction(function () use ($vacancy) {
+
             $locked = VacancyMagang::where('id', $vacancy->id)
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            // Lowongan yang sudah diarsipkan tidak bisa di-toggle
             if ($locked->isArchived()) {
                 abort(422, 'Lowongan yang sudah diarsipkan tidak dapat diubah statusnya.');
             }
@@ -316,36 +493,48 @@ class VacancyMagangController extends Controller
     }
 
     /**
-     * Arsipkan lowongan — hanya bisa dilakukan saat status = closed.
-     * Lowongan archived tidak bisa dibuka lagi dan tidak tampil di landing page.
+     * =========================================================
+     * ARCHIVE
+     * =========================================================
      */
     public function archive(VacancyMagang $vacancy)
     {
         $this->authorize('update', $vacancy);
 
-        if (!$vacancy->status === VacancyMagang::STATUS_CLOSED) {
-            return back()->with(
-                'error',
-                'Hanya lowongan yang sudah ditutup yang dapat diarsipkan.'
-            );
-        }
+        DB::transaction(function () use ($vacancy) {
 
-        if ($vacancy->isArchived()) {
-            return back()->with('error', 'Lowongan ini sudah diarsipkan.');
-        }
+            $locked = VacancyMagang::where('id', $vacancy->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $vacancy->update(['status' => VacancyMagang::STATUS_ARCHIVED]);
+            if ($locked->isArchived()) {
+                abort(422, 'Lowongan ini sudah diarsipkan.');
+            }
+
+            if ($locked->status !== VacancyMagang::STATUS_CLOSED) {
+                abort(422, 'Hanya lowongan yang sudah ditutup yang dapat diarsipkan.');
+            }
+
+            $locked->update([
+                'status' => VacancyMagang::STATUS_ARCHIVED
+            ]);
+
+            $vacancy->status = VacancyMagang::STATUS_ARCHIVED;
+        });
 
         DashboardCache::clear();
 
         Log::info('Lowongan diarsipkan', [
-            'vacancy_id'    => $vacancy->id,
-            'title'         => $vacancy->title,
-            'archived_by'   => Auth::id(),
-            'archived_at'   => now()->toDateTimeString(),
+            'vacancy_id'  => $vacancy->id,
+            'title'       => $vacancy->title,
+            'archived_by' => Auth::id(),
+            'archived_at' => now()->toDateTimeString(),
         ]);
 
-        return back()->with('success', 'Lowongan berhasil diarsipkan dan tidak akan tampil di publik.');
+        return back()->with(
+            'success',
+            'Lowongan berhasil diarsipkan dan tidak akan tampil di publik.'
+        );
     }
 
     /**
@@ -374,7 +563,7 @@ class VacancyMagangController extends Controller
 
     /**
      * =========================================================
-     * HELPER: HAK AKSES DARI MIDDLEWARE
+     * HELPER: HAK AKSES
      * =========================================================
      */
     private function getHakAkses(): MagangAccessRight
@@ -414,13 +603,42 @@ class VacancyMagangController extends Controller
      */
     private function resolveMemberRange(
         string $mode,
-        $min,
-        $max
+        int|string|null $min,
+        int|string|null $max
     ): array {
+
         if ($mode === VacancyMagang::MODE_INDIVIDU) {
             return [1, 1];
         }
 
-        return [(int) $min, (int) $max];
+        return [
+            (int) $min,
+            (int) $max
+        ];
+    }
+
+    /**
+     * =========================================================
+     * HELPER: CEK KAPASITAS DIVISI.
+     * =========================================================
+     */
+    private function isDivisionFull(string $division): bool
+    {
+        $setting = DivisionSetting::where('division_name', $division)
+            ->lockForUpdate()
+            ->first();
+
+        if (!$setting || !$setting->hasLimit()) {
+            return false;
+        }
+
+        $currentCount = VacancyMagang::where('division_name', $division)
+            ->whereIn('status', [
+                VacancyMagang::STATUS_OPEN,
+                VacancyMagang::STATUS_CLOSED,
+            ])
+            ->count();
+
+        return $currentCount >= $setting->max_open_vacancies;
     }
 }
