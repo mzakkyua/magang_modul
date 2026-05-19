@@ -3,13 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 use Illuminate\Validation\Rule;
+use Illuminate\Http\Request;
+use Carbon\Carbon;
+
+
 
 /**
  * ======================================================================
@@ -60,24 +63,6 @@ class AdminProfileController extends Controller
    * ==================================================================
    * METHOD: index()
    * ==================================================================
-   *
-   * TUJUAN:
-   * Menampilkan halaman profil admin beserta histori sesi login.
-   *
-   * DATA YANG DIAMBIL:
-   * - Data user admin yang sedang login
-   * - Daftar session login yang tersimpan di database
-   *
-   * ALUR PROSES:
-   *
-   * 1. Mengambil user yang sedang login.
-   * 2. Mengambil seluruh session login user dari tabel sessions.
-   * 3. Mengurutkan session berdasarkan aktivitas terakhir.
-   * 4. Mengubah timestamp menjadi format waktu yang mudah dibaca.
-   * 5. Menentukan apakah session tersebut adalah device saat ini.
-   * 6. Mengirim data ke view admin.profile.
-   *
-   * ==================================================================
    */
   public function index()
   {
@@ -107,57 +92,77 @@ class AdminProfileController extends Controller
      * Query ini mengambil seluruh session yang dimiliki user
      * kemudian mengurutkannya dari aktivitas terbaru.
      */
-    $sessions = DB::table('sessions')
+    $rawSessions = DB::table('sessions')
       ->where('user_id', $user->id)
       ->orderBy('last_activity', 'desc')
-      ->get()
+      ->get();
 
 
-      /**
-       * ----------------------------------------------------------
-       * STEP 3
-       * TRANSFORM DATA SESSION
-       * ----------------------------------------------------------
-       *
-       * Map digunakan untuk memformat data session agar lebih
-       * mudah digunakan oleh view.
-       */
-      ->map(function ($session) {
-
-        return (object) [
-
-          /**
-           * IP Address dari session login
-           */
-          'ip_address' => $session->ip_address,
-
-          /**
-           * Menentukan apakah session ini adalah device
-           * yang sedang digunakan saat ini.
-           *
-           * request()->session()->getId()
-           * mengambil session ID dari request yang aktif.
-           */
-          'is_current_device' => $session->id === request()->session()->getId(),
-
-          /**
-           * Mengubah timestamp last_activity menjadi
-           * format waktu yang mudah dibaca manusia.
-           *
-           * Contoh output:
-           * - 5 minutes ago
-           * - 2 hours ago
-           * - 3 days ago
-           */
-          'last_active' => Carbon::createFromTimestamp($session->last_activity)
-            ->diffForHumans(),
-        ];
-      });
+    /**
+     * --------------------------------------------------------------
+     * STEP 3
+     * AMBIL SESSION ID AKTIF
+     * --------------------------------------------------------------
+     *
+     * Diambil di luar closure map() agar Intelephense dapat
+     * menyimpulkan tipe data dengan benar (string, bukan object).
+     *
+     * Manfaat tambahan:
+     * - Lebih efisien: session()->getId() hanya dipanggil sekali,
+     *   bukan setiap iterasi map.
+     */
+    $currentSessionId = session()->getId();
 
 
     /**
      * --------------------------------------------------------------
      * STEP 4
+     * TRANSFORM DATA SESSION
+     * --------------------------------------------------------------
+     *
+     * Map digunakan untuk memformat data session agar lebih
+     * mudah digunakan oleh view.
+     *
+     * Variabel $currentSessionId di-pass via `use` agar tersedia
+     * di dalam closure tanpa perlu chaining request()->session().
+     */
+    $sessions = $rawSessions->map(function ($session) use ($currentSessionId) {
+
+      $item = new \stdClass();
+
+      /**
+       * IP Address dari session login
+       */
+      $item->ip_address = $session->ip_address;
+
+      /**
+       * Menentukan apakah session ini adalah device
+       * yang sedang digunakan saat ini.
+       *
+       * Perbandingan dilakukan antara dua string (session ID),
+       * sehingga Intelephense dapat menyimpulkan tipe dengan benar.
+       */
+      $item->is_current_device = $session->id === $currentSessionId;
+
+      /**
+       * Mengubah timestamp last_activity menjadi
+       * format waktu yang mudah dibaca manusia.
+       *
+       * Contoh output:
+       * - 5 minutes ago
+       * - 2 hours ago
+       * - 3 days ago
+       */
+      $item->last_active = Carbon::createFromTimestamp($session->last_activity)
+        ->diffForHumans();
+
+      return $item;
+    });
+
+
+    /**
+     * --------------------------------------------------------------
+     * STEP 5
      * MENGIRIM DATA KE VIEW
      * --------------------------------------------------------------
      *
@@ -199,150 +204,165 @@ class AdminProfileController extends Controller
    */
   public function update(Request $request)
   {
-
-    /**
-     * --------------------------------------------------------------
-     * STEP 1
-     * MENGAMBIL USER YANG SEDANG LOGIN
-     * --------------------------------------------------------------
-     */
     /** @var \App\Models\User $user */
     $user = Auth::user();
 
-
-    /**
-     * --------------------------------------------------------------
-     * STEP 2
-     * VALIDASI INPUT
-     * --------------------------------------------------------------
-     *
-     * Validasi memastikan data yang dikirim user sesuai aturan.
-     *
-     * Aturan penting:
-     *
-     * - Email harus unik kecuali milik user sendiri.
-     * - Password baru minimal 8 karakter.
-     * - Password baru harus dikonfirmasi.
-     * - Foto profil maksimal 2MB.
-     */
     $request->validate([
       'name'  => 'required|string|max:255',
-
       'email' => [
         'required',
         'email',
         Rule::unique('users')->ignore($user->id)
       ],
-
       'current_password' => 'nullable|required_with:new_password',
-
-      'new_password' => 'nullable|required_with:current_password|min:8|confirmed',
-
-      'photo' => ['nullable', 'image', 'max:2048'],
-    ], [
-      'current_password.required_with' =>
-      'Mohon isi Password Lama jika ingin mengganti password.',
-
-      'new_password.required_with' =>
-      'Mohon isi Password Baru jika Password Lama sudah diisi.',
+      'new_password'     => 'nullable|required_with:current_password|min:8|confirmed',
+      'photo'            => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
     ]);
 
+    $newPhotoPath     = null;
+    $oldPhotoToDelete = null;
 
-    /**
-     * --------------------------------------------------------------
-     * STEP 3
-     * HAPUS FOTO PROFIL (JIKA DIMINTA USER)
-     * --------------------------------------------------------------
-     */
-    if ($request->input('delete_photo') == '1') {
+    try {
 
-      if (
-        $user->profile_photo_path &&
-        Storage::disk('public')->exists($user->profile_photo_path)
+      DB::transaction(function () use (
+        $request,
+        $user,
+        &$newPhotoPath,
+        &$oldPhotoToDelete
       ) {
-        Storage::disk('public')->delete($user->profile_photo_path);
-      }
 
-      $user->profile_photo_path = null;
-    }
+        /**
+         * ----------------------------------------------------------
+         * UPDATE PASSWORD
+         * ----------------------------------------------------------
+         */
+        if ($request->filled('new_password')) {
 
+          if (!Hash::check($request->current_password, $user->password)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+              'current_password' => 'Password lama salah!'
+            ]);
+          }
 
-    /**
-     * --------------------------------------------------------------
-     * STEP 4
-     * UPLOAD FOTO PROFIL BARU
-     * --------------------------------------------------------------
-     */
-    if ($request->hasFile('photo')) {
+          $user->password = Hash::make($request->new_password);
+        }
+
+        /**
+         * ----------------------------------------------------------
+         * HANDLE UPLOAD FOTO BARU
+         * ----------------------------------------------------------
+         *
+         * Upload file baru terlebih dahulu.
+         * Tapi file lama BELUM dihapus.
+         */
+        if ($request->hasFile('photo')) {
+
+          $newPhotoPath = $request->file('photo')
+            ->store('profile-photos', 'public');
+
+          /**
+           * Simpan foto lama untuk dihapus nanti
+           * setelah transaction sukses.
+           */
+          $oldPhotoToDelete = $user->profile_photo_path;
+
+          /**
+           * Update path baru ke model.
+           */
+          $user->profile_photo_path = $newPhotoPath;
+        }
+
+        /**
+         * ----------------------------------------------------------
+         * HANDLE DELETE FOTO
+         * ----------------------------------------------------------
+         */
+        if ($request->input('delete_photo') == '1') {
+
+          if ($user->profile_photo_path) {
+            $oldPhotoToDelete = $user->profile_photo_path;
+          }
+
+          $user->profile_photo_path = null;
+        }
+
+        /**
+         * ----------------------------------------------------------
+         * UPDATE DATA PROFIL
+         * ----------------------------------------------------------
+         */
+        $user->name = trim($request->name);
+
+        $user->email = strtolower(
+          trim($request->email)
+        );
+
+        /**
+         * ----------------------------------------------------------
+         * SAVE DATABASE
+         * ----------------------------------------------------------
+         */
+        $user->save();
+
+        /**
+         * ----------------------------------------------------------
+         * REVOKE SESSION LAIN JIKA PASSWORD DIGANTI
+         * ----------------------------------------------------------
+         *
+         * Tujuan:
+         * Mengeluarkan seluruh device lain setelah password berubah
+         * untuk mencegah session lama tetap aktif.
+         *
+         * Session saat ini TIDAK dihapus.
+         */
+        if ($request->filled('new_password')) {
+
+          DB::table('sessions')
+            ->where('user_id', $user->id)
+            ->where('user_id', $user->id)
+            ->where('auth_guard', 'web')
+            ->where('id', '!=', $request->session()->getId())
+            ->delete();
+        }
+
+        $request->session()->regenerate();
+      });
 
       /**
-       * Hapus foto lama jika ada
+       * --------------------------------------------------------------
+       * HAPUS FILE LAMA
+       * --------------------------------------------------------------
+       *
+       * Dilakukan SETELAH transaction sukses.
        */
       if (
-        $user->profile_photo_path &&
-        Storage::disk('public')->exists($user->profile_photo_path)
+        $oldPhotoToDelete &&
+        Storage::disk('public')->exists($oldPhotoToDelete)
       ) {
-        Storage::disk('public')->delete($user->profile_photo_path);
+        Storage::disk('public')->delete($oldPhotoToDelete);
       }
 
-      /**
-       * Simpan foto baru
-       */
-      $user->profile_photo_path = $request->file('photo')
-        ->store('profile-photos', 'public');
-    }
-
-
-    /**
-     * --------------------------------------------------------------
-     * STEP 5
-     * UPDATE PASSWORD (OPSIONAL)
-     * --------------------------------------------------------------
-     *
-     * Password hanya diupdate jika user mengisi field
-     * new_password.
-     */
-    if ($request->filled('new_password')) {
+      return back()->with(
+        'success',
+        'Profil berhasil diperbarui!'
+      );
+    } catch (\Throwable $e) {
 
       /**
-       * Cek apakah password lama benar
+       * --------------------------------------------------------------
+       * CLEANUP FILE BARU JIKA TRANSACTION GAGAL
+       * --------------------------------------------------------------
+       *
+       * Mencegah orphan file.
        */
-      if (!Hash::check($request->current_password, $user->password)) {
-
-        return back()->withErrors([
-          'current_password' => 'Password lama salah!'
-        ]);
+      if (
+        $newPhotoPath &&
+        Storage::disk('public')->exists($newPhotoPath)
+      ) {
+        Storage::disk('public')->delete($newPhotoPath);
       }
 
-      /**
-       * Hash password baru sebelum disimpan
-       */
-      $user->password = Hash::make($request->new_password);
+      throw $e;
     }
-
-
-    /**
-     * --------------------------------------------------------------
-     * STEP 6
-     * UPDATE DATA UTAMA USER
-     * --------------------------------------------------------------
-     */
-    $user->name  = $request->name;
-    $user->email = $request->email;
-
-
-    /**
-     * Simpan perubahan ke database
-     */
-    $user->save();
-
-
-    /**
-     * --------------------------------------------------------------
-     * STEP 7
-     * REDIRECT KEMBALI KE HALAMAN PROFIL
-     * --------------------------------------------------------------
-     */
-    return back()->with('success', 'Profil berhasil diperbarui!');
   }
 }

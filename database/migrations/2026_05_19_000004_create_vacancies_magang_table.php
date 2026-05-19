@@ -4,105 +4,84 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * ============================================================
+ * MIGRATION: Vacancies Magang
+ * ============================================================
+ *
+ * Tabel lowongan magang dan penelitian.
+ * Merupakan titik awal pipeline sistem:
+ *
+ *   Vacancy → Application → Member → Assessment → Certificate
+ *
+ * Tabel yang dibuat:
+ *   - vacancies_magang
+ *
+ * Dependency:
+ *   - Tidak ada FK ke tabel lain (division_name sebagai string)
+ * ============================================================
+ */
 return new class extends Migration
 {
     public function up(): void
     {
-        /**
-         * =========================================================
-         * TABEL VACANCIES MAGANG
-         * =========================================================
-         *
-         * Menyimpan lowongan magang dan penelitian.
-         *
-         * Tabel ini merupakan awal pipeline sistem:
-         *
-         * Vacancy → Application → Member → Assessment → Certificate
-         */
-
         Schema::create('vacancies_magang', function (Blueprint $table) {
-
             $table->id();
 
             /**
-             * Judul lowongan
+             * Informasi dasar lowongan
              */
             $table->string('title', 200);
 
             /**
-             * Nama divisi instansi
-             * digunakan untuk filter admin divisi
+             * Nama divisi pemilik lowongan.
+             * String (bukan FK) agar fleksibel; validasi dilakukan di app layer.
+             * Dropdown mengambil data dari divisions_magang.
              */
             $table->string('division_name', 100)->index();
 
-
             /**
-             * Jenis kegiatan
-             *
-             * magang
-             * penelitian
+             * Jenis kegiatan: magang | penelitian
              */
             $table->enum('type', ['magang', 'penelitian'])->index();
 
-
             /**
-             * Mode pendaftaran
-             *
-             * individu
-             * kelompok
-             * hybrid
+             * Mode pendaftaran:
+             *   individu = 1 orang
+             *   kelompok = min..max orang
+             *   hybrid   = bisa keduanya
              */
             $table->enum('registration_mode', ['individu', 'kelompok', 'hybrid'])
                 ->default('individu');
 
-
             /**
-             * Kuota peserta
+             * Kuota slot total (0 = tidak dibatasi per vacancy)
              */
             $table->unsignedInteger('quota_slots')->default(0);
-
 
             /**
              * Batas anggota kelompok
              */
-
             $table->unsignedInteger('min_members')->default(1);
-
             $table->unsignedInteger('max_members')->default(1);
 
-
             /**
-             * Timeline kegiatan
+             * Timeline pelaksanaan
              */
-
             $table->date('start_date');
-
             $table->date('end_date');
 
-
             /**
-             * Deskripsi kegiatan
+             * Deskripsi kegiatan (opsional)
              */
-
             $table->text('description')->nullable();
 
-
             /**
-             * Status lowongan
-             *
-             * open
-             * closed
-             * archived
+             * Status lowongan: open | closed | archived
              */
-
             $table->enum('status', ['open', 'closed', 'archived'])
                 ->default('open')
                 ->index();
-
-
-            /**
-             * Timestamp Laravel
-             */
 
             $table->timestamps();
         });

@@ -249,6 +249,7 @@
                                                     <option value="SMK" @selected(old('education_level', $profile->education_level ?? '') == 'SMK')>SMK</option>
                                                     <option value="D3" @selected(old('education_level', $profile->education_level ?? '') == 'D3')>D3</option>
                                                     <option value="S1" @selected(old('education_level', $profile->education_level ?? '') == 'S1')>S1 / D4</option>
+                                                    <option value="S2" @selected(old('education_level', $profile->education_level ?? '') == 'S2')>S2</option>
                                                 </select>
                                                 @error('education_level')
                                                     <p class="flex items-center gap-1 text-red-500 text-xs font-medium mt-1.5">

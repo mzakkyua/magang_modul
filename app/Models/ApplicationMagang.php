@@ -10,15 +10,6 @@ class ApplicationMagang extends Model
 
     /**
      * =====================================================
-     * TIMESTAMP
-     * =====================================================
-     * Tabel tidak menggunakan created_at / updated_at
-     * karena hanya menggunakan submission_date.
-     */
-    public $timestamps = false;
-
-    /**
-     * =====================================================
      * MASS ASSIGNMENT
      * =====================================================
      */
@@ -33,35 +24,16 @@ class ApplicationMagang extends Model
 
     /**
      * =====================================================
-     * CASTING
-     * =====================================================
-     */
-    protected $casts = [
-        'submission_date' => 'datetime',
-    ];
-
-    /**
-     * =====================================================
      * STATUS CONSTANT
      * =====================================================
      */
-    const STATUS_PENDING = 'pending';
-    const STATUS_VERIFIED = 'verified';
+    const STATUS_COMPLETED = 'completed';
     const STATUS_INTERVIEW = 'interview';
+    const STATUS_RESIGNED  = 'resigned';
+    const STATUS_VERIFIED = 'verified';
     const STATUS_ACCEPTED = 'accepted';
     const STATUS_REJECTED = 'rejected';
-
-    /**
-     * =====================================================
-     * AUTO SET SUBMISSION DATE
-     * =====================================================
-     */
-    protected static function booted()
-    {
-        static::creating(function ($model) {
-            $model->submission_date = now();
-        });
-    }
+    const STATUS_PENDING = 'pending';
 
     /**
      * =====================================================

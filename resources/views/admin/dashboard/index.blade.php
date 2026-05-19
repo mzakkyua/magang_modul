@@ -115,6 +115,9 @@
 
     </div>
 
+    {{-- ===================== KAPASITAS DIVISI ===================== --}}
+    @include('components.division-capacity-section')
+
     {{-- ===================== TABEL + INFO SISTEM ===================== --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -177,7 +180,7 @@
 
                                 {{-- Tanggal --}}
                                 <td class="px-6 py-3.5 text-sm text-gray-500">
-                                    {{ $item->submission_date?->format('d M Y') ?? '-' }}
+                                    {{ $item->created_at?->format('d M Y') ?? '-' }}
                                 </td>
 
                                 {{-- Status --}}

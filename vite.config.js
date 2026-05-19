@@ -13,6 +13,7 @@ export default defineConfig({
                 "resources/js/admin/assessment-create.js",
                 "resources/js/admin/profile.js",
                 "resources/js/auth.js",
+                "resources/js/pages/vacancy-detail.js",
             ],
             refresh: true,
         }),

@@ -105,6 +105,19 @@
                     </div>
                 @endif
 
+                {{-- Flash message: Info --}}
+                @if (session('info'))
+                    <div
+                        class="mb-5 flex items-start gap-3 p-4 text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-2xl">
+                        <i class="bi bi-info-circle-fill text-blue-400 mt-0.5 shrink-0"></i>
+
+                        <div>
+                            <span class="font-bold block">Informasi</span>
+                            {{ session('info') }}
+                        </div>
+                    </div>
+                @endif
+
                 @yield('content')
 
             </main>

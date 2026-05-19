@@ -4,32 +4,40 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Str;
+use Illuminate\Database\QueryException;
 
 use App\Models\UserMagang;
 use App\Models\ProfileMagang;
 
+use App\Http\Controllers\Requests\Auth\RegisterMagangRequest;
+use App\Http\Controllers\Requests\Auth\LoginMagangRequest;
+
+/**
+ * ==========================================================
+ * AuthMagangController (FINAL VERSION)
+ * ==========================================================
+ *
+ * FITUR:
+ * - Register peserta magang
+ * - Login admin + peserta
+ * - Logout aman
+ * - Rate limiter login
+ * - Session hardening
+ * - Username collision safe
+ * - Audit log
+ *
+ * ==========================================================
+ */
 class AuthMagangController extends Controller
 {
-
     /**
-     * ===============================================================
-     * CONSTRUCTOR
-     * ===============================================================
-     *
-     * Membatasi akses halaman login & register hanya untuk user
-     * yang BELUM login.
-     *
-     * Guard yang digunakan:
-     *
-     * web    → admin / pegawai
-     * magang → peserta magang
-     *
-     * logout tetap bisa diakses user yang sudah login.
-     *
+     * ------------------------------------------------------
+     * Constructor
+     * ------------------------------------------------------
      */
     public function __construct()
     {
@@ -37,224 +45,109 @@ class AuthMagangController extends Controller
         $this->middleware('guest:web')->except('logout');
     }
 
-
-
     /**
-     * ===============================================================
+     * ======================================================
      * SHOW REGISTER FORM
-     * ===============================================================
+     * ======================================================
      */
     public function showRegisterForm()
     {
         return view('auth.magang-register');
     }
 
-
-
     /**
-     * ===============================================================
-     * REGISTER PESERTA MAGANG
-     * ===============================================================
-     *
-     * Flow:
-     *
-     * 1. Validasi input
-     * 2. Normalisasi email
-     * 3. Generate username unik
-     * 4. Simpan user + profile (transaction)
-     * 5. Auto login
-     *
+     * ======================================================
+     * REGISTER
+     * ======================================================
      */
-    public function register(Request $request)
+    public function register(RegisterMagangRequest $request)
     {
+        $email = $request->email;
+        /** @var UserMagang|null $user */
+        $user = null;
 
-        /**
-         * ===========================================================
-         * STEP 1 — VALIDASI INPUT
-         * ===========================================================
-         */
+        DB::transaction(function () use ($request, $email, &$user) {
 
-        $request->validate([
-            'nama_lengkap'     => 'required|string|max:255',
-            'email'            => 'required|email|unique:users_magang,email',
-            'password'         => 'required|string|min:8|confirmed',
-            'education_level'  => 'required|string|max:50',
-            'nim_nisn'         => 'nullable|string|max:50',
-            'terms'            => 'accepted',
-        ], [
-            'terms.accepted' => 'Anda harus menyetujui syarat dan ketentuan.',
-        ]);
+            for ($i = 0; $i < 10; $i++) {
 
+                try {
+                    $username = $this->generateUsernameCandidate($email);
 
+                    $user = UserMagang::create([
+                        'username'      => $username,
+                        'email'         => $email,
+                        'password_hash' => Hash::make($request->password),
+                    ]);
 
-        /**
-         * ===========================================================
-         * STEP 2 — NORMALISASI EMAIL
-         * ===========================================================
-         */
+                    ProfileMagang::create([
+                        'user_id' => $user->id,
+                        'full_name' => $request->nama_lengkap,
+                        'education_level' => $request->education_level,
+                    ]);
 
-        $email = strtolower($request->email);
+                    return;
+                } catch (QueryException $e) {
 
+                    if ($e->getCode() == 23000) {
+                        continue;
+                    }
 
+                    throw $e;
+                }
+            }
 
-        /**
-         * ===========================================================
-         * STEP 3 — GENERATE USERNAME UNIK
-         * ===========================================================
-         *
-         * Format:
-         * username + random number
-         *
-         */
-
-        do {
-
-            $username = explode('@', $email)[0] . rand(100, 999);
-        } while (UserMagang::where('username', $username)->exists());
-
-
-
-        /**
-         * ===========================================================
-         * STEP 4 — DATABASE TRANSACTION
-         * ===========================================================
-         *
-         * Semua proses dibungkus transaction untuk mencegah
-         * data setengah tersimpan.
-         *
-         */
-
-        DB::transaction(function () use ($request, $email, $username) {
-
-            /**
-             * CREATE USER ACCOUNT
-             */
-            $user = UserMagang::create([
-                'username'      => $username,
-                'email'         => $email,
-                'password_hash' => Hash::make($request->password),
-            ]);
-
-
-            /**
-             * CREATE BASIC PROFILE
-             */
-
-            ProfileMagang::create([
-                'user_id'          => $user->id,
-                'full_name'        => $request->nama_lengkap,
-                'status'           => 'active',
-                'nim_nisn'         => $request->nim_nisn,
-                'education_level'  => $request->education_level,
-                'institution_name' => '-',
-                'major'            => '-',
-                'phone_number'     => '-',
-            ]);
-
-
-            /**
-             * AUTO LOGIN USER
-             */
-
-            Auth::guard('magang')->login($user);
+            throw new \Exception('Gagal membuat username unik.');
         });
 
+        if (!$user) {
+            throw new \Exception('Registrasi gagal.');
+        }
 
-
+        Auth::guard('magang')->login($user);
         /**
-         * ===========================================================
-         * STEP 5 — REGENERATE SESSION
-         * ===========================================================
-         *
-         * Mencegah session fixation attack
-         *
+         * Anti session fixation
          */
-
         $request->session()->regenerate();
 
 
+        Log::info('Register peserta berhasil', [
+            'user_id' => $user->id,
+            'email'   => $email,
+            'ip'      => $request->ip(),
+        ]);
 
         return redirect()
             ->route('dashboard.index')
-            ->with('success', 'Pendaftaran berhasil! Silakan lengkapi biodata Anda.');
+            ->with('success', 'Pendaftaran berhasil! Selamat datang.');
     }
 
-
-
     /**
-     * ===============================================================
+     * ======================================================
      * SHOW LOGIN FORM
-     * ===============================================================
+     * ======================================================
      */
-
     public function showLoginForm()
     {
         return view('auth.magang-login');
     }
 
-
-
     /**
-     * ===============================================================
-     * LOGIN SYSTEM (ADMIN + PESERTA)
-     * ===============================================================
-     *
-     * Flow login:
-     *
-     * 1. Validasi input
-     * 2. Rate limiter check
-     * 3. Login admin
-     * 4. Login peserta
-     * 5. Tambah hit jika gagal
-     *
+     * ======================================================
+     * LOGIN
+     * ======================================================
      */
-
-    public function login(Request $request)
+    public function login(LoginMagangRequest $request)
     {
+        $email = $request->email;
 
         /**
-         * ===========================================================
-         * STEP 1 — VALIDASI INPUT
-         * ===========================================================
+         * Key limiter
          */
-
-        $request->validate([
-            'email'    => ['required', 'email'],
-            'password' => ['required', 'string'],
-        ]);
-
-
-
-        /**
-         * ===========================================================
-         * STEP 2 — NORMALISASI EMAIL
-         * ===========================================================
-         */
-
-        $email = strtolower($request->email);
-
-
-
-        /**
-         * ===========================================================
-         * STEP 3 — RATE LIMITER KEY
-         * ===========================================================
-         *
-         * Menggunakan kombinasi:
-         * email + ip address
-         *
-         */
-
         $key = $email . '|' . $request->ip();
 
-
-
         /**
-         * ===========================================================
-         * STEP 4 — CEK BRUTE FORCE
-         * ===========================================================
+         * Max 5 attempt / menit
          */
-
         if (RateLimiter::tooManyAttempts($key, 5)) {
 
             $seconds = RateLimiter::availableIn($key);
@@ -264,96 +157,137 @@ class AuthMagangController extends Controller
             ]);
         }
 
-
-
-        /**
-         * ===========================================================
-         * STEP 5 — PREPARE CREDENTIALS
-         * ===========================================================
-         */
+        $remember = $request->boolean('remember');
 
         $credentials = [
-            'email' => $email,
-            'password' => $request->password
+            'email'    => $email,
+            'password' => $request->password,
         ];
 
-
-
         /**
-         * ===========================================================
-         * STEP 6 — LOGIN ADMIN
-         * ===========================================================
+         * ==========================================
+         * LOGIN ADMIN
+         * ==========================================
          */
-
-        if (Auth::guard('web')->attempt($credentials)) {
+        if (Auth::guard('web')->attempt($credentials, $remember)) {
 
             RateLimiter::clear($key);
 
             $request->session()->regenerate();
+
+            DB::table('sessions')
+                ->where('id', $request->session()->getId())
+                ->update([
+                    'auth_guard' => 'web',
+                ]);
+
+            Log::info('Login admin berhasil', [
+                'user_id' => Auth::guard('web')->id(),
+                'email'   => $email,
+                'ip'      => $request->ip(),
+            ]);
 
             return redirect()->intended(route('admin.dashboard'));
         }
 
-
-
         /**
-         * ===========================================================
-         * STEP 7 — LOGIN PESERTA
-         * ===========================================================
+         * ==========================================
+         * LOGIN PESERTA
+         * ==========================================
          */
-
-        if (Auth::guard('magang')->attempt($credentials)) {
+        if (Auth::guard('magang')->attempt($credentials, $remember)) {
 
             RateLimiter::clear($key);
 
             $request->session()->regenerate();
 
+            DB::table('sessions')
+                ->where('id', $request->session()->getId())
+                ->update([
+                    'auth_guard' => 'magang',
+                ]);
+
+            Log::info('Login peserta berhasil', [
+                'user_id' => Auth::guard('magang')->id(),
+                'email'   => $email,
+                'ip'      => $request->ip(),
+            ]);
+
             return redirect()->route('dashboard.index');
         }
 
-
-
         /**
-         * ===========================================================
-         * STEP 8 — LOGIN GAGAL
-         * ===========================================================
+         * Login gagal
          */
-
         RateLimiter::hit($key, 60);
 
-        return back()->withErrors([
-            'email' => 'Email atau password salah.',
-        ])->onlyInput('email');
+        Log::warning('Login gagal', [
+            'email'   => $email,
+            'ip'      => $request->ip(),
+            'attempt' => RateLimiter::attempts($key),
+        ]);
+
+        return back()
+            ->withErrors([
+                'email' => 'Email atau password salah.',
+            ])
+            ->onlyInput('email');
     }
 
-
-
     /**
-     * ===============================================================
-     * LOGOUT SYSTEM
-     * ===============================================================
-     *
-     * Menghandle logout untuk:
-     *
-     * - admin
-     * - peserta magang
-     *
+     * ======================================================
+     * LOGOUT
+     * ======================================================
      */
-
     public function logout(Request $request)
     {
+        $guard = null;
+        $userId = null;
 
         if (Auth::guard('web')->check()) {
+            $guard = 'web';
+            $userId = Auth::guard('web')->id();
+
             Auth::guard('web')->logout();
         }
 
         if (Auth::guard('magang')->check()) {
+            $guard = 'magang';
+            $userId = Auth::guard('magang')->id();
+
             Auth::guard('magang')->logout();
         }
 
+        /**
+         * Hancurkan session lama
+         */
         $request->session()->invalidate();
+
+        /**
+         * Token baru
+         */
         $request->session()->regenerateToken();
 
+        Log::info('Logout berhasil', [
+            'guard'   => $guard,
+            'user_id' => $userId,
+            'ip'      => $request->ip(),
+        ]);
+
         return redirect('/');
+    }
+
+    /**
+     * ======================================================
+     * HELPER USERNAME
+     * ======================================================
+     */
+    private function generateUsernameCandidate(string $email): string
+    {
+        $prefix = explode('@', $email)[0];
+
+        $prefix = preg_replace('/[^a-zA-Z0-9]/', '', $prefix);
+
+        return strtolower($prefix) . rand(100, 9999);
     }
 }

@@ -4,64 +4,77 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 
+/**
+ * ======================================================================
+ * MODEL: UserMagang
+ * ======================================================================
+ */
 class UserMagang extends Authenticatable implements CanResetPasswordContract
 {
     use Notifiable, CanResetPassword;
 
-    /**
-     * =====================================================
-     * TABLE NAME
-     * =====================================================
-     */
+
+    // ======================================================================
+    // KONFIGURASI TABEL
+    // ======================================================================
+
     protected $table = 'users_magang';
 
-    /**
-     * =====================================================
-     * MASS ASSIGNMENT
-     * =====================================================
-     */
+
+    // ======================================================================
+    // MASS ASSIGNMENT
+    // ======================================================================
+
     protected $fillable = [
         'username',
         'email',
         'password_hash',
     ];
 
-    /**
-     * =====================================================
-     * HIDDEN ATTRIBUTE
-     * =====================================================
-     */
+
+    // ======================================================================
+    // HIDDEN
+    // ======================================================================
+
     protected $hidden = [
         'password_hash',
+        'remember_token', // ← ditambahkan
     ];
 
-    /**
-     * =====================================================
-     * ATTRIBUTE CASTING
-     * =====================================================
-     */
+
+    // ======================================================================
+    // CASTS
+    // ======================================================================
+
     protected $casts = [
-        'password_hash' => 'hashed'
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
+
+    // ======================================================================
+    // AUTH OVERRIDES
+    // ======================================================================
+
     /**
-     * =====================================================
-     * CUSTOM PASSWORD COLUMN
-     * =====================================================
+     * Override kolom password default Laravel ('password' → 'password_hash').
+     * Wajib ada agar Auth::attempt() dan Hash::check() membaca kolom yang benar.
      */
-    public function getAuthPassword()
+    public function getAuthPassword(): string
     {
         return $this->password_hash;
     }
 
+
+    // ======================================================================
+    // RELATIONS
+    // ======================================================================
+
     /**
-     * =====================================================
-     * RELATION: PROFILE
-     * =====================================================
+     * Profil lengkap peserta (NIM, institusi, CV, dll).
      */
     public function profile()
     {
@@ -69,9 +82,7 @@ class UserMagang extends Authenticatable implements CanResetPasswordContract
     }
 
     /**
-     * =====================================================
-     * RELATION: APPLICATION AS LEADER
-     * =====================================================
+     * Lamaran yang dipimpin peserta ini sebagai ketua.
      */
     public function applications()
     {
@@ -79,31 +90,69 @@ class UserMagang extends Authenticatable implements CanResetPasswordContract
     }
 
     /**
-     * =====================================================
-     * RELATION: APPLICATION MEMBER
-     * =====================================================
+     * Keikutsertaan peserta dalam lamaran (sebagai anggota maupun ketua).
      */
-    public function memberOf()
+    public function applicationMembers()
     {
         return $this->hasMany(ApplicationMemberMagang::class, 'user_id');
     }
 
     /**
-     * =====================================================
-     * HELPER: PROFILE COMPLETENESS
-     * =====================================================
+     * Sertifikat yang dimiliki peserta.
      */
-    public function hasCompleteProfile()
+    public function certificates()
+    {
+        return $this->hasMany(Certificate::class, 'user_id');
+    }
+
+
+    // ======================================================================
+    // ACCESSORS
+    // ======================================================================
+
+    /**
+     * Nama tampilan — ambil dari profile jika sudah diisi, fallback ke username.
+     *
+     * CARA PAKAI DI BLADE:
+     *   {{ $user->display_name }}
+     *
+     * Berguna di notifikasi, greeting, dan tabel admin
+     * tanpa perlu eager load manual tiap kali.
+     */
+    public function getDisplayNameAttribute(): string
+    {
+        return $this->profile?->full_name ?? $this->username;
+    }
+
+
+    // ======================================================================
+    // HELPERS
+    // ======================================================================
+
+    /**
+     * Cek apakah profil sudah lengkap (termasuk CV).
+     * Dipakai di ApplicationMagangController sebelum izinkan daftar.
+     */
+    public function hasCompleteProfile(): bool
     {
         return $this->profile && $this->profile->isComplete();
     }
 
+
+    // ======================================================================
+    // SCOPES
+    // ======================================================================
+
     /**
-     * Relasi ke ApplicationMemberMagang
-     * Menghubungkan peserta dengan lamaran (baik individu maupun kelompok)
+     * Filter user yang profilenya berstatus aktif.
+     *
+     * CARA PAKAI:
+     *   UserMagang::active()->get();
      */
-    public function applicationMembers()
+    public function scopeActive($query)
     {
-        return $this->hasMany(\App\Models\ApplicationMemberMagang::class, 'user_id');
+        return $query->whereHas('profile', function ($q) {
+            $q->whereNotNull('cv_file_path'); // profile dianggap aktif jika sudah upload CV
+        });
     }
 }

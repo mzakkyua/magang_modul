@@ -29,10 +29,10 @@ class AssessmentMagang extends Model
      * =====================================================
      */
     protected $casts = [
-        'score_behavior'    => 'integer',
-        'score_discipline'  => 'integer',
-        'score_performance' => 'integer',
-        'final_score'       => 'float'
+        'score_behavior'    => 'float',
+        'score_discipline'  => 'float',
+        'score_performance' => 'float',
+        'final_score'       => 'float',
     ];
 
     /**
@@ -44,13 +44,15 @@ class AssessmentMagang extends Model
     {
         static::saving(function ($model) {
 
-            $scores = [
+            $scores = array_filter([
                 $model->score_behavior,
                 $model->score_discipline,
                 $model->score_performance
-            ];
+            ], fn($score) => is_numeric($score));
 
-            $model->final_score = round(array_sum($scores) / 3, 2);
+            $model->final_score = count($scores) > 0
+                ? round(array_sum($scores) / count($scores), 2)
+                : 0;
         });
     }
 

@@ -78,110 +78,138 @@
                 </p>
             </div>
 
-            <div class="max-w-2xl mx-auto mb-10">
-                <form action="{{ route('landing.index') }}" method="GET">
-                    <div class="flex gap-2 bg-white p-2 rounded-2xl shadow-lg shadow-gray-200/80 border border-gray-100">
-                        <div class="flex items-center flex-1 gap-2 px-3">
-                            <i class="bi bi-search text-gray-400 text-sm"></i>
-                            <input type="text" name="search" value="{{ request('search') }}"
-                                placeholder="Cari posisi magang..."
-                                class="flex-1 py-2 outline-none text-sm text-gray-700 bg-transparent placeholder-gray-400">
-                        </div>
-                        <button type="submit"
-                            class="bg-blue-600 text-white px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition shadow-md shadow-blue-600/30 flex items-center gap-2">
-                            <i class="bi bi-search"></i> Cari
-                        </button>
-                    </div>
-                </form>
+            {{-- SEARCH --}}
+            <div class="max-w-2xl mx-auto mb-8">
+                <x-search-lowongan action="{{ route('landing.index') }}" search="{{ $search }}" />
+                {{-- Untuk dashboard, ganti route di atas:
+         action="{{ route('dashboard.index') }}"
+    --}}
             </div>
 
-            @if ($search)
-                <div class="max-w-7xl mx-auto mb-6 flex items-center gap-2 text-gray-600 text-sm">
-                    <i class="bi bi-search text-blue-600"></i>
-                    Hasil pencarian untuk:
-                    <span class="font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-100">
-                        "{{ $search }}"
-                    </span>
-                    <a href="{{ route('landing.index') }}"
-                        class="ml-1 text-gray-500 hover:text-red-500 flex items-center gap-1 text-xs transition">
-                        <i class="bi bi-x-circle-fill"></i> Reset
-                    </a>
-                </div>
-            @endif
-
+            {{-- TAB FILTER — lebih compact --}}
             <div class="flex gap-2 mb-8">
-                <button data-tab="semua" class="tab-btn active-tab px-5 py-2 rounded-full text-sm font-semibold transition">
-                    <i class="bi bi-grid mr-1"></i> Semua
+                <button data-tab="semua"
+                    class="tab-btn active-tab px-4 py-1.5 rounded-full text-xs font-semibold transition flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path
+                            d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 8a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zm6-6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zm0 8a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                    Semua
                 </button>
                 <button data-tab="magang"
-                    class="tab-btn inactive-tab px-5 py-2 rounded-full text-sm font-semibold transition">
-                    <i class="bi bi-briefcase mr-1"></i> Magang
+                    class="tab-btn inactive-tab px-4 py-1.5 rounded-full text-xs font-semibold transition flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z"
+                            clip-rule="evenodd" />
+                        <path
+                            d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z" />
+                    </svg>
+                    Magang
                 </button>
                 <button data-tab="penelitian"
-                    class="tab-btn inactive-tab px-5 py-2 rounded-full text-sm font-semibold transition">
-                    <i class="bi bi-journal-text mr-1"></i> Penelitian
+                    class="tab-btn inactive-tab px-4 py-1.5 rounded-full text-xs font-semibold transition flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path
+                            d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+                    </svg>
+                    Penelitian
                 </button>
             </div>
 
+            {{-- TAB SEMUA --}}
             <div id="tab-semua" class="tab-content">
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                     @forelse ($vacanciesMagang as $job)
-                    <x-job-card :job="$job" />@empty
+                        {{-- PENTING: tambahkan data-search-card + data attributes --}}
+                        <div data-search-card data-title="{{ strtolower($job->title) }}"
+                            data-division="{{ strtolower($job->division_name) }}" data-type="magang">
+                            <x-job-card :job="$job" />
+                        </div>
+                    @empty
                     @endforelse
                     @forelse ($vacanciesPenelitian as $job)
-                    <x-job-card :job="$job" />@empty
+                        <div data-search-card data-title="{{ strtolower($job->title) }}"
+                            data-division="{{ strtolower($job->division_name) }}" data-type="penelitian">
+                            <x-job-card :job="$job" />
+                        </div>
+                    @empty
                     @endforelse
+
+                    {{-- Empty state — PENTING: tambahkan data-empty-state --}}
                     @if ($vacanciesMagang->isEmpty() && $vacanciesPenelitian->isEmpty())
-                        <div class="col-span-3 text-center py-24">
+                        <div data-empty-state class="col-span-3 text-center py-24">
                             <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <i class="bi bi-inbox text-4xl text-gray-400"></i>
+                                <svg class="w-8 h-8 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd"
+                                        d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 2h10v7h-2l-1 2H8l-1-2H5V5z"
+                                        clip-rule="evenodd" />
+                                </svg>
                             </div>
-                            <p class="text-gray-500 font-semibold text-lg">Tidak ada lowongan ditemukan</p>
-                            <p class="text-gray-400 text-sm mt-1">Coba ubah kata kunci pencarian kamu</p>
+                            <p class="text-gray-500 font-semibold">Tidak ada lowongan ditemukan</p>
+                            <p class="text-gray-400 text-sm mt-1">Coba ubah kata kunci pencarian</p>
+                        </div>
+                    @else
+                        {{-- Empty state saat filter aktif (hidden by default) --}}
+                        <div data-empty-state class="col-span-3 text-center py-24 hidden">
+                            <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd"
+                                        d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 2h10v7h-2l-1 2H8l-1-2H5V5z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <p class="text-gray-500 font-semibold">Tidak ada hasil untuk pencarian ini</p>
+                            <p class="text-gray-400 text-sm mt-1">Coba kata kunci yang berbeda</p>
                         </div>
                     @endif
                 </div>
             </div>
 
+            {{-- TAB MAGANG --}}
             <div id="tab-magang" class="tab-content hidden">
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                     @forelse ($vacanciesMagang as $job)
-                        <x-job-card :job="$job" />
+                        <div data-search-card data-title="{{ strtolower($job->title) }}"
+                            data-division="{{ strtolower($job->division_name) }}" data-type="magang">
+                            <x-job-card :job="$job" />
+                        </div>
                     @empty
-                        <div class="col-span-3 text-center py-24">
-                            <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <i class="bi bi-briefcase text-4xl text-gray-400"></i>
-                            </div>
-                            <p class="text-gray-500 font-semibold text-lg">Tidak ada lowongan magang</p>
+                        <div data-empty-state class="col-span-3 text-center py-24">
+                            <p class="text-gray-500 font-semibold">Tidak ada lowongan magang</p>
                         </div>
                     @endforelse
+                    <div data-empty-state class="col-span-3 text-center py-24 hidden">
+                        <p class="text-gray-500 font-semibold">Tidak ada hasil untuk pencarian ini</p>
+                    </div>
                 </div>
             </div>
 
+            {{-- TAB PENELITIAN --}}
             <div id="tab-penelitian" class="tab-content hidden">
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                     @forelse ($vacanciesPenelitian as $job)
-                        <x-job-card :job="$job" />
+                        <div data-search-card data-title="{{ strtolower($job->title) }}"
+                            data-division="{{ strtolower($job->division_name) }}" data-type="penelitian">
+                            <x-job-card :job="$job" />
+                        </div>
                     @empty
-                        <div class="col-span-3 text-center py-24">
-                            <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <i class="bi bi-journal-text text-4xl text-gray-400"></i>
-                            </div>
-                            <p class="text-gray-500 font-semibold text-lg">Tidak ada lowongan penelitian</p>
+                        <div data-empty-state class="col-span-3 text-center py-24">
+                            <p class="text-gray-500 font-semibold">Tidak ada lowongan penelitian</p>
                         </div>
                     @endforelse
+                    <div data-empty-state class="col-span-3 text-center py-24 hidden">
+                        <p class="text-gray-500 font-semibold">Tidak ada hasil untuk pencarian ini</p>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
+    {{-- ===================== DIVISION CAPACITY SECTION ===================== --}}
+    @include('components.division-capacity-landing')
+
     {{-- ===================== ABOUT SECTION — MODERN CLEAN REDESIGN ===================== --}}
-    {{--
-        KONSEP: Tipografi sebagai elemen visual utama.
-        Layout: 2 kolom — kiri narasi + angka besar, kanan foto tunggal bersih + satu baris pilar.
-        Warna: Putih bersih, aksen biru hanya pada border dan angka.
-        Tidak ada badge melayang, tidak ada card bertumpuk.
-    --}}
     <section class="bg-white py-24 border-t border-gray-100" id="about">
         <div class="max-w-7xl mx-auto px-6">
 
@@ -252,7 +280,7 @@
                 <div class="flex flex-col gap-8">
 
                     {{-- Foto tunggal — proporsional, tidak ramai --}}
-                    <div class="relative overflow-hidden rounded-2xl aspect-[4/3] bg-gray-100">
+                    <div class="relative overflow-hidden rounded-2xl aspect-4/3 bg-gray-100">
                         <img src="https://kilasjatim.com/wp-content/uploads/2025/04/100-e1744800110750.webp"
                             class="w-full h-full object-cover object-center transition-transform duration-700 hover:scale-105"
                             alt="Dinas Tenaga Kerja Jawa Timur" />
@@ -284,7 +312,8 @@
                                     </div>
                                     <div>
                                         <p class="text-xs font-bold text-gray-800">{{ $p[1] }}</p>
-                                        <p class="text-[10px] text-gray-400 leading-relaxed mt-0.5">{{ $p[2] }}</p>
+                                        <p class="text-[10px] text-gray-400 leading-relaxed mt-0.5">{{ $p[2] }}
+                                        </p>
                                     </div>
                                 </div>
                             @endforeach

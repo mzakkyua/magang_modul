@@ -61,31 +61,88 @@ SECTION: INFORMASI POSISI
 
             @if ($hakAkses->role === 'superadmin')
                 {{-- Superadmin: input bebas --}}
-                <input type="text" name="division_name"
-                    value="{{ old('division_name', $vacancy->division_name ?? '') }}" required
-                    placeholder="Nama divisi..."
-                    class="w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium text-gray-800
-                           transition-all duration-200 outline-none
-                           border-gray-200 bg-white
-                           hover:border-blue-300 hover:bg-blue-50/20
-                           focus:border-blue-400 focus:ring-2 focus:ring-blue-100
-                           placeholder:text-gray-300">
-            @else
-                {{-- Admin divisi: tampilkan divisi sendiri, tidak bisa diubah --}}
                 <div class="relative">
-                    <input type="text" value="{{ $hakAkses->division_name }}" disabled
-                        class="w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium
-                               border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed pr-10">
-                    <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-                        <i class="bi bi-lock-fill text-gray-300 text-xs"></i>
+
+                    <select name="division_name" required
+                        class="w-full px-3.5 py-2.5 pr-11
+               rounded-xl border
+               text-sm font-medium text-gray-800
+               transition-all duration-200
+               outline-none appearance-none
+
+               border-gray-200 bg-white
+               hover:border-blue-300
+               focus:border-blue-400
+               focus:ring-2 focus:ring-blue-100">
+
+                        <option value="">
+                            Pilih Divisi
+                        </option>
+
+                        @foreach ($divisions as $value => $label)
+                            <option value="{{ $value }}"
+                                {{ old('division_name', $vacancy->division_name ?? '') == $value ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+
+                    </select>
+
+                    {{-- Arrow --}}
+                    <div
+                        class="absolute inset-y-0 right-3
+               flex items-center
+               pointer-events-none">
+
+                        <i class="bi bi-chevron-down text-gray-400 text-xs"></i>
                     </div>
+
                 </div>
-                {{-- Hidden field wajib untuk submit --}}
-                <input type="hidden" name="division_name" value="{{ $hakAkses->division_name }}">
-                <p class="text-[10.5px] text-gray-400 mt-1">
-                    <i class="bi bi-info-circle mr-0.5"></i>
-                    Divisi dikunci sesuai akun Anda
-                </p>
+            @else
+                <div class="relative">
+
+                    <div
+                        class="w-full px-3.5 py-2.5
+               rounded-xl border
+               border-gray-200
+               bg-gray-50
+               flex items-center justify-between">
+
+                        <div class="flex items-center gap-3">
+
+                            <div
+                                class="w-8 h-8 rounded-lg
+                       bg-blue-100
+                       flex items-center justify-center">
+
+                                <i class="bi bi-building text-blue-600 text-sm"></i>
+                            </div>
+
+                            <div>
+                                <p class="text-sm font-semibold text-gray-800">
+                                    {{ $hakAkses->division_name }}
+                                </p>
+
+                                <p class="text-[11px] text-gray-400">
+                                    Divisi otomatis sesuai akun admin
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <div
+                            class="w-8 h-8 rounded-lg
+                   bg-white border border-gray-200
+                   flex items-center justify-center">
+
+                            <i class="bi bi-lock-fill text-gray-400 text-xs"></i>
+                        </div>
+
+                    </div>
+
+                    <input type="hidden" name="division_name" value="{{ $hakAkses->division_name }}">
+
+                </div>
             @endif
         </div>
 
