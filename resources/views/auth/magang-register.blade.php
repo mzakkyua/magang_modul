@@ -34,7 +34,7 @@
         {{-- LEFT PANEL --}}
         {{-- ========================================================= --}}
         <div
-            class="hidden lg:flex lg:w-5/12 xl:w-[42%] bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 relative overflow-hidden flex-col justify-between p-12 sticky top-0 h-screen">
+            class="hidden lg:flex lg:w-5/12 xl:w-[42%] bg-linear-to-br from-blue-900 via-blue-800 to-blue-700 relative overflow-hidden flex-col justify-between p-12 top-0 h-screen">
 
             {{-- Decorative Circles --}}
             <div class="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3">
@@ -203,7 +203,8 @@
 
                         <x-select-field name="education_level" label="Jenjang Pendidikan">
 
-                            <option value="SMA/SMK">SMA / SMK</option>
+                            <option value="SMA">SMA</option>
+                            <option value="SMK">SMK</option>
                             <option value="D3">D3</option>
                             <option value="S1">S1</option>
                             <option value="S2">S2</option>

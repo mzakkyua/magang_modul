@@ -60,27 +60,58 @@ class SyncExistingDivisions extends Command
 
         foreach ($divisions as $name) {
 
-            $exists = Division::whereRaw(
+            $division = Division::whereRaw(
                 'LOWER(name) = ?',
                 [strtolower($name)]
-            )->exists();
+            )->first();
 
-            if (!$exists) {
+            /**
+             * =====================================================
+             * CREATE MASTER DIVISION
+             * =====================================================
+             */
+            if (!$division) {
 
-                Division::create([
+                $division = Division::create([
                     'name' => $name,
                     'is_active' => true,
                 ]);
 
-                $this->line("✔ {$name}");
+                $this->line("✔ Division created: {$name}");
 
                 $created++;
             }
+
+            /**
+             * =====================================================
+             * ENSURE DIVISION SETTING EXISTS
+             * =====================================================
+             *
+             * IMPORTANT:
+             * Semua division WAJIB punya division_settings
+             * agar:
+             * - occupancy monitoring muncul
+             * - quota management aktif
+             * - capacity service dapat membaca data
+             *
+             * null = unlimited quota
+             * =====================================================
+             */
+            DivisionSetting::firstOrCreate(
+                [
+                    'division_name' => $name,
+                ],
+                [
+                    'max_open_vacancies' => 6,
+                ]
+            );
         }
 
         $this->newLine();
 
-        $this->info("Selesai. {$created} divisi berhasil disinkronkan.");
+        $this->info(
+            "Selesai. {$created} divisi berhasil disinkronkan."
+        );
 
         return self::SUCCESS;
     }

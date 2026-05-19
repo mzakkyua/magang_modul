@@ -23,8 +23,11 @@ class Certificate extends Model
      * ==================================================================
      * FILLABLE
      * ==================================================================
-     * 'file' SENGAJA tidak ada — set manual di controller untuk
-     * mencegah path traversal via mass assignment.
+     * Field 'file' diizinkan untuk mass assignment karena path file
+     * sudah dikontrol dan divalidasi sepenuhnya di controller upload.
+     *
+     * Raw file path tetap disembunyikan dari JSON/toArray melalui
+     * properti $hidden untuk mencegah eksposur internal path.
      * ==================================================================
      */
     protected $fillable = [

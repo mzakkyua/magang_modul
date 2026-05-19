@@ -110,58 +110,18 @@
 
                             /**
                              * =====================================================
-                             * SEVERITY COLOR
-                             * =====================================================
-                             */
-
-                            $barColor = 'bg-emerald-400';
-
-                            if ($percentage >= 100) {
-                                $barColor = 'bg-red-400';
-                            } elseif ($percentage >= 85) {
-                                $barColor = 'bg-orange-400';
-                            } elseif ($percentage >= 60) {
-                                $barColor = 'bg-amber-400';
-                            }
-
-                            /**
-                             * =====================================================
                              * SMART STATUS BADGE
                              * =====================================================
                              */
 
                             $statusLabel = 'Aman';
 
-                            $statusClass = '
-    bg-emerald-50
-    text-emerald-600
-    border-emerald-100
-';
-
                             if ($percentage >= 100) {
                                 $statusLabel = 'Penuh';
-
-                                $statusClass = '
-        bg-red-50
-        text-red-600
-        border-red-100
-    ';
                             } elseif ($percentage >= 85) {
                                 $statusLabel = 'Kritis';
-
-                                $statusClass = '
-        bg-orange-50
-        text-orange-600
-        border-orange-100
-    ';
                             } elseif ($percentage >= 60) {
                                 $statusLabel = 'Hampir Penuh';
-
-                                $statusClass = '
-        bg-amber-50
-        text-amber-600
-        border-amber-100
-    ';
                             }
 
                         @endphp
@@ -177,16 +137,19 @@
                                         {{ $setting->division_name }}
                                     </p>
 
-                                    <span
-                                        class="
-                                            text-[10px]
-                                            font-bold
-                                            border
-                                            px-2
-                                            py-0.5
-                                            rounded-full
-                                            {{ $statusClass }}
-                                        ">
+                                    <span @class([
+                                        'text-[10px] font-bold border px-2 py-0.5 rounded-full',
+                                    
+                                        'bg-red-50 text-red-600 border-red-100' => $percentage >= 100,
+                                    
+                                        'bg-orange-50 text-orange-600 border-orange-100' =>
+                                            $percentage >= 85 && $percentage < 100,
+                                    
+                                        'bg-amber-50 text-amber-600 border-amber-100' =>
+                                            $percentage >= 60 && $percentage < 85,
+                                    
+                                        'bg-emerald-50 text-emerald-600 border-emerald-100' => $percentage < 60,
+                                    ])>
                                         {{ $statusLabel }}
                                     </span>
 
@@ -213,8 +176,17 @@
                                 @if ($max !== null)
                                     <div class="mt-1.5 w-full max-w-xs h-1.5 bg-gray-100 rounded-full overflow-hidden">
 
-                                        <div class="h-full rounded-full {{ $barColor }}"
-                                            style="width: {{ $percentage }}%">
+                                        <div @class([
+                                            'h-full rounded-full',
+                                        
+                                            'bg-red-400' => $percentage >= 100,
+                                        
+                                            'bg-orange-400' => $percentage >= 85 && $percentage < 100,
+                                        
+                                            'bg-amber-400' => $percentage >= 60 && $percentage < 85,
+                                        
+                                            'bg-emerald-400' => $percentage < 60,
+                                        ]) style="width: {{ $percentage }}%">
 
                                         </div>
 

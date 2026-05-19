@@ -238,7 +238,7 @@
         {{-- Profil --}}
         <a href="{{ route('admin.profile') }}"
             class="flex items-center px-3 py-2.5 mb-0.5 text-sm font-semibold rounded-xl transition-all duration-150
-            {{ request()->routeIs('admin.profile.index')
+            {{ request()->routeIs('admin.profile')
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
                 : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' }}">
 

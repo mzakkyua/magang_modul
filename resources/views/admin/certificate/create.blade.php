@@ -9,7 +9,7 @@
             return [
                 $m->id => [
                     'id' => $m->id,
-                    'name' => $m->user->profile->full_name ?? $m->user->name,
+                    'name' => $m->user->profile->full_name ?? $m->user->username,
                     'email' => $m->user->email,
                     'divisi' => $v->division_name ?? '-',
                     'title' => $v->title ?? '-',
@@ -91,7 +91,7 @@
                             @foreach ($members as $member)
                                 @php
                                     $vacancy = $member->application->vacancy;
-                                    $name = $member->user->profile->full_name ?? $member->user->name;
+                                    $name = $member->user->profile->full_name ?? $member->user->username;
                                     $email = $member->user->email;
                                     $divisi = $vacancy->division_name ?? '-';
                                     $periode =

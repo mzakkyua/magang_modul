@@ -63,24 +63,6 @@ class AdminProfileController extends Controller
    * ==================================================================
    * METHOD: index()
    * ==================================================================
-   *
-   * TUJUAN:
-   * Menampilkan halaman profil admin beserta histori sesi login.
-   *
-   * DATA YANG DIAMBIL:
-   * - Data user admin yang sedang login
-   * - Daftar session login yang tersimpan di database
-   *
-   * ALUR PROSES:
-   *
-   * 1. Mengambil user yang sedang login.
-   * 2. Mengambil seluruh session login user dari tabel sessions.
-   * 3. Mengurutkan session berdasarkan aktivitas terakhir.
-   * 4. Mengubah timestamp menjadi format waktu yang mudah dibaca.
-   * 5. Menentukan apakah session tersebut adalah device saat ini.
-   * 6. Mengirim data ke view admin.profile.
-   *
-   * ==================================================================
    */
   public function index()
   {
@@ -110,57 +92,77 @@ class AdminProfileController extends Controller
      * Query ini mengambil seluruh session yang dimiliki user
      * kemudian mengurutkannya dari aktivitas terbaru.
      */
-    $sessions = DB::table('sessions')
+    $rawSessions = DB::table('sessions')
       ->where('user_id', $user->id)
       ->orderBy('last_activity', 'desc')
-      ->get()
+      ->get();
 
 
-      /**
-       * ----------------------------------------------------------
-       * STEP 3
-       * TRANSFORM DATA SESSION
-       * ----------------------------------------------------------
-       *
-       * Map digunakan untuk memformat data session agar lebih
-       * mudah digunakan oleh view.
-       */
-      ->map(function ($session) {
-
-        return (object) [
-
-          /**
-           * IP Address dari session login
-           */
-          'ip_address' => $session->ip_address,
-
-          /**
-           * Menentukan apakah session ini adalah device
-           * yang sedang digunakan saat ini.
-           *
-           * request()->session()->getId()
-           * mengambil session ID dari request yang aktif.
-           */
-          'is_current_device' => $session->id === request()->session()->getId(),
-
-          /**
-           * Mengubah timestamp last_activity menjadi
-           * format waktu yang mudah dibaca manusia.
-           *
-           * Contoh output:
-           * - 5 minutes ago
-           * - 2 hours ago
-           * - 3 days ago
-           */
-          'last_active' => Carbon::createFromTimestamp($session->last_activity)
-            ->diffForHumans(),
-        ];
-      });
+    /**
+     * --------------------------------------------------------------
+     * STEP 3
+     * AMBIL SESSION ID AKTIF
+     * --------------------------------------------------------------
+     *
+     * Diambil di luar closure map() agar Intelephense dapat
+     * menyimpulkan tipe data dengan benar (string, bukan object).
+     *
+     * Manfaat tambahan:
+     * - Lebih efisien: session()->getId() hanya dipanggil sekali,
+     *   bukan setiap iterasi map.
+     */
+    $currentSessionId = session()->getId();
 
 
     /**
      * --------------------------------------------------------------
      * STEP 4
+     * TRANSFORM DATA SESSION
+     * --------------------------------------------------------------
+     *
+     * Map digunakan untuk memformat data session agar lebih
+     * mudah digunakan oleh view.
+     *
+     * Variabel $currentSessionId di-pass via `use` agar tersedia
+     * di dalam closure tanpa perlu chaining request()->session().
+     */
+    $sessions = $rawSessions->map(function ($session) use ($currentSessionId) {
+
+      $item = new \stdClass();
+
+      /**
+       * IP Address dari session login
+       */
+      $item->ip_address = $session->ip_address;
+
+      /**
+       * Menentukan apakah session ini adalah device
+       * yang sedang digunakan saat ini.
+       *
+       * Perbandingan dilakukan antara dua string (session ID),
+       * sehingga Intelephense dapat menyimpulkan tipe dengan benar.
+       */
+      $item->is_current_device = $session->id === $currentSessionId;
+
+      /**
+       * Mengubah timestamp last_activity menjadi
+       * format waktu yang mudah dibaca manusia.
+       *
+       * Contoh output:
+       * - 5 minutes ago
+       * - 2 hours ago
+       * - 3 days ago
+       */
+      $item->last_active = Carbon::createFromTimestamp($session->last_activity)
+        ->diffForHumans();
+
+      return $item;
+    });
+
+
+    /**
+     * --------------------------------------------------------------
+     * STEP 5
      * MENGIRIM DATA KE VIEW
      * --------------------------------------------------------------
      *
@@ -213,11 +215,11 @@ class AdminProfileController extends Controller
         Rule::unique('users')->ignore($user->id)
       ],
       'current_password' => 'nullable|required_with:new_password',
-      'new_password' => 'nullable|required_with:current_password|min:8|confirmed',
-      'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+      'new_password'     => 'nullable|required_with:current_password|min:8|confirmed',
+      'photo'            => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
     ]);
 
-    $newPhotoPath = null;
+    $newPhotoPath     = null;
     $oldPhotoToDelete = null;
 
     try {
@@ -301,6 +303,29 @@ class AdminProfileController extends Controller
          * ----------------------------------------------------------
          */
         $user->save();
+
+        /**
+         * ----------------------------------------------------------
+         * REVOKE SESSION LAIN JIKA PASSWORD DIGANTI
+         * ----------------------------------------------------------
+         *
+         * Tujuan:
+         * Mengeluarkan seluruh device lain setelah password berubah
+         * untuk mencegah session lama tetap aktif.
+         *
+         * Session saat ini TIDAK dihapus.
+         */
+        if ($request->filled('new_password')) {
+
+          DB::table('sessions')
+            ->where('user_id', $user->id)
+            ->where('user_id', $user->id)
+            ->where('auth_guard', 'web')
+            ->where('id', '!=', $request->session()->getId())
+            ->delete();
+        }
+
+        $request->session()->regenerate();
       });
 
       /**

@@ -9,8 +9,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Auth\AuthenticationException;
 
 use App\Models\ProfileMagang;
+use App\Models\UserMagang;
 
 /**
  * ======================================================================
@@ -19,20 +21,13 @@ use App\Models\ProfileMagang;
  *
  * Menangani update biodata, upload dokumen, dan ganti password peserta.
  *
- * IMPROVEMENT DARI VERSI SEBELUMNYA:
- *
  * 🔴 CRITICAL
  *   - [FIX] Filename CV & proposal di-randomize dengan Str::uuid()
- *           Nama file asli user tidak dipakai — mencegah tebak path,
- *           tabrakan nama, dan overwrite file orang lain
  *   - [FIX] Password policy diperkuat: wajib huruf besar + angka
- *           (konsisten dengan RegisterMagangController)
- *   - [FIX] Revoke session lain saat ganti password — jika ada sesi
- *           aktif di device lain, semua di-invalidate kecuali sesi ini
+ *   - [FIX] Revoke session lain saat ganti password
  *
  * 🟡 MAINTAINABILITY
  *   - [FIX] Logic upload file dipusatkan ke handleFileUpload()
- *           agar tidak ada duplikasi kode antara CV dan proposal
  *   - [FIX] Audit log ditambahkan untuk update profil dan ganti password
  *
  * ✅ SUDAH ADA SEBELUMNYA (DIPERTAHANKAN)
@@ -52,11 +47,36 @@ class ProfileMagangController extends Controller
     // KONFIGURASI FILE UPLOAD
     // ======================================================================
 
-    private const CV_DISK       = 'public';
-    private const CV_MAX_KB     = 2048;  // 2 MB
+    private const CV_DISK         = 'public';
+    private const CV_MAX_KB       = 2048;  // 2 MB
 
     private const PROPOSAL_DISK   = 'public';
     private const PROPOSAL_MAX_KB = 5120; // 5 MB
+
+
+    // ======================================================================
+    // PRIVATE HELPER — AMBIL USER TERAUTENTIKASI
+    // ======================================================================
+
+    /**
+     * Ambil user yang sedang login via guard 'magang'.
+     *
+     * dalam method memaksa Intelephense menerima tipe UserMagang
+     * sejak assignment — sebelum instanceof check dilakukan.
+     *
+     * @throws AuthenticationException
+     */
+    private function getAuthUser(): UserMagang
+    {
+        /** @var UserMagang|null $user */
+        $user = Auth::guard('magang')->user();
+
+        if ($user instanceof UserMagang) {
+            return $user;
+        }
+
+        throw new AuthenticationException('Unauthenticated.');
+    }
 
 
     // ======================================================================
@@ -65,10 +85,11 @@ class ProfileMagangController extends Controller
 
     public function edit()
     {
-        $user = Auth::guard('magang')->user();
+        /** @var UserMagang $user */
+        $user = $this->getAuthUser();
 
         $profile = ProfileMagang::firstOrNew([
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ]);
 
         return view('magang.profile.edit', compact('profile', 'user'));
@@ -81,23 +102,17 @@ class ProfileMagangController extends Controller
 
     public function update(Request $request)
     {
-        /** @var \App\Models\UserMagang $user */
-        $user = Auth::guard('magang')->user();
+        /** @var UserMagang $user */
+        $user = $this->getAuthUser();
 
         $profile = ProfileMagang::firstOrNew([
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ]);
 
         /**
          * ===========================================================
          * STEP 1 — VALIDASI INPUT
          * ===========================================================
-         *
-         * PASSWORD POLICY (diperkuat — konsisten dengan register):
-         * - min:8           → minimal 8 karakter
-         * - regex huruf besar → wajib ada minimal 1 huruf kapital
-         * - regex angka     → wajib ada minimal 1 digit angka
-         * - confirmed       → harus match dengan password_confirmation
          */
         $isCvRequired = empty($profile->cv_file_path);
 
@@ -106,17 +121,17 @@ class ProfileMagangController extends Controller
             'full_name'        => 'required|string|max:100',
             'nim_nisn'         => 'required|string|max:50',
             'institution_name' => 'required|string|max:100',
-            'education_level'  => 'required|string|in:SMA,SMK,D3,S1',
+            'education_level'  => 'required|string|in:SMA,SMK,D3,S1,S2',
             'major'            => 'required|string|max:100',
             'phone_number'     => ['required', 'regex:/^[0-9+\-\s]+$/', 'max:20'],
             'address'          => 'required|string|max:500',
 
-            // File CV — wajib jika belum pernah upload, nullable jika sudah
+            // File CV — wajib jika belum pernah upload
             'cv_file' => array_filter([
                 $isCvRequired ? 'required' : 'nullable',
                 'file',
                 'mimes:pdf',
-                'mimetypes:application/pdf', // validasi konten real file
+                'mimetypes:application/pdf',
                 'max:' . self::CV_MAX_KB,
             ]),
 
@@ -129,14 +144,13 @@ class ProfileMagangController extends Controller
                 'max:' . self::PROPOSAL_MAX_KB,
             ],
 
-            // Ganti password — semua nullable, tapi jika password diisi maka current_password wajib
             'current_password' => 'nullable|required_with:password|string',
             'password'         => [
                 'nullable',
                 'min:8',
                 'confirmed',
-                'regex:/[A-Z]/', // wajib huruf besar
-                'regex:/[0-9]/', // wajib angka
+                'regex:/[A-Z]/',
+                'regex:/[0-9]/',
             ],
         ], [
             'cv_file.required'               => 'Anda WAJIB mengunggah Curriculum Vitae (CV) untuk pendaftaran pertama.',
@@ -156,8 +170,6 @@ class ProfileMagangController extends Controller
          * ===========================================================
          * STEP 2 — VERIFIKASI PASSWORD LAMA
          * ===========================================================
-         * Hash::check() memastikan current_password cocok dengan
-         * password yang tersimpan di DB sebelum diizinkan mengganti.
          */
         if ($request->filled('password')) {
             if (!Hash::check($request->current_password, $user->password_hash)) {
@@ -172,32 +184,35 @@ class ProfileMagangController extends Controller
          * ===========================================================
          * STEP 3 — DATABASE TRANSACTION
          * ===========================================================
+         *
+         * $userId & $currentSessId diekstrak sebelum closure.
+         * $user di-redeclare dengan @var di dalam closure karena
+         * Intelephense kehilangan tipe saat variabel masuk via use().
          */
-        DB::transaction(function () use ($request, $profile, $user) {
+        $userId        = $user->id;
+        $currentSessId = $request->session()->getId();
+
+        DB::transaction(function () use ($request, $profile, $user, $userId, $currentSessId) {
+
+            /** @var UserMagang $user */
 
             /*
             ----------------------------------------------------------
             3A. UPDATE PASSWORD
-            ----------------------------------------------------------
-            IMPROVEMENT — Revoke session lain:
-            Saat password diganti, semua session aktif di device lain
-            di-invalidate. Hanya session saat ini yang tetap aktif.
-            Ini mencegah session lama dipakai jika akun sempat diakses
-            orang lain.
             ----------------------------------------------------------
             */
             if ($request->filled('password')) {
                 $user->password_hash = Hash::make($request->password);
                 $user->save();
 
-                // Revoke semua session lain kecuali yang sekarang
                 DB::table('sessions')
-                    ->where('user_id', $user->id)
-                    ->where('id', '!=', session()->getId())
+                    ->where('user_id', $userId)
+                    ->where('auth_guard', 'magang')
+                    ->where('id', '!=', $currentSessId)
                     ->delete();
 
                 Log::info('Password peserta diubah', [
-                    'user_id'   => $user->id,
+                    'user_id'   => $userId,
                     'timestamp' => now()->toDateTimeString(),
                 ]);
             }
@@ -206,16 +221,11 @@ class ProfileMagangController extends Controller
             ----------------------------------------------------------
             3B. HANDLE CV UPLOAD
             ----------------------------------------------------------
-            handleFileUpload() menangani:
-            - Hapus file lama dari storage
-            - Generate UUID sebagai nama file baru
-            - Simpan file ke path yang ditentukan
-            ----------------------------------------------------------
             */
             if ($request->hasFile('cv_file')) {
                 $profile->cv_file_path = $this->handleFileUpload(
                     $request->file('cv_file'),
-                    'cv_uploads/user_' . $user->id,
+                    'cv_uploads/user_' . $userId,
                     self::CV_DISK,
                     $profile->cv_file_path
                 );
@@ -229,7 +239,7 @@ class ProfileMagangController extends Controller
             if ($request->hasFile('proposal_file')) {
                 $profile->proposal_file_path = $this->handleFileUpload(
                     $request->file('proposal_file'),
-                    'proposal_uploads/user_' . $user->id,
+                    'proposal_uploads/user_' . $userId,
                     self::PROPOSAL_DISK,
                     $profile->proposal_file_path
                 );
@@ -247,12 +257,12 @@ class ProfileMagangController extends Controller
             $profile->major            = $request->major;
             $profile->phone_number     = $request->phone_number;
             $profile->address          = $request->address;
-            $profile->user_id          = $profile->user_id ?? $user->id;
+            $profile->user_id          = $profile->user_id ?? $userId;
 
             $profile->save();
 
             Log::info('Profil peserta diperbarui', [
-                'user_id'   => $user->id,
+                'user_id'   => $userId,
                 'timestamp' => now()->toDateTimeString(),
             ]);
         });
@@ -267,13 +277,10 @@ class ProfileMagangController extends Controller
     // DELETE CV
     // ======================================================================
 
-    /**
-     * Hapus file CV saja tanpa menghapus data profil lainnya.
-     */
     public function deleteCv()
     {
-        /** @var \App\Models\UserMagang $user */
-        $user    = Auth::guard('magang')->user();
+        /** @var UserMagang $user */
+        $user    = $this->getAuthUser();
         $profile = ProfileMagang::where('user_id', $user->id)->first();
 
         if ($profile && $profile->cv_file_path) {
@@ -299,23 +306,11 @@ class ProfileMagangController extends Controller
     // ======================================================================
 
     /**
-     * -----------------------------------------------------------------------
-     * handleFileUpload()
-     * -----------------------------------------------------------------------
-     *
      * Menangani seluruh proses replace file:
      * 1. Hapus file lama dari storage (jika ada)
      * 2. Generate nama file baru dengan UUID
      * 3. Simpan file baru ke path yang ditentukan
      * 4. Kembalikan path file baru untuk disimpan ke DB
-     *
-     * KENAPA UUID?
-     * Nama file asli dari user ("cv andi ramdhani.pdf") tidak dipakai karena:
-     * - Bisa bentrok dengan file user lain
-     * - Bisa ditebak path-nya langsung
-     * - Karakter spesial bisa menyebabkan error di beberapa OS
-     *
-     * -----------------------------------------------------------------------
      */
     private function handleFileUpload(
         \Illuminate\Http\UploadedFile $file,
@@ -323,10 +318,8 @@ class ProfileMagangController extends Controller
         string $disk,
         ?string $oldPath = null
     ): string {
-        // Hapus file lama jika ada
         $this->deleteFileIfExists($oldPath, $disk);
 
-        // UUID sebagai nama file — unik dan tidak bisa ditebak
         $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
 
         return $file->storeAs($directory, $filename, $disk);
@@ -334,12 +327,8 @@ class ProfileMagangController extends Controller
 
 
     /**
-     * -----------------------------------------------------------------------
-     * deleteFileIfExists()
-     * -----------------------------------------------------------------------
      * Hapus file dari storage jika masih ada.
      * Tidak throw error jika file sudah tidak ada (graceful).
-     * -----------------------------------------------------------------------
      */
     private function deleteFileIfExists(?string $filePath, string $disk): void
     {

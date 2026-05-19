@@ -25,7 +25,6 @@ use Illuminate\Support\Facades\DB;
  * Estimasi slot buka:
  * - menggunakan MAX(end_date)
  * - dari vacancy open/closed
- * ======================================================================
  */
 class DivisionCapacityService
 {
@@ -57,16 +56,16 @@ class DivisionCapacityService
    * GET ALL DIVISION CAPACITY (WITH CACHE)
    * ==============================================================
    *
-   * Return Collection:
+   * Return Collection per divisi:
    *
    * [
    *   division_name,
-   *   max_slots,
+   *   max_slots,        — null jika unlimited
    *   filled_slots,
-   *   available_slots,
+   *   available_slots,  — null jika unlimited
    *   is_full,
-   *   estimated_open,
-   *   fill_percentage,
+   *   estimated_open,   — null jika tidak penuh / tidak ada end_date
+   *   fill_percentage,  — null jika unlimited
    * ]
    * ==============================================================
    */
@@ -99,43 +98,6 @@ class DivisionCapacityService
     Cache::forget(self::CACHE_KEY);
   }
 
-  /**
-   * ==============================================================
-   * VALIDASI APAKAH DIVISI MASIH BISA MEMBUAT LOWONGAN
-   * ==============================================================
-   *
-   * Return:
-   * - true  = masih tersedia slot
-   * - false = quota divisi penuh
-   * ==============================================================
-   */
-  public static function canCreateVacancy(
-    string $divisionName
-  ): bool {
-
-    $setting = DivisionSetting::query()
-      ->where('division_name', $divisionName)
-      ->first();
-
-    /**
-     * ----------------------------------------------------------
-     * BELUM ADA SETTING ATAU UNLIMITED
-     * ----------------------------------------------------------
-     */
-    if (
-      !$setting
-      || !$setting->hasLimit()
-    ) {
-      return true;
-    }
-
-    $filledSlots = self::countFilledSlots(
-      $divisionName
-    );
-
-    return $filledSlots < $setting->max_open_vacancies;
-  }
-
     // ======================================================================
     // PRIVATE METHODS
     // ======================================================================
@@ -150,8 +112,7 @@ class DivisionCapacityService
    * 2. Aggregate vacancy dalam 1 query
    * 3. Build collection di PHP
    *
-   * Total query:
-   * - 2 query saja
+   * Total query: 2 query saja
    * ==============================================================
    */
   private static function computeAll(): Collection
@@ -180,19 +141,11 @@ class DivisionCapacityService
     $vacancyStats = DB::table('vacancies_magang')
       ->select([
         'division_name',
-
         DB::raw('COUNT(*) as filled_slots'),
-
         DB::raw('MAX(end_date) as latest_end_date'),
       ])
-      ->whereIn(
-        'status',
-        self::OCCUPYING_STATUSES
-      )
-      ->whereIn(
-        'division_name',
-        $divisionNames
-      )
+      ->whereIn('status', self::OCCUPYING_STATUSES)
+      ->whereIn('division_name', $divisionNames)
       ->groupBy('division_name')
       ->get()
       ->keyBy('division_name');
@@ -204,24 +157,17 @@ class DivisionCapacityService
      */
     return $settings->map(function (
       DivisionSetting $setting
-    ) use (
-      $vacancyStats
-    ) {
+    ) use ($vacancyStats) {
 
-      $stats = $vacancyStats->get(
-        $setting->division_name
-      );
+      $stats = $vacancyStats->get($setting->division_name);
 
       /**
        * ------------------------------------------------------
        * BASIC VALUES
        * ------------------------------------------------------
        */
-      $maxSlots = $setting->max_open_vacancies;
-
-      $filledSlots = (int) (
-        $stats->filled_slots ?? 0
-      );
+      $maxSlots    = $setting->max_open_vacancies;
+      $filledSlots = (int) ($stats->filled_slots ?? 0);
 
       /**
        * ------------------------------------------------------
@@ -250,16 +196,11 @@ class DivisionCapacityService
        * NULL jika unlimited.
        */
       $fillPercentage = match (true) {
-
         $maxSlots === null => null,
-
-        $maxSlots === 0 => 100,
-
-        default => min(
+        $maxSlots === 0   => 100,
+        default           => min(
           100,
-          (int) round(
-            ($filledSlots / $maxSlots) * 100
-          )
+          (int) round(($filledSlots / $maxSlots) * 100)
         ),
       };
 
@@ -270,12 +211,7 @@ class DivisionCapacityService
        */
       $estimatedOpen = null;
 
-      if (
-        $isFull
-        && $stats
-        && $stats->latest_end_date
-      ) {
-
+      if ($isFull && $stats && $stats->latest_end_date) {
         $estimatedOpen = Carbon::parse(
           $stats->latest_end_date
         )->translatedFormat('F Y');
@@ -287,42 +223,14 @@ class DivisionCapacityService
        * ------------------------------------------------------
        */
       return [
-
-        'division_name' => $setting->division_name,
-
-        'max_slots' => $maxSlots,
-
-        'filled_slots' => $filledSlots,
-
+        'division_name'   => $setting->division_name,
+        'max_slots'       => $maxSlots,
+        'filled_slots'    => $filledSlots,
         'available_slots' => $availableSlots,
-
-        'is_full' => $isFull,
-
-        'estimated_open' => $estimatedOpen,
-
+        'is_full'         => $isFull,
+        'estimated_open'  => $estimatedOpen,
         'fill_percentage' => $fillPercentage,
       ];
     })->values();
-  }
-
-  /**
-   * ==============================================================
-   * COUNT FILLED SLOTS
-   * ==============================================================
-   */
-  private static function countFilledSlots(
-    string $divisionName
-  ): int {
-
-    return VacancyMagang::query()
-      ->where(
-        'division_name',
-        $divisionName
-      )
-      ->whereIn(
-        'status',
-        self::OCCUPYING_STATUSES
-      )
-      ->count();
   }
 }

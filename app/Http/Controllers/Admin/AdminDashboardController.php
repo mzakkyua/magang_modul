@@ -7,9 +7,9 @@ use App\Models\ApplicationMagang;
 use App\Models\MagangAccessRight;
 use App\Helpers\DashboardCache;
 use App\Models\VacancyMagang;
-use App\Models\UserMagang;
 use App\Services\DivisionCapacityService;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -30,12 +30,14 @@ class AdminDashboardController extends Controller
     // INDEX
     // ======================================================================
 
-    public function index()
+    public function index(Request $request) // ← inject Request
     {
-        $user     = Auth::user();
-        $hakAkses = request()->attributes->get('magang_access');
+        $user = Auth::user();
 
-        if (!$hakAkses) {
+        /** @var MagangAccessRight|null $hakAkses */
+        $hakAkses = $request->attributes->get('magang_access'); // ← pakai $request
+
+        if (!($hakAkses instanceof MagangAccessRight)) {
             abort(403, 'Akses Ditolak: Anda tidak terdaftar sebagai Admin Magang.');
         }
 

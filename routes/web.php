@@ -225,7 +225,7 @@ Route::middleware('auth:magang')->group(function () {
         ->name('certificates.download');
 
     Route::get('/vacancies/{vacancy}/snapshot', [LandingController::class, 'snapshot'])
-        ->middleware(['auth:magang', 'throttle:60,1'])
+        ->middleware(['throttle:60,1'])
         ->name('vacancies.snapshot');
 });
 
@@ -309,14 +309,8 @@ Route::prefix('admin')
         Route::get('/division-settings', [DivisionSettingController::class, 'index'])
             ->name('division-settings.index');
 
-        Route::post('/division-settings', [DivisionSettingController::class, 'store'])
-            ->name('division-settings.store');
-
         Route::patch('/division-settings/{divisionSetting}', [DivisionSettingController::class, 'update'])
             ->name('division-settings.update');
-
-        Route::delete('/division-settings/{divisionSetting}', [DivisionSettingController::class, 'destroy'])
-            ->name('division-settings.destroy');
 
         // Di dalam group middleware admin
         Route::get('/peserta', [PesertaController::class, 'index'])

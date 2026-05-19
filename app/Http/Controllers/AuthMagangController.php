@@ -82,6 +82,7 @@ class AuthMagangController extends Controller
                     ProfileMagang::create([
                         'user_id' => $user->id,
                         'full_name' => $request->nama_lengkap,
+                        'education_level' => $request->education_level,
                     ]);
 
                     return;
@@ -174,6 +175,12 @@ class AuthMagangController extends Controller
 
             $request->session()->regenerate();
 
+            DB::table('sessions')
+                ->where('id', $request->session()->getId())
+                ->update([
+                    'auth_guard' => 'web',
+                ]);
+
             Log::info('Login admin berhasil', [
                 'user_id' => Auth::guard('web')->id(),
                 'email'   => $email,
@@ -193,6 +200,12 @@ class AuthMagangController extends Controller
             RateLimiter::clear($key);
 
             $request->session()->regenerate();
+
+            DB::table('sessions')
+                ->where('id', $request->session()->getId())
+                ->update([
+                    'auth_guard' => 'magang',
+                ]);
 
             Log::info('Login peserta berhasil', [
                 'user_id' => Auth::guard('magang')->id(),

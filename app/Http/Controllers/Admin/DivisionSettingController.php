@@ -6,6 +6,8 @@ use App\Helpers\DashboardCache;
 use App\Http\Controllers\Controller;
 use App\Models\DivisionSetting;
 use App\Services\DivisionCapacityService;
+use App\Models\MagangAccessRight;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -38,9 +40,9 @@ class DivisionSettingController extends Controller
    * HALAMAN KELOLA QUOTA DIVISI
    * ==============================================================
    */
-  public function index()
+  public function index(Request $request) // ← inject Request di sini
   {
-    $this->authorizeSuperAdmin();
+    $this->authorizeSuperAdmin($request);
 
     /**
      * ----------------------------------------------------------
@@ -56,7 +58,7 @@ class DivisionSettingController extends Controller
      * DATA KAPASITAS REALTIME
      * ----------------------------------------------------------
      */
-    $capacityData = DivisionCapacityService::getAll()
+    $capacityData = DivisionCapacityService::getAllCached()
       ->keyBy('division_name');
 
     return view(
@@ -82,7 +84,7 @@ class DivisionSettingController extends Controller
     DivisionSetting $divisionSetting
   ) {
 
-    $this->authorizeSuperAdmin();
+    $this->authorizeSuperAdmin($request);
 
     /**
      * ----------------------------------------------------------
@@ -163,14 +165,12 @@ class DivisionSettingController extends Controller
    * SUPERADMIN GUARD
    * ==============================================================
    */
-  private function authorizeSuperAdmin(): void
+  private function authorizeSuperAdmin(Request $request): void
   {
-    $hakAkses = request()
-      ->attributes
-      ->get('magang_access');
+    $hakAkses = $request->attributes->get('magang_access');
 
     if (
-      !$hakAkses
+      !($hakAkses instanceof MagangAccessRight)
       || !$hakAkses->isSuperAdmin()
     ) {
       abort(
