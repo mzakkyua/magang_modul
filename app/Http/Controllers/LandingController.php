@@ -2,15 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use App\Models\VacancyMagang;
-use App\Services\DivisionCapacityService;
 
 /**
  * ======================================================================
  * CONTROLLER: LandingController
  * ======================================================================
+ *
+ * CHANGELOG (refactor divisionStats):
+ *   - $divisionCapacity (admin quota slot) DIGANTI dengan $divisionStats
+ *   - $divisionStats = data lowongan aktif per divisi dari vacancies_magang
+ *   - DivisionCapacityService tidak lagi dipakai di sini
+ *     → import-nya dihapus dari file ini
+ *     → JANGAN hapus file DivisionCapacityService.php dulu sebelum
+ *       memastikan tidak ada controller lain (misal AdminDashboard) yang
+ *       masih menggunakannya
  */
 class LandingController extends Controller
 {
@@ -18,10 +29,11 @@ class LandingController extends Controller
     // KONFIGURASI
     // ======================================================================
 
-    private const CACHE_TTL_MINUTES = 10;
-    private const CACHE_KEY_MAGANG = 'landing_vacancies_magang';
-    private const CACHE_KEY_PENELITIAN = 'landing_vacancies_penelitian';
-    private const LISTING_LIMIT = 20;
+    private const CACHE_TTL_MINUTES       = 10;
+    private const CACHE_KEY_MAGANG        = 'landing_vacancies_magang';
+    private const CACHE_KEY_PENELITIAN    = 'landing_vacancies_penelitian';
+    private const CACHE_KEY_DIVISION_STATS = 'landing_division_stats';  // ← BARU
+    private const LISTING_LIMIT           = 20;
 
     private const LISTING_COLUMNS = [
         'id',
@@ -62,35 +74,39 @@ class LandingController extends Controller
         if ($search === '') {
             [
                 $vacanciesMagang,
-                $vacanciesPenelitian
+                $vacanciesPenelitian,
             ] = $this->getFromCache();
         } else {
             [
                 $vacanciesMagang,
-                $vacanciesPenelitian
+                $vacanciesPenelitian,
             ] = $this->getFromDatabase($search);
         }
 
         /**
          * -------------------------------------------------------
-         * KAPASITAS DIVISI
+         * DIVISION STATS (BARU)
          * -------------------------------------------------------
          *
-         * Data kapasitas per divisi untuk ditampilkan di landing.
-         * Hanya divisi yang sudah dikonfigurasi superadmin yang
-         * muncul. Menggunakan cache tersendiri (10 menit).
+         * Menampilkan lowongan aktif per divisi di landing page —
+         * dari sudut pandang calon peserta:
+         *   "Divisi mana yang sedang buka lowongan?"
+         *   "Berapa tempat tersedia?"
+         *   "Kapan kira-kira buka lagi kalau penuh?"
          *
-         * Jika tidak ada divisi yang dikonfigurasi, $divisionCapacity
-         * akan berupa Collection kosong — section tidak ditampilkan.
+         * Data bersumber dari vacancies_magang (bukan quota admin).
+         * Cache terpisah 10 menit — tidak ikut reset saat search.
+         *
+         * Selalu fresh dari cache; tidak bergantung pada $search
+         * karena section ini bukan bagian dari fitur search.
          * -------------------------------------------------------
          */
-        $divisionCapacity = DivisionCapacityService::getAllCached();
-
+        $divisionStats = $this->getDivisionStatsFromCache();
         return view('landing.index', compact(
             'vacanciesMagang',
             'vacanciesPenelitian',
             'search',
-            'divisionCapacity'
+            'divisionStats',
         ));
     }
 
@@ -114,7 +130,7 @@ class LandingController extends Controller
     public function snapshot(VacancyMagang $vacancy)
     {
         if (
-            !in_array(
+            ! in_array(
                 $vacancy->status,
                 self::PUBLIC_STATUSES,
                 true
@@ -135,7 +151,7 @@ class LandingController extends Controller
     }
 
     // ======================================================================
-    // PRIVATE HELPERS
+    // PRIVATE HELPERS — LISTING VACANCIES
     // ======================================================================
 
     private function getFromCache(): array
@@ -200,5 +216,171 @@ class LandingController extends Controller
                 }
             )
             ->latest();
+    }
+
+    // ======================================================================
+    // PRIVATE HELPERS — DIVISION STATS (BARU)
+    // ======================================================================
+
+    /**
+     * Ambil division stats dari cache.
+     * TTL 10 menit, cache key tersendiri.
+     */
+    private function getDivisionStatsFromCache(): Collection
+    {
+        return Cache::remember(
+            self::CACHE_KEY_DIVISION_STATS,
+            now()->addMinutes(self::CACHE_TTL_MINUTES),
+            fn() => $this->computeDivisionStats()
+        );
+    }
+
+    /**
+     * Hitung division stats dari database.
+     *
+     * Menggunakan 2 query:
+     *   Q1 — semua open vacancies + jumlah active applications per vacancy
+     *   Q2 — MAX(end_date) lowongan closed per divisi (untuk estimasi buka)
+     *
+     * Semua aggregasi dilakukan di PHP supaya logika
+     * quota_slots=null (unlimited) mudah ditangani.
+     *
+     * Output per item (sesuai blade division-stats.blade.php):
+     *   division_name    string
+     *   open_vacancies   int      jumlah vacancy status 'open'
+     *   total_available  int      total slot tersedia (0 jika has_unlimited)
+     *   has_unlimited    bool     true jika ada vacancy tanpa batas slot
+     *   has_open         bool     true jika ada lowongan open
+     *   estimated_open   ?string  "Agustus 2026" — hanya jika !has_open
+     */
+    private function computeDivisionStats(): Collection
+    {
+        /**
+         * ----------------------------------------------------------
+         * QUERY 1:
+         * Semua open vacancies beserta jumlah active applications.
+         *
+         * active_count dipakai untuk menghitung sisa slot per vacancy:
+         *   sisa = quota_slots - active_count
+         * ----------------------------------------------------------
+         */
+        $openVacancies = VacancyMagang::query()
+            ->select(['division_name', 'quota_slots'])
+            ->where('status', VacancyMagang::STATUS_OPEN)
+            ->withCount([
+                'applications as active_count' => fn($q) =>
+                $q->whereIn('status', self::ACTIVE_STATUSES),
+            ])
+            ->get();
+
+        /**
+         * ----------------------------------------------------------
+         * QUERY 2:
+         * MAX(end_date) dari vacancies berstatus closed, per divisi.
+         * Dipakai sebagai estimasi kapan divisi bisa buka lagi.
+         *
+         * Hanya relevan untuk divisi yang tidak punya lowongan open.
+         * ----------------------------------------------------------
+         */
+        $closedEndDates = DB::table('vacancies_magang')
+            ->select([
+                'division_name',
+                DB::raw('MAX(end_date) as latest_end_date'),
+            ])
+            ->where('status', VacancyMagang::STATUS_CLOSED)
+            ->groupBy('division_name')
+            ->get()
+            ->keyBy('division_name');
+
+        /**
+         * ----------------------------------------------------------
+         * GROUP open vacancies by division_name
+         * ----------------------------------------------------------
+         */
+        $grouped = $openVacancies->groupBy('division_name');
+
+        /**
+         * ----------------------------------------------------------
+         * UNIVERSE DIVISI:
+         * Union antara divisi yang punya open vacancy
+         * dan divisi yang punya closed vacancy (untuk estimated_open).
+         *
+         * Sort alphabetical agar urutan konsisten.
+         * ----------------------------------------------------------
+         */
+        $allDivisionNames = $grouped->keys()
+            ->merge($closedEndDates->keys())
+            ->unique()
+            ->sort()
+            ->values();
+
+        /**
+         * ----------------------------------------------------------
+         * BUILD FINAL COLLECTION
+         * ----------------------------------------------------------
+         */
+        return $allDivisionNames->map(function (string $divisionName) use (
+            $grouped,
+            $closedEndDates,
+        ) {
+            /** @var \Illuminate\Support\Collection $vacancies */
+            $vacancies     = $grouped->get($divisionName, collect());
+            $hasOpen       = $vacancies->isNotEmpty();
+            $openCount     = $vacancies->count();
+
+            /**
+             * has_unlimited:
+             * true jika ada minimal 1 vacancy dengan quota_slots = null
+             */
+            $hasUnlimited = $vacancies->contains(
+                fn($v) => $v->quota_slots === null
+            );
+
+            /**
+             * total_available:
+             * Jumlah slot yang masih bisa diisi di semua open vacancies.
+             * 0 (dan diabaikan) jika has_unlimited = true.
+             */
+            $totalAvailable = 0;
+            $totalQuota = 0;
+
+            if (! $hasUnlimited) {
+                $totalAvailable = $vacancies->sum(function ($v) {
+                    $filled = (int) ($v->active_count ?? 0);
+                    $quota  = (int) ($v->quota_slots ?? 0);
+                    return max(0, $quota - $filled);
+                });
+                // Hitung total kuota awal ← TAMBAHKAN INI
+                $totalQuota = $vacancies->sum(function ($v) {
+                    return (int) ($v->quota_slots ?? 0);
+                });
+            }
+
+            /**
+             * estimated_open:
+             * Hanya relevan jika divisi tidak punya open vacancies.
+             * Diambil dari MAX(end_date) closed vacancies divisi tsb.
+             */
+            $estimatedOpen = null;
+
+            if (! $hasOpen && isset($closedEndDates[$divisionName])) {
+                $latestEnd = $closedEndDates[$divisionName]->latest_end_date;
+
+                if ($latestEnd) {
+                    $estimatedOpen = Carbon::parse($latestEnd)
+                        ->translatedFormat('F Y');
+                }
+            }
+
+            return [
+                'division_name'   => $divisionName,
+                'open_vacancies'  => $openCount,
+                'total_available' => $totalAvailable,
+                'total_quota'     => $totalQuota,
+                'has_unlimited'   => $hasUnlimited,
+                'has_open'        => $hasOpen,
+                'estimated_open'  => $estimatedOpen,
+            ];
+        })->values();
     }
 }

@@ -51,8 +51,8 @@
                             <div class="mt-1.5 w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                 <div class="h-full rounded-full transition-all duration-300
                                     @if ($item['is_full']) bg-red-400
-                                    @elseif ($item['fill_percentage'] >= 70) bg-amber-400
-                                    @else bg-emerald-400 @endif"
+                                    @elseif ($item['fill_percentage'] >= 70)
+                                    @else @endif"
                                     style="width: {{ $item['fill_percentage'] }}%">
                                 </div>
                             </div>
