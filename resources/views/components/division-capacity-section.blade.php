@@ -4,7 +4,7 @@
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center shadow-inner">
-                    <i class="bi bi-pie-chart-fill text-sm"></i>
+                    <i class="bi bi-pie-chart-fill text-sm"></i> {{-- Menggunakan Bootstrap Icons sesuai standar --}}
                 </div>
                 <div>
                     <h3 class="font-bold text-gray-900 text-sm tracking-tight">Monitoring Kapasitas Divisi</h3>
@@ -27,6 +27,24 @@
                 @php
                     $isFull = $item['is_full'];
                     $pct = $item['fill_percentage'] ?? 0;
+
+                    // Logika warna selaras dengan Design System
+                    $barColor = 'bg-emerald-500';
+                    $textColor = 'text-emerald-700';
+                    $bgColor = 'bg-emerald-50';
+                    $borderColor = 'border-emerald-200';
+
+                    if ($isFull) {
+                        $barColor = 'bg-red-500';
+                        $textColor = 'text-red-700';
+                        $bgColor = 'bg-red-50';
+                        $borderColor = 'border-red-200';
+                    } elseif ($pct >= 80) {
+                        $barColor = 'bg-amber-500';
+                        $textColor = 'text-amber-700';
+                        $bgColor = 'bg-amber-50';
+                        $borderColor = 'border-amber-200';
+                    }
                 @endphp
 
                 <div
@@ -46,12 +64,8 @@
 
                         @if ($item['max_slots'] !== null)
                             <div class="w-full max-w-md h-2 bg-gray-100 rounded-full overflow-hidden">
-                                <div @class([
-                                    'h-full rounded-full transition-all duration-700 ease-out',
-                                    'bg-red-500' => $isFull,
-                                    'bg-amber-500' => !$isFull && $pct >= 80,
-                                    'bg-emerald-500' => !$isFull && $pct < 80,
-                                ]) style="width: {{ $pct }}%">
+                                <div class="h-full rounded-full transition-all duration-700 ease-out {{ $barColor }}"
+                                    style="width: {{ $pct }}%">
                                 </div>
                             </div>
                         @endif
@@ -61,8 +75,8 @@
                     <div class="shrink-0 flex flex-col sm:items-end justify-center mt-2 sm:mt-0 gap-1.5">
                         @if ($isFull)
                             <span
-                                class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide bg-red-50 text-red-700 border border-red-200 px-3 py-1 rounded-full">
-                                <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> Penuh
+                                class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide {{ $bgColor }} {{ $textColor }} border {{ $borderColor }} px-3 py-1 rounded-full">
+                                <span class="w-2 h-2 {{ $barColor }} rounded-full animate-pulse"></span> Penuh
                             </span>
                         @elseif ($item['max_slots'] === null)
                             <span
@@ -70,18 +84,10 @@
                                 <i class="bi bi-infinity"></i> Unlimited
                             </span>
                         @else
-                            <span @class([
-                                'inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide px-3 py-1 rounded-full border',
-                                'bg-amber-50 text-amber-700 border-amber-200' => !$isFull && $pct >= 80,
-                                'bg-emerald-50 text-emerald-700 border-emerald-200' =>
-                                    !$isFull && $pct < 80,
-                            ])>
-                                <span @class([
-                                    'w-2 h-2 rounded-full',
-                                    'bg-amber-500' => !$isFull && $pct >= 80,
-                                    'bg-emerald-500' => !$isFull && $pct < 80,
-                                ])></span>
-                                Sisa {{ $item['available_slots'] }} Slot
+                            <span
+                                class="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide {{ $bgColor }} {{ $textColor }} border {{ $borderColor }} px-3 py-1 rounded-full">
+                                <span class="w-2 h-2 {{ $barColor }} rounded-full"></span> Sisa
+                                {{ $item['available_slots'] }} Slot
                             </span>
                         @endif
 

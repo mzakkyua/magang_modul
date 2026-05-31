@@ -205,16 +205,24 @@
                 filterCards('');
             }
 
+            // ─────────────────────────────────────────
+            // TRIGGER SEARCH DARI COMPONENT LAIN (Card Divisi)
+            // ─────────────────────────────────────────
             function searchDivisionAndScroll(divisionName) {
+                // 1. Masukkan teks divisi ke dalam input search
                 var input = document.getElementById('search-input');
                 if (input) {
                     input.value = divisionName;
+
+                    // 2. Munculkan tombol X (clear)
                     var clearBtn = document.getElementById('clear-btn');
                     if (clearBtn) clearBtn.classList.remove('hidden');
                 }
 
+                // 3. Jalankan filter client-side langsung tanpa reload
                 filterCards(divisionName);
 
+                // 4. Scroll smooth ke section lowongan
                 var sectionLowongan = document.getElementById('lowongan');
                 if (sectionLowongan) {
                     sectionLowongan.scrollIntoView({
@@ -223,6 +231,9 @@
                 }
             }
 
+            // ─────────────────────────────────────────
+            // INIT — jalankan filter jika ada search dari server
+            // ─────────────────────────────────────────
             document.addEventListener('DOMContentLoaded', function() {
                 var input = document.getElementById('search-input');
                 if (input && input.value.trim().length > 0) {
