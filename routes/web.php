@@ -38,6 +38,8 @@ use App\Http\Controllers\Admin\DivisionController;
 // ---------------------
 use App\Http\Controllers\Requests\Auth\ForgotPasswordMagangController;
 use App\Http\Controllers\Requests\Auth\ResetPasswordMagangController;
+use App\Http\Controllers\Requests\Auth\ForgotPasswordAdminController;
+use App\Http\Controllers\Requests\Auth\ResetPasswordAdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -53,18 +55,6 @@ use App\Http\Controllers\Requests\Auth\ResetPasswordMagangController;
 |   4. Guest Peserta   — login & register (hanya jika belum login)
 |   5. Auth Peserta    — area peserta yang sudah login (guard: magang)
 |   6. Admin           — area admin dinas (guard: web + admin.magang)
-|
-| IMPROVEMENT DARI VERSI SEBELUMNYA:
-|   - [FIX] Logout closure dipindah ke AuthMagangController::logout()
-|           agar testable, loggable, dan route:cache friendly
-|   - [FIX] Certificate routes pakai route model binding {certificate}
-|           agar otomatis 404 jika ID tidak ada + lebih clean
-|   - [FIX] Rate limiting ditambahkan pada POST login & register
-|           sebagai defense in depth di level route
-|   - [FIX] Naming route certificate distandarkan ke plural (certificates.*)
-|           agar konsisten dengan assessments.* dan vacancies.*
-|   - [FIX] Import Auth facade dihapus karena logout sudah di controller
-|
 |--------------------------------------------------------------------------
 */
 
@@ -93,6 +83,25 @@ Route::prefix('password')->group(function () {
         ->name('password.update');
 });
 
+/*
+|--------------------------------------------------------------------------
+| RESET PASSWORD (ADMIN DINAS)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('admin/password')->name('admin.password.')->group(function () {
+    Route::get('/forgot', [ForgotPasswordAdminController::class, 'showLinkRequestForm'])
+        ->name('request');
+
+    Route::post('/email', [ForgotPasswordAdminController::class, 'sendResetLinkEmail'])
+        ->name('email')
+        ->middleware('throttle:5,1'); // Maksimal 5 kali minta email per menit
+
+    Route::get('/reset/{token}', [ResetPasswordAdminController::class, 'showResetForm'])
+        ->name('reset');
+
+    Route::post('/reset', [ResetPasswordAdminController::class, 'reset'])
+        ->name('update');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -204,13 +213,6 @@ Route::middleware('auth:magang')->group(function () {
 
     /*
     | Sertifikat Peserta
-    |
-    | IMPROVEMENT: Pakai route model binding {certificate} bukan {id} mentah.
-    | Keuntungan:
-    |   - Laravel otomatis throw 404 jika certificate tidak ditemukan
-    |   - Tidak perlu findOrFail() manual di controller
-    |   - URL lebih semantik
-    |   - Konsisten dengan pattern Laravel
     |
     | CATATAN: Pastikan controller menggunakan type-hint Certificate $certificate
     | bukan $id agar binding bekerja. Ownership check tetap ada di controller.

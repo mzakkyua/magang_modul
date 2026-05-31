@@ -26,25 +26,23 @@
                     $app = $member->application;
 
                     $isTypeMagang = $vacancy->type === 'magang';
-                    $accentBg = $isTypeMagang ? 'from-blue-600 to-blue-700' : 'from-violet-600 to-violet-700';
 
+                    // Label Status (Hanya teksnya saja, warnanya kita atur di @class)
                     $statusLabel = match ($app->status) {
-                        'accepted' => [
-                            'label' => 'Sedang Berjalan',
-                            'color' => 'bg-emerald-100 text-emerald-700 border-emerald-200',
-                        ],
-                        'completed' => ['label' => 'Selesai', 'color' => 'bg-blue-100 text-blue-700 border-blue-200'],
-                        default => [
-                            'label' => ucfirst($app->status),
-                            'color' => 'bg-gray-100 text-gray-600 border-gray-200',
-                        ],
+                        'accepted' => 'Sedang Berjalan',
+                        'completed' => 'Selesai',
+                        default => ucfirst($app->status),
                     };
                 @endphp
 
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
 
                     {{-- ── HEADER PERIODE ── --}}
-                    <div class="bg-gradient-to-r {{ $accentBg }} px-6 py-4 relative overflow-hidden">
+                    <div @class([
+                        'bg-gradient-to-r px-6 py-4 relative overflow-hidden',
+                        'from-blue-600 to-blue-700' => $isTypeMagang,
+                        'from-violet-600 to-violet-700' => !$isTypeMagang,
+                    ])>
                         <div class="absolute inset-0 opacity-10"
                             style="background-image:radial-gradient(circle,#fff 1px,transparent 1px);background-size:20px 20px;">
                         </div>
@@ -57,9 +55,17 @@
                                 <p class="text-xs text-white/75 mt-0.5">{{ $vacancy->division_name }}</p>
                             </div>
                             <div class="text-right shrink-0">
-                                <span
-                                    class="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full border {{ $statusLabel['color'] }} bg-white/90">
-                                    {{ $statusLabel['label'] }}
+                                <span @class([
+                                    'inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full border bg-white/90',
+                                    'bg-emerald-100 text-emerald-700 border-emerald-200' =>
+                                        $app->status === 'accepted',
+                                    'bg-blue-100 text-blue-700 border-blue-200' => $app->status === 'completed',
+                                    'bg-gray-100 text-gray-600 border-gray-200' => !in_array($app->status, [
+                                        'accepted',
+                                        'completed',
+                                    ]),
+                                ])>
+                                    {{ $statusLabel }}
                                 </span>
                                 <p class="text-white/60 text-[11px] mt-1.5">
                                     {{ \Carbon\Carbon::parse($vacancy->start_date)->format('d M Y') }}
@@ -75,7 +81,7 @@
                         @if ($assessment)
                             @php $passed = $assessment->isPassed(); @endphp
 
-                            {{-- BANNER HASIL --}}
+                            {{-- BANNER HASIL (Tetap pakai inline style karena dynamic hex code) --}}
                             <div class="rounded-2xl overflow-hidden mb-5 p-5 relative"
                                 style="background: linear-gradient(135deg, {{ $passed ? '#1e3a5f' : '#4c1130' }} 0%, {{ $passed ? '#2563eb' : '#dc2626' }} 100%);">
                                 <div class="absolute top-0 right-0 w-40 h-40 pointer-events-none"
@@ -84,9 +90,11 @@
                                 <div
                                     class="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                                     <div>
-                                        <span
-                                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold mb-3
-                                            {{ $passed ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30' : 'bg-red-500/20 text-red-300 border border-red-400/30' }}">
+                                        <span @class([
+                                            'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold mb-3 border',
+                                            'bg-emerald-500/20 text-emerald-300 border-emerald-400/30' => $passed,
+                                            'bg-red-500/20 text-red-300 border-red-400/30' => !$passed,
+                                        ])>
                                             <i
                                                 class="bi {{ $passed ? 'bi-patch-check-fill' : 'bi-x-octagon-fill' }} text-[11px]"></i>
                                             {{ $passed ? 'LULUS' : 'TIDAK LULUS' }}
@@ -119,23 +127,42 @@
                                     Rincian Nilai Per Komponen
                                 </p>
                                 <div class="grid md:grid-cols-3 gap-4">
-                                    @foreach ([['label' => 'Perilaku', 'sub' => 'Etika, sopan santun, attitude', 'icon' => 'bi-person-check-fill', 'score' => $assessment->score_behavior, 'color' => 'blue'], ['label' => 'Kedisiplinan', 'sub' => 'Ketepatan waktu, kehadiran', 'icon' => 'bi-clock-fill', 'score' => $assessment->score_discipline, 'color' => 'indigo'], ['label' => 'Kinerja', 'sub' => 'Hasil kerja, inisiatif, skill', 'icon' => 'bi-lightning-charge-fill', 'score' => $assessment->score_performance, 'color' => 'violet']] as $k)
-                                        @php
-                                            $barCls =
-                                                $k['score'] >= 80
-                                                    ? 'bg-emerald-500'
-                                                    : ($k['score'] >= 60
-                                                        ? 'bg-blue-500'
-                                                        : ($k['score'] >= 40
-                                                            ? 'bg-amber-500'
-                                                            : 'bg-red-500'));
-                                        @endphp
+                                    @php
+                                        // Array warna didefinisikan utuh (tidak dipotong-potong) agar Tailwind Scanner bisa mendeteksinya
+                                        $komponen = [
+                                            [
+                                                'label' => 'Perilaku',
+                                                'sub' => 'Etika, sopan santun, attitude',
+                                                'icon' => 'bi-person-check-fill',
+                                                'score' => $assessment->score_behavior,
+                                                'bgClass' => 'bg-blue-50',
+                                                'textClass' => 'text-blue-500',
+                                            ],
+                                            [
+                                                'label' => 'Kedisiplinan',
+                                                'sub' => 'Ketepatan waktu, kehadiran',
+                                                'icon' => 'bi-clock-fill',
+                                                'score' => $assessment->score_discipline,
+                                                'bgClass' => 'bg-indigo-50',
+                                                'textClass' => 'text-indigo-500',
+                                            ],
+                                            [
+                                                'label' => 'Kinerja',
+                                                'sub' => 'Hasil kerja, inisiatif, skill',
+                                                'icon' => 'bi-lightning-charge-fill',
+                                                'score' => $assessment->score_performance,
+                                                'bgClass' => 'bg-violet-50',
+                                                'textClass' => 'text-violet-500',
+                                            ],
+                                        ];
+                                    @endphp
+
+                                    @foreach ($komponen as $k)
                                         <div class="bg-white rounded-xl p-4 border border-gray-100">
                                             <div class="flex items-center gap-2 mb-3">
                                                 <div
-                                                    class="w-7 h-7 rounded-lg bg-{{ $k['color'] }}-50 flex items-center justify-center shrink-0">
-                                                    <i
-                                                        class="bi {{ $k['icon'] }} text-{{ $k['color'] }}-500 text-xs"></i>
+                                                    class="w-7 h-7 rounded-lg {{ $k['bgClass'] }} flex items-center justify-center shrink-0">
+                                                    <i class="bi {{ $k['icon'] }} {{ $k['textClass'] }} text-xs"></i>
                                                 </div>
                                                 <div>
                                                     <p class="text-xs font-bold text-gray-700">{{ $k['label'] }}</p>
@@ -147,8 +174,14 @@
                                                 <p class="text-xs text-gray-400 mb-1">/ 100</p>
                                             </div>
                                             <div class="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
-                                                <div class="{{ $barCls }} h-full rounded-full transition-all duration-700"
-                                                    style="width: {{ $k['score'] }}%"></div>
+                                                <div @class([
+                                                    'h-full rounded-full transition-all duration-700',
+                                                    'bg-emerald-500' => $k['score'] >= 80,
+                                                    'bg-blue-500' => $k['score'] >= 60 && $k['score'] < 80,
+                                                    'bg-amber-500' => $k['score'] >= 40 && $k['score'] < 60,
+                                                    'bg-red-500' => $k['score'] < 40,
+                                                ]) style="width: {{ $k['score'] }}%">
+                                                </div>
                                             </div>
                                         </div>
                                     @endforeach

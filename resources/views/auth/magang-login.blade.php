@@ -156,7 +156,11 @@
                         </x-input-field>
 
                         {{-- Lupa Password --}}
-                        <div class="text-right mt-2">
+                        <div class="flex items-center justify-between mt-2">
+                            <a href="{{ route('admin.password.request') }}"
+                                class="text-xs text-gray-400 hover:text-blue-600 hover:underline font-medium transition-colors">
+                                Lupa Password Admin?
+                            </a>
                             <a href="{{ route('password.request') }}"
                                 class="text-xs text-blue-600 hover:underline font-medium">
                                 Lupa Password?

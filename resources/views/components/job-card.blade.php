@@ -3,21 +3,6 @@
 BLADE COMPONENT: x-job-card
 =====================================================================
 CARA PAKAI: <x-job-card :job="$job" />
-
-FITUR:
-  - Badge "Baru" jika diterbitkan <= 7 hari yang lalu
-  - Banner deadline merah jika tutup <= 3 hari
-  - Banner deadline kuning jika tutup <= 7 hari
-  - Jumlah pelamar (dari total_applications_count)
-  - Info tanggal diterbitkan
-  - State sold-out: card redup, tombol nonaktif, accent abu
-  - Progress bar kuota dengan warna dinamis
-
-DATA YANG DIBUTUHKAN DARI CONTROLLER:
-  - active_applications_count  -> untuk getSisaKuota()
-  - total_applications_count   -> untuk jumlah pelamar
-  - created_at                 -> untuk badge "Baru" & tanggal terbit
-  - end_date                   -> untuk hitung deadline
 =====================================================================
 --}}
 
@@ -28,22 +13,8 @@ DATA YANG DIBUTUHKAN DARI CONTROLLER:
     $percentage = $job->quota_slots > 0 ? round(($filled / $job->quota_slots) * 100) : 0;
     $isSoldOut = $sisa <= 0;
 
-    // Tipe & warna
+    // Tipe
     $isMagang = $job->type === 'magang';
-    $accentBar = $isSoldOut ? 'bg-gray-300' : ($isMagang ? 'bg-blue-500' : 'bg-violet-500');
-    $typeBadgeBg = $isMagang
-        ? 'bg-blue-50 text-blue-700 border-blue-200'
-        : 'bg-violet-50 text-violet-700 border-violet-200';
-    $btnClass = $isMagang
-        ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20 group-hover:shadow-blue-600/30'
-        : 'bg-violet-600 hover:bg-violet-700 shadow-violet-600/20 group-hover:shadow-violet-600/30';
-
-    // Progress bar warna
-    $barColor = match (true) {
-        $percentage >= 80 => 'bg-red-400',
-        $percentage >= 50 => 'bg-amber-400',
-        default => $isMagang ? 'bg-blue-500' : 'bg-violet-500',
-    };
 
     // Badge Baru: diterbitkan <= 7 hari lalu
     $isNew = $job->created_at && $job->created_at->diffInDays(now()) <= 7;
@@ -71,25 +42,36 @@ DATA YANG DIBUTUHKAN DARI CONTROLLER:
 @endphp
 
 <div data-search-card data-title="{{ strtolower($job->title) }}" data-division="{{ strtolower($job->division_name) }}"
-    data-type="{{ strtolower($job->type) }}"
-    class="group bg-white rounded-2xl border border-gray-100 flex flex-col h-full overflow-hidden transition-all duration-300
-        {{ $isSoldOut
-            ? 'opacity-60 cursor-not-allowed'
-            : 'shadow-sm hover:shadow-xl hover:border-blue-100 hover:-translate-y-1' }}">
+    data-type="{{ strtolower($job->type) }}" @class([
+        'group bg-white rounded-2xl border border-gray-100 flex flex-col h-full overflow-hidden transition-all duration-300',
+        'opacity-60 cursor-not-allowed' => $isSoldOut,
+        'shadow-sm hover:shadow-xl hover:border-blue-100 hover:-translate-y-1' => !$isSoldOut,
+    ])>
+
     {{-- Accent bar --}}
-    <div class="h-1 w-full {{ $accentBar }}"></div>
+    <div @class([
+        'h-1 w-full',
+        'bg-gray-300' => $isSoldOut,
+        'bg-blue-500' => !$isSoldOut && $isMagang,
+        'bg-violet-500' => !$isSoldOut && !$isMagang,
+    ])></div>
 
     <div class="p-5 flex flex-col h-full grow">
 
         {{-- Header: Judul + Badges --}}
         <div class="flex justify-between items-start gap-3 mb-3">
-            <h3
-                class="text-base font-bold text-gray-900 leading-snug line-clamp-2
-                {{ !$isSoldOut ? 'group-hover:text-blue-700 transition-colors' : '' }}">
+            <h3 @class([
+                'text-base font-bold text-gray-900 leading-snug line-clamp-2',
+                'group-hover:text-blue-700 transition-colors' => !$isSoldOut,
+            ])>
                 {{ $job->title }}
             </h3>
             <div class="flex flex-col items-end gap-1.5 shrink-0">
-                <span class="text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wide border {{ $typeBadgeBg }}">
+                <span @class([
+                    'text-[10px] font-bold px-2.5 py-1 rounded-full tracking-wide border',
+                    'bg-blue-50 text-blue-700 border-blue-200' => $isMagang,
+                    'bg-violet-50 text-violet-700 border-violet-200' => !$isMagang,
+                ])>
                     {{ strtoupper($job->type) }}
                 </span>
                 @if ($isSoldOut)
@@ -127,7 +109,11 @@ DATA YANG DIBUTUHKAN DARI CONTROLLER:
         <div class="flex flex-wrap gap-1.5 mb-4">
             <span
                 class="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg border border-gray-100 text-gray-600 bg-gray-50">
-                <span class="w-1.5 h-1.5 rounded-full {{ $isMagang ? 'bg-blue-500' : 'bg-violet-500' }}"></span>
+                <span @class([
+                    'w-1.5 h-1.5 rounded-full',
+                    'bg-blue-500' => $isMagang,
+                    'bg-violet-500' => !$isMagang,
+                ])></span>
                 {{ $job->division_name }}
             </span>
             @if ($modeLabel)
@@ -176,8 +162,14 @@ DATA YANG DIBUTUHKAN DARI CONTROLLER:
                 </span>
             </div>
             <div class="w-full h-1 bg-gray-100 rounded-full overflow-hidden">
-                <div class="h-full rounded-full transition-all duration-500 {{ $isSoldOut ? 'bg-gray-300 w-full' : $barColor }}"
-                    style="width: {{ $isSoldOut ? 100 : $percentage }}%">
+                <div @class([
+                    'h-full rounded-full transition-all duration-500',
+                    'bg-gray-300 w-full' => $isSoldOut,
+                    'bg-red-400' => !$isSoldOut && $percentage >= 80,
+                    'bg-amber-400' => !$isSoldOut && $percentage >= 50 && $percentage < 80,
+                    'bg-blue-500' => !$isSoldOut && $percentage < 50 && $isMagang,
+                    'bg-violet-500' => !$isSoldOut && $percentage < 50 && !$isMagang,
+                ]) style="width: {{ $isSoldOut ? 100 : $percentage }}%">
                 </div>
             </div>
         </div>
@@ -213,8 +205,11 @@ DATA YANG DIBUTUHKAN DARI CONTROLLER:
         {{-- CTA Button --}}
         <div class="mt-auto">
             @if (!$isSoldOut)
-                <a href="{{ $detailRoute }}"
-                    class="flex items-center justify-center gap-2 w-full text-white py-2.5 px-4 rounded-xl transition-all duration-200 font-semibold text-sm shadow-sm group-hover:shadow-md {{ $btnClass }}">
+                <a href="{{ $detailRoute }}" @class([
+                    'flex items-center justify-center gap-2 w-full text-white py-2.5 px-4 rounded-xl transition-all duration-200 font-semibold text-sm shadow-sm group-hover:shadow-md',
+                    'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20 group-hover:shadow-blue-600/30' => $isMagang,
+                    'bg-violet-600 hover:bg-violet-700 shadow-violet-600/20 group-hover:shadow-violet-600/30' => !$isMagang,
+                ])>
                     Lihat Detail
                     <svg class="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5"
                         viewBox="0 0 20 20" fill="currentColor">

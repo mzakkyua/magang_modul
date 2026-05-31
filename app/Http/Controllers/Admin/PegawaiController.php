@@ -53,72 +53,32 @@ class PegawaiController extends Controller
 
     public function storeAccess(Request $request, int $userId)
     {
-        /*
-        ==============================================================
-        SUPERADMIN ONLY
-        ==============================================================
-        */
         $hakAkses = $request->attributes->get('magang_access');
 
         if (!$hakAkses || !$hakAkses->isSuperAdmin()) {
             abort(403, 'Akses Ditolak: Hanya Superadmin yang dapat mengubah hak akses.');
         }
 
-        /*
-        ==============================================================
-        VALIDATION
-        ==============================================================
-        */
+        // PERBAIKAN: Menggunakan konstanta untuk validasi
         $request->validate([
-
             'role' => [
                 'required',
-                'in:superadmin,admin_bidang',
+                'in:' . MagangAccessRight::ROLE_SUPERADMIN . ',' . MagangAccessRight::ROLE_DIVISION_ADMIN,
             ],
-
             'division_name' => [
-
                 'nullable',
-
                 'string',
-
                 'max:100',
-
-                /**
-                 * =====================================================
-                 * VALIDASI ROLE ↔ DIVISION
-                 * =====================================================
-                 */
                 function ($attribute, $value, $fail) use ($request) {
-
-                    /**
-                     * -------------------------------------------------
-                     * Admin bidang wajib punya divisi
-                     * -------------------------------------------------
-                     */
-                    if (
-                        $request->role === 'admin_bidang'
-                        && blank($value)
-                    ) {
-
+                    // PERBAIKAN: Menggunakan konstanta
+                    if ($request->role === MagangAccessRight::ROLE_DIVISION_ADMIN && blank($value)) {
                         $fail('Divisi wajib dipilih untuk Admin Bidang.');
-
                         return;
                     }
 
-                    /**
-                     * -------------------------------------------------
-                     * Division harus berasal dari master division aktif
-                     * -------------------------------------------------
-                     */
                     if (!blank($value)) {
-
-                        $exists = Division::active()
-                            ->where('name', $value)
-                            ->exists();
-
+                        $exists = Division::active()->where('name', $value)->exists();
                         if (!$exists) {
-
                             $fail('Divisi tidak valid atau sudah nonaktif.');
                         }
                     }
@@ -126,92 +86,35 @@ class PegawaiController extends Controller
             ],
         ]);
 
-        /*
-        ==============================================================
-        GUARD:
-        SUPERADMIN TERAKHIR TIDAK BOLEH DI-DOWNGRADE
-        ==============================================================
-        */
-        $currentAccess = MagangAccessRight::where(
-            'user_id',
-            $userId
-        )->first();
+        $currentAccess = MagangAccessRight::where('user_id', $userId)->first();
 
-        if (
-            $currentAccess
-            && $currentAccess->role === 'superadmin'
-            && $request->role !== 'superadmin'
-        ) {
-
-            $superadminCount = MagangAccessRight::where(
-                'role',
-                'superadmin'
-            )->count();
-
+        // PERBAIKAN: Menggunakan konstanta
+        if ($currentAccess && $currentAccess->role === MagangAccessRight::ROLE_SUPERADMIN && $request->role !== MagangAccessRight::ROLE_SUPERADMIN) {
+            $superadminCount = MagangAccessRight::where('role', MagangAccessRight::ROLE_SUPERADMIN)->count();
             if ($superadminCount <= 1) {
-
-                return back()->with(
-                    'error',
-                    'Minimal harus ada 1 superadmin aktif.'
-                );
+                return back()->with('error', 'Minimal harus ada 1 superadmin aktif.');
             }
         }
 
-        /*
-        ==============================================================
-        STORE / UPDATE ACCESS
-        ==============================================================
-        */
         $access = MagangAccessRight::updateOrCreate(
-
             ['user_id' => $userId],
-
             [
                 'role' => $request->role,
-
-                'division_name' => $request->role === 'superadmin'
-                    ? null
-                    : $request->division_name,
+                'division_name' => $request->role === MagangAccessRight::ROLE_SUPERADMIN ? null : $request->division_name,
             ]
         );
 
-        /*
-        ==============================================================
-        CLEAR CACHE MIDDLEWARE
-        ==============================================================
-        AdminMagangMiddleware menyimpan hak akses di cache.
-        Jika tidak di-clear, perubahan tidak langsung berlaku.
-        ==============================================================
-        */
         Cache::forget($this->cacheKey($userId));
 
-        /*
-        ==============================================================
-        LOGGING
-        ==============================================================
-        */
         Log::info('Hak akses pegawai diperbarui', [
-
             'by_admin_id' => Auth::id(),
-
             'user_id' => $userId,
-
             'role' => $request->role,
-
             'division' => $request->division_name ?? 'semua',
-
             'timestamp' => now()->toDateTimeString(),
         ]);
 
-        /*
-        ==============================================================
-        RESPONSE
-        ==============================================================
-        */
-        return back()->with(
-            'success',
-            'Hak akses pegawai berhasil diperbarui!'
-        );
+        return back()->with('success', 'Hak akses pegawai berhasil diperbarui!');
     }
 
 
@@ -252,27 +155,13 @@ class PegawaiController extends Controller
         TIDAK BISA HAPUS SUPERADMIN TERAKHIR
         ==============================================================
         */
-        $targetAccess = MagangAccessRight::where(
-            'user_id',
-            $userId
-        )->first();
+        $targetAccess = MagangAccessRight::where('user_id', $userId)->first();
 
-        if (
-            $targetAccess
-            && $targetAccess->role === 'superadmin'
-        ) {
-
-            $superadminCount = MagangAccessRight::where(
-                'role',
-                'superadmin'
-            )->count();
-
+        // PERBAIKAN: Menggunakan konstanta
+        if ($targetAccess && $targetAccess->role === MagangAccessRight::ROLE_SUPERADMIN) {
+            $superadminCount = MagangAccessRight::where('role', MagangAccessRight::ROLE_SUPERADMIN)->count();
             if ($superadminCount <= 1) {
-
-                return back()->with(
-                    'error',
-                    'Tidak dapat mencabut akses! Minimal harus ada 1 superadmin yang aktif.'
-                );
+                return back()->with('error', 'Tidak dapat mencabut akses! Minimal harus ada 1 superadmin yang aktif.');
             }
         }
 

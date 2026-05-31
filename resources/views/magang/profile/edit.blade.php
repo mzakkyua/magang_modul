@@ -9,8 +9,6 @@
 
             {{-- ===================== HERO BANNER ===================== --}}
             <div class="relative rounded-2xl overflow-hidden mb-6 bg-linear-to-r from-blue-900 via-blue-800 to-blue-700">
-
-                {{-- Dekorasi --}}
                 <div
                     class="absolute top-0 right-0 w-72 h-72 bg-white/5 rounded-full translate-x-1/3 -translate-y-1/3 pointer-events-none">
                 </div>
@@ -20,8 +18,6 @@
 
                 <div
                     class="relative z-10 p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-
-                    {{-- Kiri: Identitas user --}}
                     <div class="flex items-center gap-4">
                         <div
                             class="w-14 h-14 rounded-2xl bg-white/15 border-2 border-white/20 flex items-center justify-center font-extrabold text-2xl text-white shrink-0">
@@ -39,7 +35,6 @@
                         </div>
                     </div>
 
-                    {{-- Kanan: Badge email --}}
                     <div class="shrink-0 bg-white/10 border border-white/20 rounded-xl px-4 py-2.5 backdrop-blur-sm">
                         <p class="text-[10px] text-blue-300 uppercase tracking-widest font-bold">Login sebagai</p>
                         <p class="text-sm font-bold text-white mt-0.5">{{ auth()->user()->email ?? '-' }}</p>
@@ -50,22 +45,31 @@
                 <div
                     class="relative z-10 border-t border-white/10 px-6 sm:px-8 py-3 grid grid-cols-3 divide-x divide-white/10">
                     <div class="text-center pr-4">
-                        <p
-                            class="font-extrabold text-base leading-none {{ $profile->full_name ?? false ? 'text-emerald-400' : 'text-white/40' }}">
+                        <p @class([
+                            'font-extrabold text-base leading-none',
+                            'text-emerald-400' => $profile->full_name ?? false,
+                            'text-white/40' => !($profile->full_name ?? false),
+                        ])>
                             {{ $profile->full_name ?? false ? '✓' : '—' }}
                         </p>
                         <p class="text-blue-300 text-[10px] mt-0.5">Data Diri</p>
                     </div>
                     <div class="text-center px-4">
-                        <p
-                            class="font-extrabold text-base leading-none {{ $profile->cv_file_path ?? false ? 'text-emerald-400' : 'text-white/40' }}">
+                        <p @class([
+                            'font-extrabold text-base leading-none',
+                            'text-emerald-400' => $profile->cv_file_path ?? false,
+                            'text-white/40' => !($profile->cv_file_path ?? false),
+                        ])>
                             {{ $profile->cv_file_path ?? false ? '✓' : '—' }}
                         </p>
                         <p class="text-blue-300 text-[10px] mt-0.5">CV</p>
                     </div>
                     <div class="text-center pl-4">
-                        <p
-                            class="font-extrabold text-base leading-none {{ $profile->proposal_file_path ?? false ? 'text-emerald-400' : 'text-white/40' }}">
+                        <p @class([
+                            'font-extrabold text-base leading-none',
+                            'text-emerald-400' => $profile->proposal_file_path ?? false,
+                            'text-white/40' => !($profile->proposal_file_path ?? false),
+                        ])>
                             {{ $profile->proposal_file_path ?? false ? '✓' : '—' }}
                         </p>
                         <p class="text-blue-300 text-[10px] mt-0.5">Proposal</p>
@@ -98,8 +102,6 @@
                 </div>
             @endif
 
-            {{-- ===================== FORM ===================== --}}
-            {{-- enctype="multipart/form-data" WAJIB — tidak diubah --}}
             <form id="profileForm" method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
@@ -107,14 +109,12 @@
                 <div class="grid lg:grid-cols-[200px_1fr] gap-5">
 
                     {{-- ===================== SIDENAV KIRI ===================== --}}
-                    {{-- BUGFIX: Tombol simpan dihapus dari sini — hanya ada 1 tombol di bawah konten --}}
                     <div class="hidden lg:flex flex-col gap-1">
                         <p class="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest px-3 mb-2">Pengaturan
                         </p>
 
                         <a href="#sec-info"
-                            class="sidenav-link flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold
-                    bg-white text-blue-600 shadow-sm border border-gray-100 transition-all">
+                            class="sidenav-link flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold bg-white text-blue-600 shadow-sm border border-gray-100 transition-all">
                             <div class="w-6 h-6 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
                                 <i class="bi bi-person-fill text-blue-500 text-xs"></i>
                             </div>
@@ -122,8 +122,7 @@
                         </a>
 
                         <a href="#sec-docs"
-                            class="sidenav-link flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold
-                    text-gray-500 hover:bg-white hover:text-gray-800 hover:shadow-sm transition-all">
+                            class="sidenav-link flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-500 hover:bg-white hover:text-gray-800 hover:shadow-sm transition-all">
                             <div class="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
                                 <i class="bi bi-paperclip text-gray-400 text-xs"></i>
                             </div>
@@ -133,15 +132,13 @@
                         <div class="h-px bg-gray-100 my-2 mx-1"></div>
 
                         <a href="#sec-security"
-                            class="sidenav-link flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold
-                    text-gray-500 hover:bg-white hover:text-gray-800 hover:shadow-sm transition-all">
+                            class="sidenav-link flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-500 hover:bg-white hover:text-gray-800 hover:shadow-sm transition-all">
                             <div class="w-6 h-6 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
                                 <i class="bi bi-shield-lock-fill text-gray-400 text-xs"></i>
                             </div>
                             Keamanan
                         </a>
 
-                        {{-- Info sertifikasi --}}
                         <div class="mt-6 bg-amber-50 border border-amber-100 rounded-xl px-3 py-3 text-center">
                             <i class="bi bi-info-circle text-amber-500 text-sm mb-1 block"></i>
                             <p class="text-[10px] text-amber-600 leading-relaxed">
@@ -191,7 +188,6 @@
                                                 'val' => $profile->institution_name ?? '',
                                                 'required' => true,
                                             ],
-                                            // Jenjang disisipkan manual setelah index 2
                                             [
                                                 'name' => 'major',
                                                 'label' => 'Jurusan',
@@ -211,18 +207,17 @@
                                         <div class="{{ $field['span'] ?? '' }}">
                                             <label
                                                 class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                                                {{ $field['label'] }}
-                                                @if ($field['required'])
+                                                {{ $field['label'] }} @if ($field['required'])
                                                     <span class="text-red-400">*</span>
                                                 @endif
                                             </label>
                                             <input type="text" name="{{ $field['name'] }}"
                                                 value="{{ old($field['name'], $field['val']) }}"
-                                                class="w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium text-gray-800
-                                        outline-none transition-all duration-200
-                                        border-gray-200 bg-white placeholder:text-gray-300
-                                        hover:border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100
-                                        {{ $errors->has($field['name']) ? 'border-red-300 focus:ring-red-100' : '' }}">
+                                                @class([
+                                                    'w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium text-gray-800 outline-none transition-all duration-200 bg-white placeholder:text-gray-300 hover:border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100',
+                                                    'border-gray-200' => !$errors->has($field['name']),
+                                                    'border-red-300 focus:ring-red-100' => $errors->has($field['name']),
+                                                ])>
                                             @error($field['name'])
                                                 <p class="flex items-center gap-1 text-red-500 text-xs font-medium mt-1.5">
                                                     <i class="bi bi-exclamation-circle-fill text-[11px]"></i>
@@ -231,19 +226,17 @@
                                             @enderror
                                         </div>
 
-                                        {{-- STEP: Sisipkan Jenjang setelah Asal Instansi (index 2) — logic tidak diubah --}}
                                         @if ($index == 2)
                                             <div>
                                                 <label
                                                     class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
                                                     Jenjang <span class="text-red-400">*</span>
                                                 </label>
-                                                <select name="education_level"
-                                                    class="w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium text-gray-800
-                                            outline-none appearance-none transition-all duration-200
-                                            border-gray-200 bg-white
-                                            hover:border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100
-                                            {{ $errors->has('education_level') ? 'border-red-300 focus:ring-red-100' : '' }}">
+                                                <select name="education_level" @class([
+                                                    'w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium text-gray-800 outline-none appearance-none transition-all duration-200 bg-white hover:border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100',
+                                                    'border-gray-200' => !$errors->has('education_level'),
+                                                    'border-red-300 focus:ring-red-100' => $errors->has('education_level'),
+                                                ])>
                                                     <option value="">Pilih Jenjang</option>
                                                     <option value="SMA" @selected(old('education_level', $profile->education_level ?? '') == 'SMA')>SMA</option>
                                                     <option value="SMK" @selected(old('education_level', $profile->education_level ?? '') == 'SMK')>SMK</option>
@@ -267,12 +260,11 @@
                                             class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
                                             Alamat Lengkap <span class="text-red-400">*</span>
                                         </label>
-                                        <textarea name="address" rows="3"
-                                            class="w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium text-gray-800
-                                    outline-none resize-none transition-all duration-200
-                                    border-gray-200 bg-white placeholder:text-gray-300
-                                    hover:border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100
-                                    {{ $errors->has('address') ? 'border-red-300 focus:ring-red-100' : '' }}">{{ old('address', $profile->address ?? '') }}</textarea>
+                                        <textarea name="address" rows="3" @class([
+                                            'w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium text-gray-800 outline-none resize-none transition-all duration-200 bg-white placeholder:text-gray-300 hover:border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100',
+                                            'border-gray-200' => !$errors->has('address'),
+                                            'border-red-300 focus:ring-red-100' => $errors->has('address'),
+                                        ])>{{ old('address', $profile->address ?? '') }}</textarea>
                                         @error('address')
                                             <p class="flex items-center gap-1 text-red-500 text-xs font-medium mt-1.5">
                                                 <i class="bi bi-exclamation-circle-fill text-[11px]"></i> {{ $message }}
@@ -287,7 +279,6 @@
                         {{-- ── SEKSI 2: DOKUMEN LAMPIRAN ── --}}
                         <div id="sec-docs"
                             class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden scroll-mt-6">
-
                             <div class="flex items-center gap-2.5 px-5 py-4 border-b border-gray-100">
                                 <div class="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
                                     <i class="bi bi-paperclip text-amber-500 text-sm"></i>
@@ -300,12 +291,10 @@
                             </div>
 
                             <div class="p-5 grid md:grid-cols-2 gap-5">
-
                                 {{-- ── CV ── --}}
                                 <div>
                                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                                        Curriculum Vitae (CV)
-                                        @if (!($profile->cv_file_path ?? false))
+                                        Curriculum Vitae (CV) @if (!($profile->cv_file_path ?? false))
                                             <span class="text-red-400">*</span>
                                         @endif
                                     </label>
@@ -327,19 +316,16 @@
                                             <div class="flex gap-1.5 shrink-0">
                                                 <a href="{{ asset('storage/' . $profile->cv_file_path) }}"
                                                     target="_blank"
-                                                    class="w-7 h-7 bg-white rounded-lg border border-blue-200 flex items-center justify-center
-                                            text-blue-500 hover:bg-blue-600 hover:text-white transition-all text-xs">
+                                                    class="w-7 h-7 bg-white rounded-lg border border-blue-200 flex items-center justify-center text-blue-500 hover:bg-blue-600 hover:text-white transition-all text-xs">
                                                     <i class="bi bi-eye-fill"></i>
                                                 </a>
                                                 <button type="button"
                                                     onclick="if(confirm('Yakin hapus CV ini?')) document.getElementById('delete-cv-form').submit();"
-                                                    class="w-7 h-7 bg-white rounded-lg border border-red-200 flex items-center justify-center
-                                            text-red-400 hover:bg-red-500 hover:text-white transition-all text-xs">
+                                                    class="w-7 h-7 bg-white rounded-lg border border-red-200 flex items-center justify-center text-red-400 hover:bg-red-500 hover:text-white transition-all text-xs">
                                                     <i class="bi bi-trash-fill"></i>
                                                 </button>
                                             </div>
                                         </div>
-                                        {{-- Form hapus CV — route & method tidak diubah --}}
                                         <form id="delete-cv-form" action="{{ route('profile.delete.cv') }}"
                                             method="POST" class="hidden">
                                             @csrf @method('DELETE')
@@ -349,11 +335,12 @@
                                         </p>
                                     @endif
 
-                                    {{-- Drop zone CV --}}
-                                    <label for="cvInput"
-                                        class="group flex flex-col items-center gap-2 w-full py-8 rounded-xl cursor-pointer
-                                border-2 border-dashed transition-all duration-200
-                                {{ $errors->has('cv_file') ? 'border-red-200 bg-red-50/30' : 'border-gray-200 bg-gray-50/40 hover:border-blue-300 hover:bg-blue-50/30' }}">
+                                    <label for="cvInput" @class([
+                                        'group flex flex-col items-center gap-2 w-full py-8 rounded-xl cursor-pointer border-2 border-dashed transition-all duration-200',
+                                        'border-red-200 bg-red-50/30' => $errors->has('cv_file'),
+                                        'border-gray-200 bg-gray-50/40 hover:border-blue-300 hover:bg-blue-50/30' => !$errors->has(
+                                            'cv_file'),
+                                    ])>
                                         <div
                                             class="w-10 h-10 bg-white rounded-xl border border-gray-200 flex items-center justify-center group-hover:border-blue-200 transition-all shadow-sm">
                                             <i
@@ -370,7 +357,6 @@
                                             <i class="bi bi-file-earmark-check-fill"></i>
                                             <span id="cvFileName"></span>
                                         </div>
-                                        {{-- name="cv_file" dan accept TIDAK DIUBAH --}}
                                         <input type="file" name="cv_file" id="cvInput" accept=".pdf"
                                             class="hidden">
                                     </label>
@@ -384,8 +370,7 @@
                                 {{-- ── PROPOSAL ── --}}
                                 <div>
                                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                                        Proposal
-                                        <span
+                                        Proposal <span
                                             class="text-[10px] normal-case font-medium text-gray-400 ml-1">(Penelitian)</span>
                                     </label>
 
@@ -400,11 +385,12 @@
                                         </div>
                                     @endif
 
-                                    {{-- Drop zone Proposal --}}
-                                    <label for="proposalInput"
-                                        class="group flex flex-col items-center gap-2 w-full py-8 rounded-xl cursor-pointer
-                                border-2 border-dashed transition-all duration-200
-                                {{ $errors->has('proposal_file') ? 'border-red-200 bg-red-50/30' : 'border-gray-200 bg-gray-50/40 hover:border-blue-300 hover:bg-blue-50/30' }}">
+                                    <label for="proposalInput" @class([
+                                        'group flex flex-col items-center gap-2 w-full py-8 rounded-xl cursor-pointer border-2 border-dashed transition-all duration-200',
+                                        'border-red-200 bg-red-50/30' => $errors->has('proposal_file'),
+                                        'border-gray-200 bg-gray-50/40 hover:border-blue-300 hover:bg-blue-50/30' => !$errors->has(
+                                            'proposal_file'),
+                                    ])>
                                         <div
                                             class="w-10 h-10 bg-white rounded-xl border border-gray-200 flex items-center justify-center group-hover:border-blue-200 transition-all shadow-sm">
                                             <i
@@ -421,7 +407,6 @@
                                             <i class="bi bi-file-earmark-check-fill"></i>
                                             <span id="proposalFileName"></span>
                                         </div>
-                                        {{-- name="proposal_file" dan accept TIDAK DIUBAH --}}
                                         <input type="file" name="proposal_file" id="proposalInput" accept=".pdf"
                                             class="hidden">
                                     </label>
@@ -438,7 +423,6 @@
                         {{-- ── SEKSI 3: KEAMANAN AKUN ── --}}
                         <div id="sec-security"
                             class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden scroll-mt-6">
-
                             <div class="flex items-center gap-2.5 px-5 py-4 border-b border-gray-100">
                                 <div class="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
                                     <i class="bi bi-shield-lock-fill text-amber-500 text-sm"></i>
@@ -451,17 +435,16 @@
                             </div>
 
                             <div class="p-5 grid md:grid-cols-3 gap-4">
-
                                 <div>
                                     <label
                                         class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Password
                                         Lama</label>
                                     <input type="password" name="current_password" placeholder="••••••••"
-                                        class="w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium text-gray-800
-                                outline-none transition-all duration-200 border-gray-200 bg-white
-                                placeholder:text-gray-300 hover:border-blue-300
-                                focus:border-blue-500 focus:ring-2 focus:ring-blue-100
-                                {{ $errors->has('current_password') ? 'border-red-300 focus:ring-red-100' : '' }}">
+                                        @class([
+                                            'w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium text-gray-800 outline-none transition-all duration-200 bg-white placeholder:text-gray-300 hover:border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100',
+                                            'border-gray-200' => !$errors->has('current_password'),
+                                            'border-red-300 focus:ring-red-100' => $errors->has('current_password'),
+                                        ])>
                                     @error('current_password')
                                         <p class="flex items-center gap-1 text-red-500 text-xs font-medium mt-1.5">
                                             <i class="bi bi-exclamation-circle-fill text-[11px]"></i> {{ $message }}
@@ -474,11 +457,11 @@
                                         class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Password
                                         Baru</label>
                                     <input type="password" name="password" placeholder="••••••••"
-                                        class="w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium text-gray-800
-                                outline-none transition-all duration-200 border-gray-200 bg-white
-                                placeholder:text-gray-300 hover:border-blue-300
-                                focus:border-blue-500 focus:ring-2 focus:ring-blue-100
-                                {{ $errors->has('password') ? 'border-red-300 focus:ring-red-100' : '' }}">
+                                        @class([
+                                            'w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium text-gray-800 outline-none transition-all duration-200 bg-white placeholder:text-gray-300 hover:border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100',
+                                            'border-gray-200' => !$errors->has('password'),
+                                            'border-red-300 focus:ring-red-100' => $errors->has('password'),
+                                        ])>
                                     @error('password')
                                         <p class="flex items-center gap-1 text-red-500 text-xs font-medium mt-1.5">
                                             <i class="bi bi-exclamation-circle-fill text-[11px]"></i> {{ $message }}
@@ -491,29 +474,20 @@
                                         class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Ulangi
                                         Password</label>
                                     <input type="password" name="password_confirmation" placeholder="••••••••"
-                                        class="w-full px-3.5 py-2.5 rounded-xl border text-sm font-medium text-gray-800
-                                outline-none transition-all duration-200 border-gray-200 bg-white
-                                placeholder:text-gray-300 hover:border-blue-300
-                                focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+                                        class="w-full px-3.5 py-2.5 rounded-xl border-gray-200 border text-sm font-medium text-gray-800 outline-none transition-all duration-200 bg-white placeholder:text-gray-300 hover:border-blue-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
                                 </div>
-
                             </div>
                         </div>
 
-                        {{-- ── TOMBOL SIMPAN (hanya 1 — di sini) ── --}}
+                        {{-- ── TOMBOL SIMPAN ── --}}
                         <div class="flex items-center justify-between gap-4 pt-1">
                             <button type="submit" id="btnSubmit"
-                                class="flex-1 flex items-center justify-center gap-2
-                        bg-blue-600 hover:bg-blue-700 active:scale-[0.98]
-                        text-white text-sm font-bold py-3 px-5 rounded-xl
-                        shadow-md shadow-blue-600/25 hover:-translate-y-0.5
-                        transition-all duration-200">
+                                class="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-sm font-bold py-3 px-5 rounded-xl shadow-md shadow-blue-600/25 hover:-translate-y-0.5 transition-all duration-200">
                                 <i class="bi bi-cloud-arrow-up-fill"></i>
                                 <span id="btnText">Simpan Perubahan</span>
                             </button>
                         </div>
 
-                        {{-- id="noChangeAlert" WAJIB — dikontrol JavaScript, tidak diubah --}}
                         <p id="noChangeAlert"
                             class="hidden text-red-500 text-xs font-semibold text-center -mt-2 items-center justify-center gap-1">
                             <i class="bi bi-exclamation-triangle-fill"></i>
@@ -521,28 +495,18 @@
                         </p>
 
                     </div>
-                    {{-- end konten kanan --}}
-
                 </div>
-                {{-- end grid --}}
-
             </form>
-
         </div>
     </div>
 
     {{-- ===================== SCRIPT ===================== --}}
-    {{-- Seluruh logic JS tidak diubah sama sekali --}}
-    {{-- BUGFIX: Hapus referensi ke btnSubmitSide karena tombol tersebut sudah dihapus --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-
-            // SECTION: Deteksi perubahan form sebelum submit
             const form = document.getElementById('profileForm');
             const btnSubmit = document.getElementById('btnSubmit');
             const btnText = document.getElementById('btnText');
             const noChangeAlert = document.getElementById('noChangeAlert');
-
             let hasChanged = false;
 
             form.querySelectorAll('input, textarea, select').forEach(input => {
@@ -566,13 +530,11 @@
                     }, 3000);
                     return false;
                 }
-                // Loading state
                 btnSubmit.disabled = true;
                 btnSubmit.classList.add('opacity-70', 'cursor-not-allowed');
                 btnText.textContent = 'Menyimpan...';
             });
 
-            // SECTION: Drop zone preview — CV
             const cvInput = document.getElementById('cvInput');
             const cvPreview = document.getElementById('cvPreview');
             const cvDropText = document.getElementById('cvDropText');
@@ -588,7 +550,6 @@
                 }
             });
 
-            // SECTION: Drop zone preview — Proposal
             const proposalInput = document.getElementById('proposalInput');
             const proposalPreview = document.getElementById('proposalPreview');
             const proposalDropText = document.getElementById('proposalDropText');
@@ -604,10 +565,8 @@
                 }
             });
 
-            // SECTION: Sidenav highlight saat scroll
             const sections = ['sec-info', 'sec-docs', 'sec-security'];
             const navLinks = document.querySelectorAll('.sidenav-link');
-
             const activeClass = ['bg-white', 'text-blue-600', 'shadow-sm', 'border', 'border-gray-100'];
             const inactiveClass = ['text-gray-500'];
 
@@ -628,8 +587,6 @@
                     }
                 });
             });
-
         });
     </script>
-
 @endsection
