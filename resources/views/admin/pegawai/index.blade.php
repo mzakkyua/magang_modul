@@ -5,66 +5,97 @@
 @section('content')
 
     {{-- ================================================================
-     SVG ICONS — didefinisikan sekali, dipakai ulang
-     Tidak bergantung pada Bootstrap Icons font sama sekali
-     ================================================================ --}}
-    @php
-        // SVG icons sebagai string — selalu render, tidak perlu font load
-        $svgShield =
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-3.5 h-3.5"><path fill-rule="evenodd" d="M8 1.5a.5.5 0 0 1 .5.5v.5A3 3 0 0 1 11 5.5V8a3 3 0 0 1-2.5 2.958V12h1.5a.5.5 0 0 1 0 1h-4a.5.5 0 0 1 0-1H7.5v-1.042A3 3 0 0 1 5 8V5.5A3 3 0 0 1 7.5 2.5V2a.5.5 0 0 1 .5-.5z" clip-rule="evenodd"/><path d="M8 0C5.56 0 4 1.791 4 4v4a4 4 0 0 0 8 0V4c0-2.209-1.56-4-4-4z"/></svg>';
-
-        $svgBuilding =
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-3.5 h-3.5"><path d="M4 2.5A1.5 1.5 0 0 1 5.5 1h5A1.5 1.5 0 0 1 12 2.5v11H4v-11zM5.5 2a.5.5 0 0 0-.5.5V13h7V2.5a.5.5 0 0 0-.5-.5h-5z"/><path d="M2 13h12v1H2z"/><rect x="6" y="4" width="1" height="2"/><rect x="9" y="4" width="1" height="2"/><rect x="6" y="7" width="1" height="2"/><rect x="9" y="7" width="1" height="2"/><rect x="7" y="10" width="2" height="3"/></svg>';
-
-        $svgDash =
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-3.5 h-3.5"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M5 8h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
-    @endphp
-
-    {{-- ================================================================
      PAGE HEADER
      ================================================================ --}}
-    <div class="mb-8">
-
-        <p class="text-xs font-bold uppercase tracking-[0.2em] text-indigo-500 flex items-center gap-2 mb-2">
-            <span class="inline-flex w-5 h-5 rounded-md bg-indigo-100 items-center justify-center">
-                <i class="bi bi-people-fill text-[10px]"></i>
-            </span>
-            Kepegawaian
-        </p>
-
-        <div class="flex items-end justify-between">
-            <div>
-                <h1 class="text-3xl font-black text-gray-900 tracking-tight">
-                    Manajemen Pegawai
-                </h1>
-                <p class="text-gray-400 text-sm mt-1">
-                    Kelola data pegawai dan hak akses Modul Magang.
-                </p>
-            </div>
-
-            <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-2xl px-4 py-2.5 shadow-xs">
-                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <span class="text-sm font-semibold text-gray-700">{{ $pegawai->total() }} Pegawai</span>
-            </div>
+    <div class="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+            <p class="text-xs font-bold uppercase tracking-[0.2em] text-indigo-500 flex items-center gap-2 mb-2">
+                <span class="inline-flex w-6 h-6 rounded-md bg-indigo-100 items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5">
+                        <path
+                            d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" />
+                    </svg>
+                </span>
+                Kepegawaian
+            </p>
+            <h1 class="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
+                Manajemen Pegawai
+            </h1>
+            <p class="text-gray-500 text-sm mt-1">
+                Kelola data pegawai dan berikan hak akses Modul Magang.
+            </p>
         </div>
 
+        <div class="flex items-center gap-2.5 bg-white border border-gray-200 rounded-xl px-4 py-2.5 shadow-sm shrink-0">
+            <span class="relative flex h-2.5 w-2.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <span class="text-sm font-bold text-gray-700">{{ $pegawai->total() }} Total Pegawai</span>
+        </div>
     </div>
+
+    {{-- ================================================================
+     FLASH MESSAGES
+     ================================================================ --}}
+    @if (session('success'))
+        <div
+            class="mb-6 flex items-start gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-4 shadow-sm">
+            <svg class="w-6 h-6 shrink-0 text-emerald-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="currentColor">
+                <path fill-rule="evenodd"
+                    d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"
+                    clip-rule="evenodd" />
+            </svg>
+            <p class="text-sm font-medium pt-0.5">{{ session('success') }}</p>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="mb-6 flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 shadow-sm">
+            <svg class="w-6 h-6 shrink-0 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="currentColor">
+                <path fill-rule="evenodd"
+                    d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z"
+                    clip-rule="evenodd" />
+            </svg>
+            <p class="text-sm font-medium pt-0.5">{{ session('error') }}</p>
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="mb-6 flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 shadow-sm">
+            <svg class="w-6 h-6 shrink-0 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                fill="currentColor">
+                <path fill-rule="evenodd"
+                    d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z"
+                    clip-rule="evenodd" />
+            </svg>
+            <div class="pt-0.5">
+                @foreach ($errors->all() as $error)
+                    <p class="text-sm font-medium">{{ $error }}</p>
+                @endforeach
+            </div>
+        </div>
+    @endif
 
     {{-- ================================================================
      PEGAWAI CARDS
      ================================================================ --}}
-    <div class="space-y-3">
-
+    <div class="space-y-4">
         @foreach ($pegawai as $user)
             @php
                 $role = $user->magangAccessRight->role ?? null;
+                $divisionName = $user->magangAccessRight->division_name ?? '';
+
                 $isSuperadmin = $role === 'superadmin';
                 $isAdminBidang = $role === 'admin_bidang';
                 $hasAccess = !is_null($role);
 
                 $initial = strtoupper(substr($user->name, 0, 1));
+                $isMe = $user->id === Auth::id();
 
-                // Palet warna avatar — deterministik per huruf awal
+                // Palet warna deterministik
                 $palettes = [
                     'A' => ['bg' => '#EEF2FF', 'text' => '#4338CA'],
                     'B' => ['bg' => '#FFF7ED', 'text' => '#C2410C'],
@@ -87,335 +118,293 @@
             @endphp
 
             <div
-                class="bg-white rounded-2xl border border-gray-100
-                hover:border-indigo-100 hover:shadow-lg hover:shadow-indigo-500/5
-                transition-all duration-200">
+                class="bg-white rounded-2xl border border-gray-200 hover:border-indigo-200 hover:shadow-lg hover:shadow-indigo-500/5 transition-all duration-300 overflow-hidden flex flex-col lg:flex-row lg:items-center">
 
-                <div class="flex items-center p-5 gap-0">
-
-                    {{-- =========================================================
-                 KOLOM 1 — IDENTITAS
-                 ========================================================= --}}
-                    <div class="flex items-center gap-4 w-72 shrink-0">
-
-                        {{-- Avatar dengan status dot --}}
+                {{-- INFO PEGAWAI & STATUS --}}
+                <div class="flex items-center justify-between p-5 lg:w-[45%] lg:border-r border-gray-100 bg-gray-50/30">
+                    <div class="flex items-center gap-4 min-w-0">
                         <div class="relative shrink-0">
-
-                            <div class="w-12 h-12 rounded-2xl flex items-center justify-center
-                                font-black text-lg shadow-sm select-none"
+                            <div class="w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg shadow-sm select-none border border-black/5"
                                 style="background-color: {{ $color['bg'] }}; color: {{ $color['text'] }};">
                                 {{ $initial }}
                             </div>
-
-                            {{-- Status dot — pakai warna saja, tidak perlu icon di dalam --}}
                             @if ($isSuperadmin)
                                 <span
-                                    class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full
-                                     bg-violet-500 border-2 border-white shadow-sm"
+                                    class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-violet-500 border-2 border-white shadow-sm"
                                     title="Superadmin"></span>
                             @elseif ($isAdminBidang)
                                 <span
-                                    class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full
-                                     bg-blue-500 border-2 border-white shadow-sm"
+                                    class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-blue-500 border-2 border-white shadow-sm"
                                     title="Admin Divisi"></span>
                             @else
                                 <span
-                                    class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full
-                                     bg-gray-300 border-2 border-white shadow-sm"
+                                    class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-gray-300 border-2 border-white shadow-sm"
                                     title="Tanpa Akses"></span>
                             @endif
-
                         </div>
-
-                        {{-- Nama & Email --}}
                         <div class="min-w-0">
-                            <p class="font-bold text-gray-900 text-sm truncate leading-tight">
-                                {{ $user->name }}
-                            </p>
-                            <p class="text-xs text-gray-400 truncate mt-0.5">
-                                {{ $user->email }}
-                            </p>
+                            <p class="font-bold text-gray-900 text-sm truncate leading-tight">{{ $user->name }}</p>
+                            <p class="text-xs font-medium text-gray-500 truncate mt-0.5">{{ $user->email }}</p>
                         </div>
-
                     </div>
 
-                    {{-- Divider --}}
-                    <div class="w-px h-12 bg-gray-100 mx-6 shrink-0"></div>
-
-                    {{-- =========================================================
-                 KOLOM 2 — STATUS BADGE
-                 Menggunakan inline SVG — tidak bergantung Bootstrap Icons font
-                 ========================================================= --}}
-                    <div class="w-56 shrink-0">
-
+                    {{-- Badge Status Mobile / LG --}}
+                    <div class="shrink-0 ml-4 hidden sm:block">
                         @if ($isSuperadmin)
-                            <div
-                                class="inline-flex items-center gap-2.5
-                                bg-violet-50 border border-violet-200/80
-                                rounded-xl px-3 py-2.5">
-
-                                {{-- Icon shield — inline SVG --}}
-                                <span class="text-violet-600 shrink-0">
+                            <div class="text-right">
+                                <span
+                                    class="inline-flex items-center gap-1 text-[10px] font-extrabold text-violet-700 bg-violet-100 px-2 py-0.5 rounded uppercase tracking-wide">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                                        class="w-4 h-4">
+                                        class="w-3 h-3">
                                         <path fill-rule="evenodd"
                                             d="M9.661 2.237a.531.531 0 0 1 .678 0 11.947 11.947 0 0 0 7.078 2.749.5.5 0 0 1 .479.425c.069.52.104 1.05.104 1.589 0 5.162-3.26 9.563-7.834 11.256a.48.48 0 0 1-.332 0C5.26 16.563 2 12.162 2 7c0-.538.035-1.069.104-1.589a.5.5 0 0 1 .48-.425 11.947 11.947 0 0 0 7.077-2.749Zm4.196 5.954a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z"
                                             clip-rule="evenodd" />
                                     </svg>
+                                    Superadmin
                                 </span>
-
-                                <div>
-                                    <p
-                                        class="text-[11px] font-extrabold text-violet-700 uppercase tracking-wide leading-none">
-                                        Superadmin
-                                    </p>
-                                    <p class="text-[10px] text-violet-400 mt-0.5 leading-none">
-                                        Akses seluruh divisi
-                                    </p>
-                                </div>
-
                             </div>
                         @elseif ($isAdminBidang)
-                            <div
-                                class="inline-flex items-center gap-2.5
-                                bg-blue-50 border border-blue-200/80
-                                rounded-xl px-3 py-2.5">
-
-                                {{-- Icon building — inline SVG --}}
-                                <span class="text-blue-600 shrink-0">
+                            <div class="text-right">
+                                <span
+                                    class="inline-flex items-center gap-1 text-[10px] font-extrabold text-blue-700 bg-blue-100 px-2 py-0.5 rounded uppercase tracking-wide">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                                        class="w-4 h-4">
+                                        class="w-3 h-3">
                                         <path fill-rule="evenodd"
-                                            d="M4 16.5v-13h-.25a.75.75 0 0 1 0-1.5h12.5a.75.75 0 0 1 0 1.5H16v13h.25a.75.75 0 0 1 0 1.5h-3.5a.75.75 0 0 1-.75-.75v-2.5a.75.75 0 0 0-.75-.75h-2.5a.75.75 0 0 0-.75.75v2.5a.75.75 0 0 1-.75.75h-3.5a.75.75 0 0 1 0-1.5H4Zm3-11a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1Zm.5 3.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1Zm3.5-3.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1Zm.5 3.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1Z"
+                                            d="M4 16.5v-13h-.25a.75.75 0 0 1 0-1.5h12.5a.75.75 0 0 1 0 1.5H16v13h.25a.75.75 0 0 1 0 1.5h-3.5a.75.75 0 0 1-.75-.75v-2.5a.75.75 0 0 0-.75-.75h-2.5a.75.75 0 0 0-.75.75v2.5a.75.75 0 0 1-.75.75h-3.5a.75.75 0 0 1 0-1.5H4Z"
                                             clip-rule="evenodd" />
                                     </svg>
+                                    Admin Divisi
                                 </span>
-
-                                <div class="min-w-0">
-                                    <p
-                                        class="text-[11px] font-extrabold text-blue-700 uppercase tracking-wide leading-none">
-                                        Admin Divisi
-                                    </p>
-                                    <p class="text-[10px] text-blue-400 mt-0.5 leading-none truncate max-w-27.5">
-                                        {{ $user->magangAccessRight->division_name }}
-                                    </p>
-                                </div>
-
+                                <p class="text-[10px] font-medium text-gray-500 mt-1 truncate max-w-30"
+                                    title="{{ $divisionName }}">{{ $divisionName }}</p>
                             </div>
                         @else
-                            <div
-                                class="inline-flex items-center gap-2.5
-                                bg-gray-50 border border-gray-200/80
-                                rounded-xl px-3 py-2.5">
-
-                                {{-- Icon minus circle — inline SVG --}}
-                                <span class="text-gray-400 shrink-0">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
-                                        class="w-4 h-4">
-                                        <path fill-rule="evenodd"
-                                            d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM6.75 9.25a.75.75 0 0 0 0 1.5h6.5a.75.75 0 0 0 0-1.5h-6.5Z"
-                                            clip-rule="evenodd" />
-                                    </svg>
-                                </span>
-
-                                <div>
-                                    <p class="text-[11px] font-bold text-gray-500 uppercase tracking-wide leading-none">
-                                        Tanpa Akses
-                                    </p>
-                                    <p class="text-[10px] text-gray-400 mt-0.5 leading-none">
-                                        Belum ada role
-                                    </p>
-                                </div>
-
+                            <div class="text-right">
+                                <span
+                                    class="inline-flex items-center gap-1 text-[10px] font-extrabold text-gray-500 bg-gray-100 px-2 py-0.5 rounded uppercase tracking-wide">Tanpa
+                                    Akses</span>
                             </div>
                         @endif
-
                     </div>
+                </div>
 
-                    {{-- Divider --}}
-                    <div class="w-px h-12 bg-gray-100 mx-6 shrink-0"></div>
-
-                    {{-- =========================================================
-                 KOLOM 3 — FORM KELOLA AKSES
-                 ========================================================= --}}
-                    <div class="flex-1 min-w-0">
-
+                {{-- FORM CONTROL --}}
+                <div class="flex-1 p-4 lg:p-5">
+                    @if ($isMe)
+                        {{-- TAMPILAN JIKA INI ADALAH AKUN SUPERADMIN ITU SENDIRI --}}
+                        <div class="flex items-center justify-end h-full w-full">
+                            <div
+                                class="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-xl border border-indigo-100 shadow-sm cursor-default">
+                                <svg class="w-4 h-4 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                    viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                                </svg>
+                                <span class="text-[11px] font-extrabold uppercase tracking-widest mt-0.5">Ini Akun
+                                    Anda</span>
+                            </div>
+                        </div>
+                    @else
+                        {{-- FORM SEPERTI BIASA UNTUK PEGAWAI LAIN --}}
                         <form id="form-access-{{ $user->id }}"
-                            action="{{ route('admin.pegawai.access.store', $user->id) }}" method="POST">
-
+                            action="{{ route('admin.pegawai.access.store', $user->id) }}" method="POST"
+                            class="js-access-form flex flex-col sm:flex-row sm:items-center gap-3">
                             @csrf
 
-                            <div class="flex items-center gap-2 flex-wrap">
-
-                                {{-- Role Select --}}
-                                <div class="relative">
-                                    <select name="role"
-                                        class="role-select appearance-none bg-gray-50 border border-gray-200
-                                           rounded-xl pl-3 pr-8 py-2.5 text-xs font-semibold text-gray-700
-                                           focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400
-                                           outline-none transition cursor-pointer w-40">
-
-                                        <option value="" disabled {{ !$hasAccess ? 'selected' : '' }}>
-                                            — Pilih Role —
+                            <div class="flex flex-col sm:flex-row gap-3 flex-1">
+                                {{-- Pilih Role --}}
+                                <div class="relative w-full sm:w-44">
+                                    <select name="role" data-original="{{ $role }}"
+                                        class="js-input-role appearance-none w-full bg-white border border-gray-300 rounded-xl pl-4 pr-10 py-2.5 text-sm font-semibold text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition cursor-pointer shadow-sm">
+                                        <option value="" {{ !$hasAccess ? 'selected' : '' }}>— Pilih Akses —</option>
+                                        <option value="admin_bidang" {{ $isAdminBidang ? 'selected' : '' }}>Admin Divisi
                                         </option>
-                                        <option value="admin_bidang"
-                                            {{ ($user->magangAccessRight->role ?? '') == 'admin_bidang' ? 'selected' : '' }}>
-                                            Admin Divisi
+                                        <option value="superadmin" {{ $isSuperadmin ? 'selected' : '' }}>Superadmin
                                         </option>
-                                        <option value="superadmin"
-                                            {{ ($user->magangAccessRight->role ?? '') == 'superadmin' ? 'selected' : '' }}>
-                                            Superadmin
-                                        </option>
-
                                     </select>
-                                    {{-- Chevron pakai inline SVG --}}
                                     <span
-                                        class="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" fill="none"
-                                            stroke="currentColor" stroke-width="2" class="w-2.5 h-2.5">
-                                            <path d="M2 4l4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                            class="w-4 h-4">
+                                            <path fill-rule="evenodd"
+                                                d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                                                clip-rule="evenodd" />
                                         </svg>
                                     </span>
                                 </div>
 
-                                {{-- Division Select --}}
-                                <div class="relative">
-                                    <select name="division_name"
-                                        class="division-select appearance-none bg-gray-50 border border-gray-200
-                                           rounded-xl pl-3 pr-8 py-2.5 text-xs font-semibold text-gray-700
-                                           focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400
-                                           outline-none transition cursor-pointer w-56
-                                           {{ $isSuperadmin ? 'opacity-40 pointer-events-none' : '' }}">
-
-                                        <option value="">— Pilih Divisi —</option>
-
+                                {{-- Pilih Divisi --}}
+                                <div class="relative flex-1">
+                                    <select name="division_name" data-original="{{ $divisionName }}"
+                                        class="js-input-division appearance-none w-full bg-white border border-gray-300 rounded-xl pl-4 pr-10 py-2.5 text-sm font-semibold text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition cursor-pointer shadow-sm {{ $isSuperadmin || !$hasAccess ? 'opacity-50 pointer-events-none bg-gray-50' : '' }}">
+                                        <option value="">— Pilih Nama Divisi —</option>
                                         @foreach ($divisions as $division)
                                             <option value="{{ $division->name }}"
-                                                {{ ($user->magangAccessRight->division_name ?? '') === $division->name ? 'selected' : '' }}>
+                                                {{ $divisionName === $division->name ? 'selected' : '' }}>
                                                 {{ $division->name }}
                                             </option>
                                         @endforeach
-
                                     </select>
                                     <span
-                                        class="division-chevron absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400
-                                         {{ $isSuperadmin ? 'opacity-40' : '' }}">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12" fill="none"
-                                            stroke="currentColor" stroke-width="2" class="w-2.5 h-2.5">
-                                            <path d="M2 4l4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+                                        class="js-chevron-division absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500 {{ $isSuperadmin || !$hasAccess ? 'opacity-50' : '' }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                            class="w-4 h-4">
+                                            <path fill-rule="evenodd"
+                                                d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                                                clip-rule="evenodd" />
                                         </svg>
                                     </span>
                                 </div>
-
-                                {{-- Submit --}}
-                                <button type="submit"
-                                    class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl
-                                       text-xs font-bold transition-all duration-150 shadow-sm
-                                       {{ $hasAccess
-                                           ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/20'
-                                           : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20' }}">
-
-                                    {{-- Icon refresh / plus — inline SVG --}}
-                                    @if ($hasAccess)
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"
-                                            class="w-3 h-3">
-                                            <path fill-rule="evenodd"
-                                                d="M13.836 2.477a.75.75 0 0 1 .75.75v3.182a.75.75 0 0 1-.75.75h-3.182a.75.75 0 0 1 0-1.5h1.37l-.84-.841a4.5 4.5 0 0 0-7.08.932.75.75 0 0 1-1.3-.75 6 6 0 0 1 9.45-1.242l.842.84V3.227a.75.75 0 0 1 .75-.75Zm-.911 7.5A.75.75 0 0 1 13.199 11a6 6 0 0 1-9.45 1.241l-.84-.84v1.371a.75.75 0 0 1-1.5 0V9.591a.75.75 0 0 1 .75-.75H5.35a.75.75 0 0 1 0 1.5H3.98l.841.841a4.5 4.5 0 0 0 7.08-.932.75.75 0 0 1 1.024-.273Z"
-                                                clip-rule="evenodd" />
-                                        </svg>
-                                        Update
-                                    @else
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"
-                                            class="w-3 h-3">
-                                            <path
-                                                d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
-                                        </svg>
-                                        Beri Akses
-                                    @endif
-
-                                </button>
-
-                                {{-- Cabut Akses --}}
-                                @if ($hasAccess)
-                                    <div class="w-px h-6 bg-gray-200 mx-1 shrink-0"></div>
-
-                                    <form action="{{ route('admin.pegawai.access.destroy', $user->id) }}" method="POST"
-                                        onsubmit="return confirm('Yakin ingin mencabut hak akses pegawai ini?');"
-                                        class="inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
-                                            class="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl
-                                               text-xs font-bold transition-all duration-150
-                                               text-red-500 bg-red-50 border border-red-100
-                                               hover:bg-red-500 hover:text-white hover:border-red-500">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"
-                                                fill="currentColor" class="w-3 h-3">
-                                                <path
-                                                    d="M5.28 4.22a.75.75 0 0 0-1.06 1.06L6.94 8l-2.72 2.72a.75.75 0 1 0 1.06 1.06L8 9.06l2.72 2.72a.75.75 0 1 0 1.06-1.06L9.06 8l2.72-2.72a.75.75 0 0 0-1.06-1.06L8 6.94 5.28 4.22Z" />
-                                            </svg>
-                                            Cabut
-                                        </button>
-                                    </form>
-                                @endif
-
                             </div>
 
+                            {{-- Action Buttons --}}
+                            <div
+                                class="flex items-center gap-2 shrink-0 border-t sm:border-t-0 border-gray-100 pt-3 sm:pt-0 mt-1 sm:mt-0">
+
+                                {{-- Save/Update Button (Disabled by default) --}}
+                                <button type="submit" disabled
+                                    class="js-btn-submit flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm disabled:opacity-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-200 disabled:cursor-not-allowed disabled:shadow-none {{ $hasAccess ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200' : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200' }}">
+                                    @if ($hasAccess)
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                            stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+                                        </svg>
+                                        <span>Update</span>
+                                    @else
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                            stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M12 4.5v15m7.5-7.5h-15" />
+                                        </svg>
+                                        <span>Beri Akses</span>
+                                    @endif
+                                </button>
+
+                            </div>
                         </form>
 
-                    </div>
-
+                        {{-- Form Cabut Akses --}}
+                        @if ($hasAccess)
+                            <form action="{{ route('admin.pegawai.access.destroy', $user->id) }}" method="POST"
+                                class="js-delete-form mt-2 sm:mt-0 sm:absolute sm:right-5 sm:top-5 lg:static lg:mt-3 flex justify-end">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                    class="js-btn-delete inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-red-600 hover:bg-red-50 hover:text-red-700">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                    </svg>
+                                    <span>Cabut Akses</span>
+                                </button>
+                            </form>
+                        @endif
+                    @endif
                 </div>
 
             </div>
         @endforeach
-
     </div>
 
     {{-- ================================================================
      PAGINATION
      ================================================================ --}}
     @if ($pegawai->hasPages())
-        <div class="mt-6 flex justify-center">
+        <div class="mt-8 flex justify-center">
             {{ $pegawai->appends(request()->query())->links() }}
         </div>
     @endif
 
     {{-- ================================================================
-     SCRIPT — TOGGLE DIVISION FIELD
-     Logic identik dengan versi sebelumnya, tidak ada yang berubah
+     JAVASCRIPT: State Management & Form Protection
      ================================================================ --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 
-            const cards = document.querySelectorAll('[id^="form-access-"]');
+            const accessForms = document.querySelectorAll('.js-access-form');
 
-            cards.forEach(form => {
+            // Reusable spinner SVG
+            const spinnerSVG =
+                `<svg class="animate-spin w-4 h-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
 
-                const card = form.closest('.bg-white');
-                const roleSelect = form.querySelector('.role-select');
-                const divSelect = form.querySelector('.division-select');
-                const divChevron = form.querySelector('.division-chevron');
+            accessForms.forEach(form => {
+                const roleInput = form.querySelector('.js-input-role');
+                const divInput = form.querySelector('.js-input-division');
+                const divChevron = form.querySelector('.js-chevron-division');
+                const submitBtn = form.querySelector('.js-btn-submit');
 
-                if (!roleSelect || !divSelect) return;
+                const origRole = roleInput.dataset.original;
+                const origDiv = divInput.dataset.original;
 
-                function toggleDivisionField() {
+                // Function to evaluate state
+                const evaluateFormState = () => {
+                    const currentRole = roleInput.value;
+                    const currentDiv = divInput.value;
+                    let isChanged = false;
+                    let isValid = true;
 
-                    const isSuperadmin = roleSelect.value === 'superadmin';
-
-                    if (isSuperadmin) {
-                        divSelect.value = '';
-                        divSelect.classList.add('opacity-40', 'pointer-events-none');
-                        if (divChevron) divChevron.classList.add('opacity-40');
+                    // Logic 1: Toggle Division Field UX
+                    if (currentRole === 'superadmin' || currentRole === '') {
+                        divInput.classList.add('opacity-50', 'pointer-events-none', 'bg-gray-50');
+                        divChevron.classList.add('opacity-50');
+                        divInput.value = ''; // auto clear
                     } else {
-                        divSelect.classList.remove('opacity-40', 'pointer-events-none');
-                        if (divChevron) divChevron.classList.remove('opacity-40');
+                        divInput.classList.remove('opacity-50', 'pointer-events-none', 'bg-gray-50');
+                        divChevron.classList.remove('opacity-50');
                     }
-                }
 
-                toggleDivisionField();
-                roleSelect.addEventListener('change', toggleDivisionField);
+                    // Logic 2: Has it changed?
+                    if (currentRole !== origRole) {
+                        isChanged = true;
+                    } else if (currentRole === 'admin_bidang' && currentDiv !== origDiv) {
+                        isChanged = true;
+                    }
+
+                    // Logic 3: Is it valid? (Admin Bidang MUST select division)
+                    if (currentRole === 'admin_bidang' && divInput.value === '') {
+                        isValid = false;
+                    }
+
+                    // Enable button ONLY IF changed AND valid
+                    if (isChanged && isValid) {
+                        submitBtn.removeAttribute('disabled');
+                    } else {
+                        submitBtn.setAttribute('disabled', 'true');
+                    }
+                };
+
+                // Listen to changes
+                roleInput.addEventListener('change', evaluateFormState);
+                divInput.addEventListener('change', evaluateFormState);
+
+                // Handle Submit Spinner (Mencegah Double Submit)
+                form.addEventListener('submit', function() {
+                    submitBtn.setAttribute('disabled', 'true');
+                    submitBtn.classList.add('opacity-75', 'cursor-wait');
+                    submitBtn.innerHTML = spinnerSVG + ' <span>Memproses...</span>';
+                });
             });
+
+            // Handle Delete Form Spinner & SweetAlert replacement
+            const deleteForms = document.querySelectorAll('.js-delete-form');
+            deleteForms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    if (!confirm(
+                            'PERINGATAN: Yakin ingin mencabut hak akses pegawai ini? Mereka tidak akan bisa login ke dashboard admin.'
+                        )) {
+                        e.preventDefault();
+                        return;
+                    }
+
+                    const btn = this.querySelector('.js-btn-delete');
+                    btn.setAttribute('disabled', 'true');
+                    btn.classList.add('opacity-50', 'cursor-wait');
+                    btn.innerHTML = spinnerSVG + ' <span>Mencabut...</span>';
+                });
+            });
+
         });
     </script>
 

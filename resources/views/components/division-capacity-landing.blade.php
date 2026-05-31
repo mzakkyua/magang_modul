@@ -197,15 +197,17 @@
                                     Belum Ada Lowongan
                                 </div>
 
-                                {{-- Info Text --}}
+                                {{-- Info Text (Faktual) --}}
                                 <div
                                     class="p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs text-gray-500 mb-3">
-                                    @if ($item['estimated_open'])
-                                        <p class="text-[10px] font-medium mb-0.5">Periode terakhir selesai pada:</p>
-                                        <p class="font-bold text-gray-800">{{ $item['estimated_open'] }}</p>
+                                    @if ($item['last_batch_end'])
+                                        <p class="text-[10px] font-medium mb-0.5">Program magang periode terakhir telah
+                                            selesai pada:</p>
+                                        <p class="font-bold text-gray-800">{{ $item['last_batch_end'] }}</p>
                                     @else
-                                        <p class="text-[10px] leading-relaxed">Belum ada riwayat program magang untuk
-                                            bidang ini sebelumnya.</p>
+                                        <p class="text-[10px] leading-relaxed">
+                                            Belum ada data periode magang sebelumnya untuk bidang ini.
+                                        </p>
                                     @endif
                                 </div>
                             @endif

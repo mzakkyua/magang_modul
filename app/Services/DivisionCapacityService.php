@@ -55,19 +55,6 @@ class DivisionCapacityService
    * ==============================================================
    * GET ALL DIVISION CAPACITY (WITH CACHE)
    * ==============================================================
-   *
-   * Return Collection per divisi:
-   *
-   * [
-   *   division_name,
-   *   max_slots,        — null jika unlimited
-   *   filled_slots,
-   *   available_slots,  — null jika unlimited
-   *   is_full,
-   *   estimated_open,   — null jika tidak penuh / tidak ada end_date
-   *   fill_percentage,  — null jika unlimited
-   * ]
-   * ==============================================================
    */
   public static function getAllCached(): Collection
   {
@@ -155,10 +142,7 @@ class DivisionCapacityService
      * BUILD FINAL COLLECTION
      * ----------------------------------------------------------
      */
-    return $settings->map(function (
-      DivisionSetting $setting
-    ) use ($vacancyStats) {
-
+    return $settings->map(function (DivisionSetting $setting) use ($vacancyStats) {
       $stats = $vacancyStats->get($setting->division_name);
 
       /**
@@ -206,30 +190,23 @@ class DivisionCapacityService
 
       /**
        * ------------------------------------------------------
-       * ESTIMATED OPEN MONTH
+       * LAST BATCH END (Faktualitas)
        * ------------------------------------------------------
        */
-      $estimatedOpen = null;
+      $lastBatchEnd = null;
 
-      if ($isFull && $stats && $stats->latest_end_date) {
-        $estimatedOpen = Carbon::parse(
-          $stats->latest_end_date
-        )->translatedFormat('F Y');
+      if ($stats && $stats->latest_end_date) {
+        $lastBatchEnd = Carbon::parse($stats->latest_end_date)->translatedFormat('d F Y');
       }
 
-      /**
-       * ------------------------------------------------------
-       * RETURN FINAL ARRAY
-       * ------------------------------------------------------
-       */
       return [
-        'division_name'   => $setting->division_name,
-        'max_slots'       => $maxSlots,
-        'filled_slots'    => $filledSlots,
-        'available_slots' => $availableSlots,
-        'is_full'         => $isFull,
-        'estimated_open'  => $estimatedOpen,
-        'fill_percentage' => $fillPercentage,
+        'division_name'     => $setting->division_name,
+        'max_slots'         => $maxSlots,
+        'filled_slots'      => $filledSlots,
+        'available_slots'   => $availableSlots,
+        'is_full'           => $isFull,
+        'last_batch_end'    => $lastBatchEnd, // <-- Ini data faktualnya
+        'fill_percentage'   => $fillPercentage,
       ];
     })->values();
   }

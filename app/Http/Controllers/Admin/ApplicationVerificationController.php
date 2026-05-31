@@ -16,52 +16,6 @@ use App\Helpers\DashboardCache;
  * ======================================================================
  * CONTROLLER: ApplicationVerificationController
  * ======================================================================
- *
- * TUJUAN CONTROLLER
- * ----------------------------------------------------------------------
- * Controller ini menangani seluruh proses verifikasi pelamar magang
- * oleh Admin.
- *
- * Fitur utama controller ini:
- *
- * 1. Menampilkan daftar pelamar
- * 2. Menampilkan detail lamaran
- * 3. Memproses perubahan status pelamar
- *
- * ----------------------------------------------------------------------
- * SISTEM ROLE ADMIN
- * ----------------------------------------------------------------------
- * Sistem mendukung dua jenis admin:
- *
- * 1. Superadmin
- *    - Dapat melihat dan memverifikasi semua pelamar dari seluruh divisi
- *
- * 2. Admin Divisi
- *    - Hanya dapat melihat dan memverifikasi pelamar dari divisinya
- *
- * ----------------------------------------------------------------------
- * KEAMANAN SISTEM
- * ----------------------------------------------------------------------
- * Controller ini memiliki beberapa lapisan keamanan:
- *
- * - Validasi hak akses admin (dipusatkan di resolveHakAkses())
- * - Filter divisi pada query
- * - Validasi divisi pada detail dan update
- * - State transition yang ketat mencegah status lompat sembarangan
- * - Race condition protection via DB transaction + lockForUpdate
- *
- * ----------------------------------------------------------------------
- * DAMPAK BISNIS
- * ----------------------------------------------------------------------
- * Perubahan status pelamar mempengaruhi:
- *
- * - Kuota lowongan
- * - Statistik dashboard
- *
- * Oleh karena itu setiap perubahan status akan
- * membersihkan cache dashboard dan mencatat audit log.
- *
- * ======================================================================
  */
 class ApplicationVerificationController extends Controller
 {
