@@ -109,6 +109,10 @@ class AuthMagangController extends Controller
          */
         $request->session()->regenerate();
 
+        DB::table('sessions')
+            ->where('id', $request->session()->getId())
+            ->update(['auth_guard' => 'magang']);
+
 
         Log::info('Register peserta berhasil', [
             'user_id' => $user->id,

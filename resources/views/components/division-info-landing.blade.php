@@ -2,6 +2,7 @@
     Component: Penjelasan Divisi Magang (100% Dynamic Auto-Generator)
     File: resources/views/components/division-info-landing.blade.php
 --}}
+@props(['divisionStats' => collect()])
 
 @php
     use Illuminate\Support\Facades\DB;

@@ -333,7 +333,7 @@ class LandingController extends Controller
              * true jika ada minimal 1 vacancy dengan quota_slots = null
              */
             $hasUnlimited = $vacancies->contains(
-                fn($v) => $v->quota_slots === null
+                fn($v) => $v->quota_slots === 0
             );
 
             /**

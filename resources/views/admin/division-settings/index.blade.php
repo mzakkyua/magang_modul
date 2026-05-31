@@ -102,7 +102,7 @@
                                         Tidak Terbatas
                                     @endif
 
-                                    @if ($cap && $cap['estimated_open'])
+                                    @if ($cap && $cap['last_batch_end'])
                                         <span class="text-gray-300">|</span>
                                         <span class="text-blue-500 flex items-center gap-1">
                                             <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" fill="none"
@@ -110,7 +110,7 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                     d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
-                                            Est: {{ $cap['estimated_open'] }}
+                                            Last Batch: {{ $cap['last_batch_end'] }}
                                         </span>
                                     @endif
                                 </p>
@@ -211,13 +211,6 @@
                                 </svg>
                                 <span>Admin divisi <strong>terkunci</strong> (tidak bisa membuat lowongan) jika slot
                                     penuh.</span>
-                            </li>
-                            <li class="flex gap-2 leading-relaxed">
-                                <svg class="w-3 h-3 text-blue-500 shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24" fill="currentColor">
-                                    <circle cx="12" cy="12" r="6" />
-                                </svg>
-                                <span>Kosongkan nilai input untuk membuat limit tak terbatas (Unlimited).</span>
                             </li>
                         </ul>
                     </div>

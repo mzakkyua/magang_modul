@@ -321,9 +321,12 @@ class AdminProfileController extends Controller
             ->where('id', '!=', $request->session()->getId())
             ->delete();
         }
-
-        $request->session()->regenerate();
       });
+
+      // ✅ Panggil setelah transaction selesai
+      if ($request->filled('new_password')) {
+        $request->session()->regenerate();
+      }
 
       /**
        * --------------------------------------------------------------
