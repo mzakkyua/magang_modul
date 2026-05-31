@@ -40,6 +40,19 @@ class VacancyMagang extends Model
         'max_members' => 'integer',
     ];
 
+    protected static function booted(): void
+    {
+        $clearCache = function () {
+            \Illuminate\Support\Facades\Cache::forget('landing_division_stats');
+            \Illuminate\Support\Facades\Cache::forget('landing_vacancies_magang');
+            \Illuminate\Support\Facades\Cache::forget('landing_vacancies_penelitian');
+        };
+
+        static::created($clearCache);
+        static::updated($clearCache);
+        static::deleted($clearCache);
+    }
+
     /**
      * =====================================================
      * CONSTANT DOMAIN VALUE

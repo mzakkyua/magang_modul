@@ -125,5 +125,8 @@ class DashboardCache
      * ---------------------------------------------------------
      */
     Cache::forget('division_capacity_data');
+
+
+    Cache::forget('landing_division_stats');
   }
 }

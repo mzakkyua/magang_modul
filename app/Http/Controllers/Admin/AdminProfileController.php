@@ -66,7 +66,6 @@ class AdminProfileController extends Controller
    */
   public function index()
   {
-
     /**
      * --------------------------------------------------------------
      * STEP 1
@@ -89,11 +88,12 @@ class AdminProfileController extends Controller
      * Session login disimpan pada tabel `sessions` ketika
      * Laravel menggunakan database session driver.
      *
-     * Query ini mengambil seluruh session yang dimiliki user
-     * kemudian mengurutkannya dari aktivitas terbaru.
+     * Filter auth_guard = 'web' memastikan hanya sesi admin
+     * yang ditampilkan — sesi peserta magang tidak ikut muncul.
      */
     $rawSessions = DB::table('sessions')
       ->where('user_id', $user->id)
+      ->where('auth_guard', 'web')
       ->orderBy('last_activity', 'desc')
       ->get();
 
@@ -111,7 +111,7 @@ class AdminProfileController extends Controller
      * - Lebih efisien: session()->getId() hanya dipanggil sekali,
      *   bukan setiap iterasi map.
      */
-    $currentSessionId = session()->getId();
+    $currentSessionId = session()->getId() ?? '';
 
 
     /**
@@ -167,11 +167,11 @@ class AdminProfileController extends Controller
      * --------------------------------------------------------------
      *
      * View yang digunakan:
-     * resources/views/admin/profile.blade.php
+     * resources/views/admin/profile/index.blade.php
      *
      * Data yang dikirim:
      * - user     : data admin yang sedang login
-     * - sessions : histori sesi login
+     * - sessions : histori sesi login (hanya guard web)
      */
     return view('admin.profile.index', compact('user', 'sessions'));
   }
@@ -194,11 +194,10 @@ class AdminProfileController extends Controller
    * ALUR PROSES:
    *
    * 1. Validasi input dari user.
-   * 2. Menghapus foto profil jika user memilih delete.
-   * 3. Upload foto profil baru jika ada.
-   * 4. Update password jika user mengisi password baru.
-   * 5. Update nama dan email.
-   * 6. Simpan perubahan ke database.
+   * 2. Upload foto profil baru ATAU hapus foto — tidak keduanya.
+   * 3. Update password jika user mengisi password baru.
+   * 4. Update nama dan email.
+   * 5. Simpan perubahan ke database.
    *
    * ==================================================================
    */
@@ -208,11 +207,11 @@ class AdminProfileController extends Controller
     $user = Auth::user();
 
     $request->validate([
-      'name'  => 'required|string|max:255',
-      'email' => [
+      'name'             => 'required|string|max:255',
+      'email'            => [
         'required',
         'email',
-        Rule::unique('users')->ignore($user->id)
+        Rule::unique('users')->ignore($user->id),
       ],
       'current_password' => 'nullable|required_with:new_password',
       'new_password'     => 'nullable|required_with:current_password|min:8|confirmed',
@@ -240,7 +239,7 @@ class AdminProfileController extends Controller
 
           if (!Hash::check($request->current_password, $user->password)) {
             throw \Illuminate\Validation\ValidationException::withMessages([
-              'current_password' => 'Password lama salah!'
+              'current_password' => 'Password lama salah!',
             ]);
           }
 
@@ -249,35 +248,34 @@ class AdminProfileController extends Controller
 
         /**
          * ----------------------------------------------------------
-         * HANDLE UPLOAD FOTO BARU
+         * HANDLE FOTO — UPLOAD ATAU DELETE, TIDAK KEDUANYA
          * ----------------------------------------------------------
          *
-         * Upload file baru terlebih dahulu.
-         * Tapi file lama BELUM dihapus.
+         * Upload foto baru dan hapus foto adalah dua aksi yang
+         * saling eksklusif. Menggunakan elseif memastikan jika
+         * keduanya dikirim bersamaan (manipulasi form), hanya
+         * upload yang diproses — delete diabaikan.
+         *
+         * Tanpa elseif (dua if terpisah):
+         *   1. Blok upload jalan → $oldPhotoToDelete = foto lama
+         *   2. Blok delete jalan → $oldPhotoToDelete di-overwrite
+         *      dengan foto BARU yang baru saja di-set
+         *   Hasil: foto baru diupload lalu langsung dihapus,
+         *   user berakhir tanpa foto sama sekali.
+         * ----------------------------------------------------------
          */
         if ($request->hasFile('photo')) {
 
+          /**
+           * Upload file baru ke storage.
+           * File lama BELUM dihapus — tunggu transaction sukses.
+           */
           $newPhotoPath = $request->file('photo')
             ->store('profile-photos', 'public');
 
-          /**
-           * Simpan foto lama untuk dihapus nanti
-           * setelah transaction sukses.
-           */
-          $oldPhotoToDelete = $user->profile_photo_path;
-
-          /**
-           * Update path baru ke model.
-           */
+          $oldPhotoToDelete         = $user->profile_photo_path;
           $user->profile_photo_path = $newPhotoPath;
-        }
-
-        /**
-         * ----------------------------------------------------------
-         * HANDLE DELETE FOTO
-         * ----------------------------------------------------------
-         */
-        if ($request->input('delete_photo') == '1') {
+        } elseif ($request->input('delete_photo') == '1') {
 
           if ($user->profile_photo_path) {
             $oldPhotoToDelete = $user->profile_photo_path;
@@ -291,11 +289,8 @@ class AdminProfileController extends Controller
          * UPDATE DATA PROFIL
          * ----------------------------------------------------------
          */
-        $user->name = trim($request->name);
-
-        $user->email = strtolower(
-          trim($request->email)
-        );
+        $user->name  = trim($request->name);
+        $user->email = strtolower(trim($request->email));
 
         /**
          * ----------------------------------------------------------
@@ -313,20 +308,25 @@ class AdminProfileController extends Controller
          * Mengeluarkan seluruh device lain setelah password berubah
          * untuk mencegah session lama tetap aktif.
          *
+         * Filter auth_guard = 'web' memastikan hanya sesi admin
+         * yang di-revoke — sesi peserta magang tidak terpengaruh.
+         *
          * Session saat ini TIDAK dihapus.
          */
         if ($request->filled('new_password')) {
 
           DB::table('sessions')
             ->where('user_id', $user->id)
-            ->where('user_id', $user->id)
             ->where('auth_guard', 'web')
             ->where('id', '!=', $request->session()->getId())
             ->delete();
         }
-
-        $request->session()->regenerate();
       });
+
+      // ✅ Panggil setelah transaction selesai
+      if ($request->filled('new_password')) {
+        $request->session()->regenerate();
+      }
 
       /**
        * --------------------------------------------------------------
@@ -334,6 +334,8 @@ class AdminProfileController extends Controller
        * --------------------------------------------------------------
        *
        * Dilakukan SETELAH transaction sukses.
+       * Jika dilakukan di dalam transaction dan DB rollback,
+       * file sudah terhapus tapi DB tidak berubah → orphan data.
        */
       if (
         $oldPhotoToDelete &&
@@ -353,7 +355,7 @@ class AdminProfileController extends Controller
        * CLEANUP FILE BARU JIKA TRANSACTION GAGAL
        * --------------------------------------------------------------
        *
-       * Mencegah orphan file.
+       * Mencegah orphan file di storage jika DB transaction gagal.
        */
       if (
         $newPhotoPath &&

@@ -1,217 +1,243 @@
-@if ($divisionCapacity->isNotEmpty())
+{{--
+    Section: Lowongan Aktif per Bidang
+    File: resources/views/components/division-capacity-landing.blade.php
+--}}
 
+@props(['divisionStats' => collect()])
+
+@if ($divisionStats->isNotEmpty())
     @php
-        // Summary stats — tidak ada class Tailwind di sini, aman
-        $totalDivisi = $divisionCapacity->count();
-        $totalFilled = $divisionCapacity->sum('filled_slots');
-        $totalAvailable = $divisionCapacity->whereNotNull('available_slots')->sum('available_slots');
-        $totalFull = $divisionCapacity->where('is_full', true)->count();
+        $totalOpenVacancies = $divisionStats->sum('open_vacancies');
+        $totalAvailable = $divisionStats->sum('total_available');
+        $totalActiveDivisions = $divisionStats->where('has_open', true)->count();
     @endphp
 
-    <section class="px-4 md:px-6 py-16 bg-linear-to-b from-gray-50 to-white border-t border-gray-100">
-        <div class="max-w-6xl mx-auto">
+    <section class="px-4 py-10 bg-gray-50 md:px-6 border-t border-gray-100">
+        <div class="mx-auto max-w-6xl">
 
             {{-- ===================================================== --}}
-            {{-- HEADER --}}
+            {{-- HEADER SECTION (COMPACT)                              --}}
             {{-- ===================================================== --}}
-            <div class="text-center mb-10">
+            <div class="max-w-3xl mx-auto text-center mb-8">
                 <span
-                    class="inline-block text-blue-600 font-semibold text-xs uppercase tracking-[0.2em] bg-blue-50 border border-blue-100 px-3 py-1 rounded-full mb-3">
-                    Informasi Ketersediaan
+                    class="inline-block px-3 py-1 mb-3 text-[10px] font-bold tracking-widest text-blue-700 uppercase bg-blue-100 border border-blue-200 rounded-full shadow-sm">
+                    Status Ketersediaan Magang
                 </span>
-                <h2 class="text-2xl md:text-3xl font-extrabold text-gray-800 mt-2">
-                    Status Kapasitas per Divisi
-                </h2>
-                <p class="text-gray-500 mt-3 text-sm max-w-lg mx-auto leading-relaxed">
-                    Pantau ketersediaan slot magang di setiap divisi secara real-time
-                    dan lihat estimasi kapan lowongan kembali tersedia.
+                <p class="text-gray-500 text-sm md:text-base font-medium leading-relaxed">
+                    Lihat bidang yang sedang membuka penerimaan peserta magang dan ketersediaan kuota saat ini.
                 </p>
             </div>
 
             {{-- ===================================================== --}}
-            {{-- SUMMARY BAR --}}
+            {{-- SUMMARY SECTION (COMPACT)                             --}}
             {{-- ===================================================== --}}
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
+            <div class="grid grid-cols-2 gap-3 mb-10 md:grid-cols-4">
 
-                <div class="bg-white border border-gray-100 rounded-2xl px-4 py-4 text-center shadow-sm">
-                    <p class="text-2xl font-extrabold text-gray-800">{{ $totalDivisi }}</p>
-                    <p class="text-[11px] text-gray-400 mt-0.5 font-medium">Total Divisi</p>
+                {{-- Card 1: Bidang Membuka --}}
+                <div
+                    class="flex flex-col items-center justify-center p-4 bg-white border border-gray-100 shadow-sm rounded-2xl">
+                    <div class="w-10 h-10 flex items-center justify-center bg-blue-50 text-blue-600 rounded-full mb-2.5">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
+                            </path>
+                        </svg>
+                    </div>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center mb-0.5">Bidang
+                        Membuka</p>
+                    <p class="text-2xl font-black text-gray-900">{{ $totalActiveDivisions }}</p>
                 </div>
 
-                <div class="bg-white border border-gray-100 rounded-2xl px-4 py-4 text-center shadow-sm">
-                    <p class="text-2xl font-extrabold text-emerald-600">{{ $totalAvailable }}</p>
-                    <p class="text-[11px] text-gray-400 mt-0.5 font-medium">Slot Tersedia</p>
+                {{-- Card 2: Lowongan Aktif --}}
+                <div
+                    class="flex flex-col items-center justify-center p-4 bg-white border border-gray-100 shadow-sm rounded-2xl">
+                    <div
+                        class="w-10 h-10 flex items-center justify-center bg-indigo-50 text-indigo-600 rounded-full mb-2.5">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                            </path>
+                        </svg>
+                    </div>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center mb-0.5">Lowongan
+                        Aktif</p>
+                    <p class="text-2xl font-black text-gray-900">{{ $totalOpenVacancies }}</p>
                 </div>
 
-                <div class="bg-white border border-gray-100 rounded-2xl px-4 py-4 text-center shadow-sm">
-                    <p class="text-2xl font-extrabold text-blue-600">{{ $totalFilled }}</p>
-                    <p class="text-[11px] text-gray-400 mt-0.5 font-medium">Slot Terisi</p>
+                {{-- Card 3: Kuota Tersedia --}}
+                <div
+                    class="flex flex-col items-center justify-center p-4 bg-white border border-gray-100 shadow-sm rounded-2xl">
+                    <div
+                        class="w-10 h-10 flex items-center justify-center bg-emerald-50 text-emerald-600 rounded-full mb-2.5">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                            </path>
+                        </svg>
+                    </div>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center mb-0.5">Kuota
+                        Tersedia</p>
+                    <p class="text-2xl font-black text-emerald-600">{{ $totalAvailable }}</p>
                 </div>
 
-                <div class="bg-white border border-gray-100 rounded-2xl px-4 py-4 text-center shadow-sm">
-                    <p @class([
-                        'text-2xl font-extrabold',
-                        'text-red-500' => $totalFull > 0,
-                        'text-gray-800' => $totalFull === 0,
-                    ])>{{ $totalFull }}</p>
-                    <p class="text-[11px] text-gray-400 mt-0.5 font-medium">Divisi Penuh</p>
+                {{-- Card 4: Update Data --}}
+                <div
+                    class="flex flex-col items-center justify-center p-4 bg-white border border-gray-100 shadow-sm rounded-2xl">
+                    <div
+                        class="w-10 h-10 flex items-center justify-center bg-gray-100 text-gray-500 rounded-full mb-2.5">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center mb-0.5">Update
+                        Data</p>
+                    <p class="text-lg font-bold text-gray-700 mt-1">10 Menit</p>
                 </div>
-
             </div>
 
             {{-- ===================================================== --}}
-            {{-- CARDS --}}
+            {{-- DIVISION CARDS CONTAINER (FLEXBOX CENTERING)          --}}
             {{-- ===================================================== --}}
-            <div class="flex flex-wrap justify-center gap-5">
+            <div class="flex flex-wrap justify-center gap-4">
 
-                @foreach ($divisionCapacity as $item)
-                    {{--
-                        FIX: Semua kondisi warna ditulis langsung di atribut @class()
-                        atau ternary di dalam string class — bukan di variabel @php.
+                @foreach ($divisionStats as $item)
+                    @php
+                        $filledQuota = 0;
+                        $percentFilled = 0;
+                        $totalQuota = $item['total_quota'] ?? 0;
+                        $availableQuota = $item['total_available'] ?? 0;
 
-                        Tailwind JIT scanner membaca template sebagai teks.
-                        Selama class name muncul sebagai string utuh di template
-                        (bukan dibangun via variabel PHP), class akan ter-deteksi
-                        dan TIDAK di-purge saat production build.
-                    --}}
+                        if ($totalQuota > 0) {
+                            $filledQuota = $totalQuota - $availableQuota;
+                            $percentFilled = round(($filledQuota / $totalQuota) * 100);
+                            $percentFilled = min(100, max(0, $percentFilled));
+                        }
+                    @endphp
 
-                    <div @class([
-                        'w-full sm:w-[300px] bg-white rounded-2xl shadow-sm p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300',
-                        'border border-red-100 hover:border-red-200' => $item['is_full'],
-                        'border border-gray-100 hover:border-blue-100' => !$item['is_full'],
-                    ])>
+                    {{-- Rumus calc() untuk memastikan lebar presisi 3 kolom tapi bisa rata tengah --}}
+                    <div
+                        class="group flex flex-col w-full md:w-[calc(50%-8px)] lg:w-[calc(33.333%-11px)] max-w-md p-5 bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden text-left">
 
-                        {{-- Header card --}}
-                        <div class="flex items-start justify-between mb-4">
-
-                            <div class="flex items-center gap-3 min-w-0">
-
-                                {{-- Icon container --}}
-                                <div @class([
-                                    'w-10 h-10 rounded-xl flex items-center justify-center shrink-0',
-                                    'bg-red-50 border border-red-100' => $item['is_full'],
-                                    'bg-blue-50 border border-blue-100' => !$item['is_full'],
-                                ])>
-                                    <i @class([
-                                        'bi bi-building text-sm',
-                                        'text-red-400' => $item['is_full'],
-                                        'text-blue-500' => !$item['is_full'],
-                                    ])></i>
-                                </div>
-
-                                <div class="min-w-0">
-                                    <p class="font-bold text-gray-800 text-sm leading-tight truncate"
-                                        title="{{ $item['division_name'] }}">
-                                        {{ $item['division_name'] }}
-                                    </p>
-                                    <p class="text-[11px] text-gray-400 mt-0.5">Divisi Magang</p>
-                                </div>
-
+                        {{-- Decoration accent --}}
+                        @if ($item['has_open'])
+                            <div
+                                class="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-emerald-400 to-emerald-600">
                             </div>
+                        @else
+                            <div class="absolute top-0 left-0 w-full h-1 bg-gray-200"></div>
+                        @endif
 
-                            {{-- Status dot --}}
-                            <span @class([
-                                'w-2.5 h-2.5 rounded-full shrink-0 mt-1.5',
-                                'bg-red-400' => $item['is_full'],
-                                'bg-emerald-400 animate-pulse' => !$item['is_full'],
-                            ])></span>
-
+                        {{-- Header Card --}}
+                        <div class="flex items-start gap-2.5 mb-3 mt-1.5">
+                            <div class="mt-0.5 text-gray-400 group-hover:text-blue-500 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
+                                    </path>
+                                </svg>
+                            </div>
+                            <h3 class="font-bold text-gray-900 text-sm leading-snug">
+                                {{ $item['division_name'] }}
+                            </h3>
                         </div>
 
-                        {{-- Progress --}}
-                        @if ($item['max_slots'] !== null)
-                            <div class="mb-4">
-
-                                <div class="flex items-end justify-between mb-2">
-                                    <span class="text-[11px] text-gray-400">
-                                        {{ $item['filled_slots'] }} dari {{ $item['max_slots'] }} slot terisi
-                                    </span>
-                                    <span @class([
-                                        'text-sm font-extrabold',
-                                        'text-red-500' => $item['is_full'],
-                                        'text-amber-500' => !$item['is_full'] && $item['fill_percentage'] >= 70,
-                                        'text-emerald-600' => !$item['is_full'] && $item['fill_percentage'] < 70,
-                                    ])>
-                                        {{ $item['fill_percentage'] }}%
-                                    </span>
+                        <div class="flex-1">
+                            @if ($item['has_open'])
+                                {{-- 🟢 BADGE: BUKA --}}
+                                <div
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 mb-3 text-[11px] font-bold text-emerald-800 bg-emerald-100/80 rounded-md">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    Membuka Pendaftaran
                                 </div>
 
-                                {{-- Progress bar --}}
-                                <div class="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                                    <div @class([
-                                        'h-full rounded-full transition-all duration-500',
-                                        'bg-red-400' => $item['is_full'],
-                                        'bg-amber-400' => !$item['is_full'] && $item['fill_percentage'] >= 70,
-                                        'bg-emerald-400' => !$item['is_full'] && $item['fill_percentage'] < 70,
-                                    ]) style="width: {{ $item['fill_percentage'] }}%">
-                                    </div>
+                                {{-- Info Text --}}
+                                <div class="space-y-1.5 mb-4 text-xs text-gray-600">
+                                    <p class="flex items-center justify-between">
+                                        <span>Lowongan Aktif</span>
+                                        <strong class="text-gray-900">{{ $item['open_vacancies'] }}</strong>
+                                    </p>
+                                    @if ($item['has_unlimited'])
+                                        <p class="flex items-center justify-between border-t border-gray-50 pt-1.5">
+                                            <span>Kuota Peserta</span>
+                                            <strong class="text-blue-600">Tidak Dibatasi</strong>
+                                        </p>
+                                    @else
+                                        <p class="flex items-center justify-between border-t border-gray-50 pt-1.5">
+                                            <span>Kuota Tersedia</span>
+                                            <strong class="text-emerald-600">{{ $item['total_available'] }}</strong>
+                                        </p>
+                                    @endif
                                 </div>
 
-                            </div>
-                        @else
-                            <div class="mb-4 flex items-center gap-1.5 text-[11px] text-gray-400">
-                                <i class="bi bi-infinity text-blue-400"></i>
-                                {{ $item['filled_slots'] }} lowongan aktif · Tidak ada batas slot
-                            </div>
-                        @endif
-
-                        {{-- Divider --}}
-                        <div class="border-t border-gray-50 my-3"></div>
-
-                        {{-- Status badge --}}
-                        @if ($item['is_full'])
-                            <div class="space-y-2.5">
-                                <span
-                                    class="inline-flex items-center gap-1.5 text-xs font-bold bg-red-50 text-red-600 border border-red-100 px-3 py-2 rounded-xl w-full justify-center">
-                                    <i class="bi bi-x-circle-fill text-[10px]"></i>
-                                    Slot Penuh — Tidak Menerima Pendaftar
-                                </span>
-                                @if ($item['estimated_open'])
-                                    <div
-                                        class="flex items-center justify-center gap-1.5 text-[11px] text-gray-500 bg-gray-50 rounded-xl px-3 py-2">
-                                        <i class="bi bi-calendar-event text-gray-400"></i>
-                                        Estimasi buka kembali:
-                                        <strong class="text-gray-700 ml-0.5">{{ $item['estimated_open'] }}</strong>
+                                {{-- Progress Bar --}}
+                                @if (!$item['has_unlimited'] && $totalQuota > 0)
+                                    <div class="mb-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                        <div class="flex items-center justify-between mb-1.5">
+                                            <span class="text-[10px] font-semibold text-gray-500">
+                                                {{ $filledQuota }} / {{ $totalQuota }} terisi
+                                            </span>
+                                            <span
+                                                class="text-[10px] font-black {{ $percentFilled >= 80 ? 'text-amber-600' : 'text-blue-600' }}">
+                                                {{ $percentFilled }}%
+                                            </span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                            <div class="h-2 rounded-full transition-all duration-700 ease-out {{ $percentFilled >= 80 ? 'bg-amber-500' : 'bg-blue-600' }}"
+                                                style="width: {{ $percentFilled }}%"></div>
+                                        </div>
                                     </div>
                                 @endif
-                            </div>
-                        @elseif ($item['max_slots'] === null)
-                            <span
-                                class="inline-flex items-center gap-1.5 text-xs font-bold bg-blue-50 text-blue-600 border border-blue-100 px-3 py-2 rounded-xl w-full justify-center">
-                                <i class="bi bi-infinity text-[10px]"></i>
-                                Terbuka · Tanpa Batas Slot
-                            </span>
-                        @else
-                            <div
-                                class="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2">
-                                <span class="text-xs font-bold text-emerald-700 flex items-center gap-1.5">
-                                    <i class="bi bi-check-circle-fill text-[10px]"></i>
-                                    Menerima Pendaftar
-                                </span>
-                                <span
-                                    class="text-xs font-extrabold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                                    {{ $item['available_slots'] }} slot
-                                </span>
-                            </div>
-                        @endif
+                            @else
+                                {{-- 🔴 BADGE: TUTUP --}}
+                                <div
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 mb-3 text-[11px] font-bold text-red-800 bg-red-50 rounded-md">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                                    Belum Ada Lowongan
+                                </div>
+
+                                {{-- Info Text (Faktual) --}}
+                                <div
+                                    class="p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs text-gray-500 mb-3">
+                                    @if ($item['last_batch_end'])
+                                        <p class="text-[10px] font-medium mb-0.5">Program magang periode terakhir telah
+                                            selesai pada:</p>
+                                        <p class="font-bold text-gray-800">{{ $item['last_batch_end'] }}</p>
+                                    @else
+                                        <p class="text-[10px] leading-relaxed">
+                                            Belum ada data periode magang sebelumnya untuk bidang ini.
+                                        </p>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+
+                        {{-- Tombol Aksi --}}
+                        <div class="mt-1 pt-3 border-t border-gray-100">
+                            @if ($item['has_open'])
+                                <button type="button"
+                                    onclick="searchDivisionAndScroll('{{ addslashes($item['division_name']) }}')"
+                                    class="flex items-center justify-center gap-1.5 w-full py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-[0.98] rounded-xl transition-all duration-200 shadow-sm hover:shadow-blue-200">
+                                    Lihat Lowongan
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                                    </svg>
+                                </button>
+                            @else
+                                <div
+                                    class="flex items-center justify-center w-full py-2.5 text-xs font-semibold text-gray-400 bg-gray-100 rounded-xl cursor-not-allowed">
+                                    Pantau Gelombang Berikutnya
+                                </div>
+                            @endif
+                        </div>
 
                     </div>
                 @endforeach
 
             </div>
-
-            {{-- ===================================================== --}}
-            {{-- FOOTER --}}
-            {{-- ===================================================== --}}
-            <div class="mt-10 text-center">
-                <p class="text-[11px] text-gray-400">
-                    <i class="bi bi-info-circle mr-1"></i>
-                    Estimasi bulan dihitung berdasarkan tanggal berakhir program magang yang sedang berjalan.
-                    Data diperbarui setiap 10 menit.
-                </p>
-            </div>
-
         </div>
     </section>
-
 @endif
