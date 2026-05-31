@@ -90,8 +90,9 @@
                                     </div>
                                 @endif
 
-                                <div id="group-input-area"
-                                    class="{{ $vacancy->registration_mode === 'hybrid' ? 'hidden' : '' }}">
+                                <div id="group-input-area" @class([
+                                    'hidden' => $vacancy->registration_mode === 'hybrid',
+                                ])>
                                     <label class="block mb-1 text-sm font-semibold text-gray-700">
                                         Anggota Kelompok (Email)
                                     </label>

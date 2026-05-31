@@ -359,11 +359,11 @@ class ApplicationMagangController extends Controller
             ->whereIn('status', ['pending', 'verified', 'interview', 'accepted'])
             ->count();
 
+        // Karena admin minimal set 1, maka jika sisa <= 0, pasti sudah penuh.
         if (($vacancy->quota_slots - $terpakai) <= 0) {
-            throw new \Exception('Mohon maaf, kuota pendaftaran baru saja penuh.');
+            throw new \Exception('Mohon maaf, kuota pendaftaran baru saja penuh atau sedang ditutup.');
         }
     }
-
 
     /**
      * -----------------------------------------------------------------------

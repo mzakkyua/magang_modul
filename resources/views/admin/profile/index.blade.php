@@ -19,18 +19,23 @@
 
                         <img id="photoPreview"
                             src="{{ $user->profile_photo_path ? asset('storage/' . $user->profile_photo_path) : '' }}"
-                            class="{{ $user->profile_photo_path ? '' : 'hidden' }} h-28 w-28 rounded-2xl mx-auto object-cover border-4 border-white shadow-lg"
-                            alt="Foto Profil">
+                            @class([
+                                'h-28 w-28 rounded-2xl mx-auto object-cover border-4 border-white shadow-lg',
+                                'hidden' => !$user->profile_photo_path,
+                            ]) alt="Foto Profil">
 
-                        <div id="initialPlaceholder"
-                            class="{{ $user->profile_photo_path ? 'hidden' : '' }} h-28 w-28 rounded-2xl bg-linear-to-br from-blue-500 to-blue-600 mx-auto flex items-center justify-center text-white text-4xl font-extrabold shadow-lg border-4 border-white">
+                        <div id="initialPlaceholder" @class([
+                            'h-28 w-28 rounded-2xl bg-linear-to-br from-blue-500 to-blue-600 mx-auto flex items-center justify-center text-white text-4xl font-extrabold shadow-lg border-4 border-white',
+                            'hidden' => $user->profile_photo_path,
+                        ])>
                             {{ substr($user->name, 0, 1) }}
                         </div>
 
                         {{-- Tombol Hapus Foto --}}
-                        <button type="button" id="btnDeletePhoto"
-                            class="{{ $user->profile_photo_path ? '' : 'hidden' }} absolute -bottom-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-xl flex items-center justify-center hover:bg-red-600 shadow-md transition"
-                            title="Hapus Foto Profil">
+                        <button type="button" id="btnDeletePhoto" @class([
+                            'absolute -bottom-2 -right-2 w-8 h-8 bg-red-500 text-white rounded-xl flex items-center justify-center hover:bg-red-600 shadow-md transition',
+                            'hidden' => !$user->profile_photo_path,
+                        ]) title="Hapus Foto Profil">
                             <i class="bi bi-trash-fill text-xs"></i>
                         </button>
                     </div>
@@ -47,9 +52,11 @@
                         @endphp
 
                         @if ($hakAkses)
-                            <span
-                                class="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full
-                            {{ $isSuperAdmin ? 'bg-blue-50 text-blue-600 border border-blue-200' : 'bg-indigo-50 text-indigo-600 border border-indigo-200' }}">
+                            <span @class([
+                                'inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border',
+                                'bg-blue-50 text-blue-600 border-blue-200' => $isSuperAdmin,
+                                'bg-indigo-50 text-indigo-600 border-indigo-200' => !$isSuperAdmin,
+                            ])>
                                 <i class="bi bi-{{ $isSuperAdmin ? 'shield-fill-check' : 'building' }} text-[10px]"></i>
                                 {{ strtoupper(str_replace('_', ' ', $hakAkses->role)) }}
                                 @if ($hakAkses->division_name)
@@ -87,7 +94,6 @@
             </div>
 
             {{-- ===================== KOLOM KANAN: FORM ===================== --}}
-            {{-- BUGFIX: </form> dipindahkan ke dalam div col-span-2 --}}
             <div class="col-span-1 md:col-span-2 space-y-5">
 
                 {{-- Flash Messages --}}
@@ -123,7 +129,6 @@
 
                     {{-- ============ CARD: FOTO & INFO AKUN ============ --}}
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-5">
-
                         <div class="flex items-center gap-2 px-6 py-4 border-b border-gray-100">
                             <div class="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center">
                                 <i class="bi bi-person text-blue-600 text-xs"></i>
@@ -132,15 +137,13 @@
                         </div>
 
                         <div class="p-6 space-y-5">
-
                             {{-- Upload Foto --}}
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">Foto Profil</label>
                                 <div class="flex items-center gap-3">
                                     <label
                                         class="cursor-pointer inline-flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50 hover:border-blue-300 transition shadow-sm">
-                                        <i class="bi bi-upload text-xs"></i>
-                                        Upload Foto
+                                        <i class="bi bi-upload text-xs"></i> Upload Foto
                                         <input id="photoInput" name="photo" type="file" class="sr-only"
                                             accept="image/png, image/jpeg, image/jpg">
                                     </label>
@@ -162,13 +165,11 @@
                                 <input type="email" name="email" value="{{ old('email', $user->email) }}" required
                                     class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                             </div>
-
                         </div>
                     </div>
 
                     {{-- ============ CARD: GANTI PASSWORD ============ --}}
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-5">
-
                         <div class="flex items-center gap-2 px-6 py-4 border-b border-gray-100">
                             <div class="w-7 h-7 bg-amber-50 rounded-lg flex items-center justify-center">
                                 <i class="bi bi-shield-lock text-amber-500 text-xs"></i>
@@ -179,7 +180,6 @@
                         </div>
 
                         <div class="p-6 space-y-4">
-
                             <p class="text-xs text-gray-400 -mt-1">Kosongkan semua field password jika tidak ingin
                                 menggantinya.</p>
 
@@ -252,22 +252,12 @@
                     </div>
 
                 </form>
-                {{-- BUGFIX: </form> sekarang di dalam col-span-2 div --}}
-
-                {{-- SECTION: Perangkat Terhubung (dinonaktifkan sementara) --}}
-                {{-- @include atau uncomment jika fitur session tracking sudah aktif --}}
 
             </div>
-            {{-- end col-span-2 --}}
-
         </div>
-        {{-- end grid --}}
-
     </div>
-    {{-- end max-w-5xl --}}
 
-    {{-- ===================== SCRIPT: Photo Preview ===================== --}}
-    {{-- Logic tidak berubah sama sekali --}}
+    {{-- ===================== SCRIPT ===================== --}}
     <script>
         const photoInput = document.getElementById('photoInput');
         const photoPreview = document.getElementById('photoPreview');
@@ -276,7 +266,6 @@
         const btnDeletePhoto = document.getElementById('btnDeletePhoto');
         const deletePhotoInput = document.getElementById('deletePhotoInput');
 
-        // STEP: Preview saat pilih file baru
         photoInput.addEventListener('change', function() {
             const file = this.files[0];
             if (file) {
@@ -287,10 +276,7 @@
                     photoPreview.classList.remove('hidden');
                     initialPlaceholder.classList.add('hidden');
 
-                    // Munculkan tombol hapus karena sekarang ada foto preview
                     if (btnDeletePhoto) btnDeletePhoto.classList.remove('hidden');
-
-                    // Reset flag delete jika user jadi upload foto baru
                     deletePhotoInput.value = '0';
                 };
                 reader.readAsDataURL(file);

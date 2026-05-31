@@ -50,6 +50,12 @@ return new class extends Migration
             $table->timestamp('created_at')->nullable();
         });
 
+        Schema::create('password_reset_tokens_magang', function (Blueprint $table) {
+            $table->string('email')->primary();
+            $table->string('token');
+            $table->timestamp('created_at')->nullable();
+        });
+
         // --------------------------------------------------
         // 3. SESSIONS
         // --------------------------------------------------
@@ -88,6 +94,7 @@ return new class extends Migration
         Schema::dropIfExists('cache');
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('password_reset_tokens_magang');
         Schema::dropIfExists('users');
     }
 };

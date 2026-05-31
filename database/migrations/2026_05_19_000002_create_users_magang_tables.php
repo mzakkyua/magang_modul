@@ -57,7 +57,7 @@ return new class extends Migration
             $table->string('full_name', 150);
 
             /**
-             * Level pendidikan: siswa_smk | mahasiswa | peneliti
+             * Level pendidikan: SMA | SMK | D3 | S1 | S2
              */
             $table->string('education_level', 50)->nullable()->index();
 

@@ -15,15 +15,26 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // 1. Satpam pengecekan: Hanya jalankan ini jika BUKAN di server Production (asli)
+        if (!app()->isProduction()) {
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+            // Bikin user test hanya di lokal
+            User::factory()->create([
+                'name' => 'Test User',
+                'email' => 'test@example.com',
+            ]);
+
+            // Panggil seeder yang rawan (dummy user & reset password)
+            $this->call([
+                UserMagangSeeder::class,
+                MagangRoleSeeder::class,
+            ]);
+
+            $this->command->info('Development seeders berhasil dijalankan.');
+        }
+
+        // 2. Seeder yang aman dan WAJIB jalan di production taruh di luar blok if
         $this->call([
-            UserMagangSeeder::class,
-            MagangRoleSeeder::class,
             DivisionSettingMagangSeeder::class,
         ]);
     }

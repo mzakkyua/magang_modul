@@ -3,7 +3,6 @@
 
 <div class="w-full">
 
-    {{-- Form — return false agar tidak pernah reload --}}
     <form onsubmit="doSearch(); return false;">
         <div
             class="flex gap-2 bg-white p-1.5 rounded-2xl shadow-lg shadow-gray-200/80 border border-gray-100 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-200 transition-all duration-200">
@@ -25,10 +24,12 @@
                     oninput="onSearchInput(this.value)" onkeydown="if(event.key==='Escape'){ clearSearch(); }"
                     class="flex-1 py-2 outline-none text-sm text-gray-700 bg-transparent placeholder-gray-400" />
 
-                {{-- Tombol X — type=button supaya tidak submit form --}}
-                <button type="button" id="clear-btn"
-                    class="{{ $search ? '' : 'hidden' }} shrink-0 p-0.5 text-gray-300 hover:text-red-400 transition-colors"
-                    title="Hapus pencarian" onclick="clearSearch()">
+                {{-- Tombol X --}}
+                <button type="button" id="clear-btn" @class([
+                    'shrink-0 p-0.5 text-gray-300 hover:text-red-400 transition-colors',
+                    'hidden' => !$search,
+                ]) title="Hapus pencarian"
+                    onclick="clearSearch()">
                     <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd"
                             d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -38,11 +39,6 @@
 
             </div>
 
-            {{--
-                Tombol Cari — fungsinya sekarang:
-                "langsung filter sekarang tanpa tunggu debounce 200ms"
-                Berguna saat user sudah selesai ketik dan mau langsung lihat hasil.
-            --}}
             <button type="submit"
                 class="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 active:scale-95 transition-all shadow-md shadow-blue-600/30 flex items-center gap-1.5 shrink-0">
                 <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
@@ -56,8 +52,11 @@
     </form>
 
     {{-- Badge hasil pencarian --}}
-    <div id="search-badge"
-        class="{{ $search ? 'flex' : 'hidden' }} mt-3 items-center gap-2 text-xs text-gray-500 flex-wrap">
+    <div id="search-badge" @class([
+        'mt-3 items-center gap-2 text-xs text-gray-500 flex-wrap',
+        'flex' => $search,
+        'hidden' => !$search,
+    ])>
         <svg class="w-3.5 h-3.5 text-blue-500 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor"
             stroke-width="2">
             <circle cx="8.5" cy="8.5" r="5.5" />
@@ -85,16 +84,10 @@
 @once
     @push('script')
         <script>
-            // ─────────────────────────────────────────
-            // VARIABEL GLOBAL — fungsi pakai global
-            // supaya onclick="..." di HTML bisa akses
-            // ─────────────────────────────────────────
+            // ... (Kode JavaScript di sini tidak diubah sama sekali agar tidak merusak fungsi search)
             var searchDebounceTimer = null;
             var SEARCH_DEBOUNCE_MS = 500;
 
-            // ─────────────────────────────────────────
-            // FILTER CARDS CLIENT-SIDE
-            // ─────────────────────────────────────────
             function filterCards(keyword) {
                 var kw = (keyword || '').trim().toLowerCase();
                 var allCards = document.querySelectorAll('[data-search-card]');
@@ -111,7 +104,6 @@
                     if (match) count++;
                 });
 
-                // Update empty state tiap tab
                 ['semua', 'magang', 'penelitian'].forEach(function(tab) {
                     var container = document.getElementById('tab-' + tab);
                     if (!container) return;
@@ -125,10 +117,8 @@
                     empty.style.display = anyVisible ? 'none' : '';
                 });
 
-                // Update badge
                 updateBadge(keyword, count);
 
-                // Update URL tanpa reload
                 var url = new URL(window.location.href);
                 if (kw.length > 0) {
                     url.searchParams.set('search', keyword.trim());
@@ -138,9 +128,6 @@
                 window.history.replaceState({}, '', url.toString());
             }
 
-            // ─────────────────────────────────────────
-            // UPDATE BADGE
-            // ─────────────────────────────────────────
             function updateBadge(keyword, count) {
                 var badge = document.getElementById('search-badge');
                 var kw = document.getElementById('badge-keyword');
@@ -161,9 +148,6 @@
                 }
             }
 
-            // ─────────────────────────────────────────
-            // SET LOADING INDICATOR
-            // ─────────────────────────────────────────
             function setSearchLoading(on) {
                 var icon = document.getElementById('search-icon');
                 var loading = document.getElementById('search-loading');
@@ -171,13 +155,9 @@
                 if (loading) loading.classList.toggle('hidden', !on);
             }
 
-            // ─────────────────────────────────────────
-            // EVENT: ONINPUT — dipanggil saat user mengetik
-            // ─────────────────────────────────────────
             function onSearchInput(value) {
                 var clearBtn = document.getElementById('clear-btn');
 
-                // Tampilkan/sembunyikan tombol X
                 if (clearBtn) {
                     if (value.length > 0) {
                         clearBtn.classList.remove('hidden');
@@ -186,17 +166,14 @@
                     }
                 }
 
-                // Hapus debounce sebelumnya
                 clearTimeout(searchDebounceTimer);
 
                 if (value.trim().length === 0) {
-                    // Langsung reset tanpa debounce
                     setSearchLoading(false);
                     filterCards('');
                     return;
                 }
 
-                // Tampilkan dot loading selama menunggu debounce
                 setSearchLoading(true);
 
                 searchDebounceTimer = setTimeout(function() {
@@ -205,10 +182,6 @@
                 }, SEARCH_DEBOUNCE_MS);
             }
 
-            // ─────────────────────────────────────────
-            // EVENT: SUBMIT FORM (tombol Cari / Enter)
-            // Fungsi: langsung filter SEKARANG, tanpa tunggu debounce
-            // ─────────────────────────────────────────
             function doSearch() {
                 clearTimeout(searchDebounceTimer);
                 setSearchLoading(false);
@@ -216,9 +189,6 @@
                 if (input) filterCards(input.value);
             }
 
-            // ─────────────────────────────────────────
-            // CLEAR — dipanggil tombol X dan tombol Reset
-            // ─────────────────────────────────────────
             function clearSearch() {
                 clearTimeout(searchDebounceTimer);
                 setSearchLoading(false);
@@ -235,24 +205,16 @@
                 filterCards('');
             }
 
-            // ─────────────────────────────────────────
-            // TRIGGER SEARCH DARI COMPONENT LAIN (Card Divisi)
-            // ─────────────────────────────────────────
             function searchDivisionAndScroll(divisionName) {
-                // 1. Masukkan teks divisi ke dalam input search
                 var input = document.getElementById('search-input');
                 if (input) {
                     input.value = divisionName;
-
-                    // 2. Munculkan tombol X (clear)
                     var clearBtn = document.getElementById('clear-btn');
                     if (clearBtn) clearBtn.classList.remove('hidden');
                 }
 
-                // 3. Jalankan filter client-side langsung tanpa reload
                 filterCards(divisionName);
 
-                // 4. Scroll smooth ke section lowongan
                 var sectionLowongan = document.getElementById('lowongan');
                 if (sectionLowongan) {
                     sectionLowongan.scrollIntoView({
@@ -261,16 +223,12 @@
                 }
             }
 
-            // ─────────────────────────────────────────
-            // INIT — jalankan filter jika ada search dari server
-            // ─────────────────────────────────────────
             document.addEventListener('DOMContentLoaded', function() {
                 var input = document.getElementById('search-input');
                 if (input && input.value.trim().length > 0) {
                     filterCards(input.value);
                 }
 
-                // Ctrl+K / Cmd+K → fokus ke search
                 document.addEventListener('keydown', function(e) {
                     if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
                         e.preventDefault();

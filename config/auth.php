@@ -114,7 +114,7 @@ return [
 
         'magang' => [
             'provider' => 'users_magang',
-            'table' => 'password_reset_tokens',
+            'table' => 'password_reset_tokens_magang',
             'expire' => 60,
             'throttle' => 60,
         ],

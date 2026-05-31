@@ -12,20 +12,19 @@ class MagangRoleSeeder extends Seeder
 {
     public function run(): void
     {
+
+        // Gembok Keamanan Lapisan Kedua
+        if (app()->isProduction()) {
+            $this->command->warn('Peringatan: MagangRoleSeeder dihentikan! Tidak boleh mereset password admin di server production.');
+            return; // Hentikan eksekusi kode di bawahnya
+        }
         /**
          * =====================================================
          * SUPERADMIN
          * =====================================================
-         *
-         * Akun root utama sistem.
-         * Dibuat via seeder sebagai bootstrap awal.
-         * =====================================================
          */
-
         $superAdmin = User::updateOrCreate(
-            [
-                'email' => 'bos@dinas.go.id'
-            ],
+            ['email' => 'bos@dinas.go.id'],
             [
                 'name' => 'Bapak Kepala Dinas',
                 'password' => Hash::make('password'),
@@ -33,9 +32,7 @@ class MagangRoleSeeder extends Seeder
         );
 
         MagangAccessRight::updateOrCreate(
-            [
-                'user_id' => $superAdmin->id
-            ],
+            ['user_id' => $superAdmin->id],
             [
                 'role' => 'superadmin',
                 'division_name' => null,

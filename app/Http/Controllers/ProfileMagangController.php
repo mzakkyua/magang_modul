@@ -18,27 +18,6 @@ use App\Models\UserMagang;
  * ======================================================================
  * CONTROLLER: ProfileMagangController
  * ======================================================================
- *
- * Menangani update biodata, upload dokumen, dan ganti password peserta.
- *
- * 🔴 CRITICAL
- *   - [FIX] Filename CV & proposal di-randomize dengan Str::uuid()
- *   - [FIX] Password policy diperkuat: wajib huruf besar + angka
- *   - [FIX] Revoke session lain saat ganti password
- *
- * 🟡 MAINTAINABILITY
- *   - [FIX] Logic upload file dipusatkan ke handleFileUpload()
- *   - [FIX] Audit log ditambahkan untuk update profil dan ganti password
- *
- * ✅ SUDAH ADA SEBELUMNYA (DIPERTAHANKAN)
- *   - Validasi CV conditional (wajib jika belum punya)
- *   - Hash::check() untuk verifikasi password lama
- *   - DB::transaction untuk atomicity
- *   - File lama dihapus saat replace
- *   - deleteCv() untuk hapus CV saja
- *   - firstOrNew() untuk profile baru
- *
- * ======================================================================
  */
 class ProfileMagangController extends Controller
 {
@@ -47,10 +26,10 @@ class ProfileMagangController extends Controller
     // KONFIGURASI FILE UPLOAD
     // ======================================================================
 
-    private const CV_DISK         = 'public';
+    private const CV_DISK         = 'local';
     private const CV_MAX_KB       = 2048;  // 2 MB
 
-    private const PROPOSAL_DISK   = 'public';
+    private const PROPOSAL_DISK   = 'local';
     private const PROPOSAL_MAX_KB = 5120; // 5 MB
 
 

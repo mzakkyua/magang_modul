@@ -76,14 +76,6 @@ class VacancyMagang extends Model
      * =====================================================
      * STATUS APLIKASI YANG MENGAMBIL KUOTA
      * =====================================================
-     *
-     * Semua status application yang dianggap:
-     * - masih aktif
-     * - masih menggunakan slot kuota
-     *
-     * Tujuan:
-     * Menghindari duplicate magic string di banyak tempat.
-     * =====================================================
      */
     const ACTIVE_APPLICATION_STATUSES = [
         'pending',
@@ -109,43 +101,16 @@ class VacancyMagang extends Model
      */
     public function updateStatusBasedOnQuota()
     {
-        /**
-         * -----------------------------------------------------
-         * HITUNG KUOTA TERPAKAI
-         * -----------------------------------------------------
-         *
-         * Hanya status aktif yang mengambil slot kuota.
-         */
         $terpakai = $this->applications()
-            ->whereIn(
-                'status',
-                self::ACTIVE_APPLICATION_STATUSES
-            )
+            ->whereIn('status', self::ACTIVE_APPLICATION_STATUSES)
             ->count();
 
         $sisaKuota = $this->quota_slots - $terpakai;
 
-        /**
-         * -----------------------------------------------------
-         * AUTO CLOSE / OPEN
-         * -----------------------------------------------------
-         */
-        if (
-            $sisaKuota <= 0 &&
-            $this->status === self::STATUS_OPEN
-        ) {
-
-            $this->update([
-                'status' => self::STATUS_CLOSED
-            ]);
-        } elseif (
-            $sisaKuota > 0 &&
-            $this->status === self::STATUS_CLOSED
-        ) {
-
-            $this->update([
-                'status' => self::STATUS_OPEN
-            ]);
+        if ($sisaKuota <= 0 && $this->status === self::STATUS_OPEN) {
+            $this->update(['status' => self::STATUS_CLOSED]);
+        } elseif ($sisaKuota > 0 && $this->status === self::STATUS_CLOSED) {
+            $this->update(['status' => self::STATUS_OPEN]);
         }
     }
 
@@ -153,57 +118,18 @@ class VacancyMagang extends Model
      * =====================================================
      * MENGHITUNG SISA KUOTA
      * =====================================================
-     *
-     * Optimisasi:
-     * - Jika active_applications_count tersedia
-     *   → gunakan hasil withCount()
-     *
-     * Fallback:
-     * - Jika model tidak di-load dengan withCount()
-     *   → query langsung ke database
-     *
-     * Tujuan:
-     * Menghindari silent bug yang menyebabkan
-     * sisa kuota selalu dianggap penuh.
-     * =====================================================
      */
     public function getSisaKuota(): int
     {
-        /**
-         * -------------------------------------------------
-         * FAST PATH
-         * -------------------------------------------------
-         *
-         * Gunakan hasil eager load withCount()
-         * jika tersedia.
-         */
         if (isset($this->active_applications_count)) {
-
-            return max(
-                $this->quota_slots - $this->active_applications_count,
-                0
-            );
+            return max($this->quota_slots - $this->active_applications_count, 0);
         }
 
-        /**
-         * -------------------------------------------------
-         * FALLBACK QUERY
-         * -------------------------------------------------
-         *
-         * Lebih lambat, tapi menjamin data akurat
-         * jika withCount() tidak digunakan.
-         */
         $terpakai = $this->applications()
-            ->whereIn(
-                'status',
-                self::ACTIVE_APPLICATION_STATUSES
-            )
+            ->whereIn('status', self::ACTIVE_APPLICATION_STATUSES)
             ->count();
 
-        return max(
-            $this->quota_slots - $terpakai,
-            0
-        );
+        return max($this->quota_slots - $terpakai, 0);
     }
 
     /**
@@ -211,7 +137,6 @@ class VacancyMagang extends Model
      * HELPER METHODS
      * =====================================================
      */
-
     public function isOpen(): bool
     {
         return $this->status === self::STATUS_OPEN;
