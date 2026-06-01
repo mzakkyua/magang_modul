@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use App\Models\VacancyMagang;
+use App\Models\Division;
+use App\Models\ApplicationMemberMagang;
 
 /**
  * ======================================================================
@@ -102,11 +104,38 @@ class LandingController extends Controller
          * -------------------------------------------------------
          */
         $divisionStats = $this->getDivisionStatsFromCache();
+
+        /**
+         * =======================================================
+         * STATS BAR DIGITAL (Menghitung Peserta, Divisi, Alumni)
+         * Disimpan di Cache 10 menit agar database tidak jebol
+         * =======================================================
+         */
+        $globalStats = Cache::remember('global_stats_magang', now()->addMinutes(10), function () {
+            return [
+                // 1. Hitung Divisi Aktif (menggunakan scopeActive dari Model)
+                'jumlahDivisi' => Division::active()->count(),
+
+                // 2. Hitung Peserta Aktif (Member active + Aplikasi accepted)
+                'pesertaAktif' => ApplicationMemberMagang::where('individual_status', 'active')
+                    ->whereHas('application', function ($q) {
+                        $q->where('status', 'accepted');
+                    })->count(),
+
+                // 3. Hitung Alumni (Member finished + Aplikasi completed)
+                'alumniMagang' => ApplicationMemberMagang::where('individual_status', 'finished')
+                    ->whereHas('application', function ($q) {
+                        $q->where('status', 'completed');
+                    })->count(),
+            ];
+        });
+
         return view('landing.index', compact(
             'vacanciesMagang',
             'vacanciesPenelitian',
             'search',
             'divisionStats',
+            'globalStats'
         ));
     }
 

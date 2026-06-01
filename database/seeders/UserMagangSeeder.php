@@ -40,6 +40,8 @@ class UserMagangSeeder extends Seeder
                 'username' => 'user' . $i,
                 'email' => 'user' . $i . '@test.com',
                 'password_hash' => Hash::make('password123'),
+                // TIKET VIP: Anggap saja mereka sudah verifikasi email saat ini juga!
+                'email_verified_at' => now(),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

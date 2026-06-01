@@ -12,8 +12,8 @@ use Illuminate\Support\Facades\Schema;
  * Tabel akun dan biodata peserta magang/penelitian.
  *
  * Tabel yang dibuat:
- *   - users_magang     (akun login peserta)
- *   - profiles_magang  (biodata dan dokumen peserta)
+ * - users_magang     (akun login peserta)
+ * - profiles_magang  (biodata dan dokumen peserta)
  *
  * Dependency: TIDAK ADA dependency ke tabel lain
  * ============================================================
@@ -29,7 +29,12 @@ return new class extends Migration
             $table->id();
             $table->string('username', 50)->unique();
             $table->string('email', 100)->unique();
+
+            // --- TAMBAHAN BARU UNTUK VERIFIKASI & GOOGLE SSO ---
+            $table->timestamp('email_verified_at')->nullable(); // Tanggal verifikasi email
+            $table->string('google_id')->unique()->nullable();  // ID unik dari akun Google
             $table->string('password_hash');
+            // ---------------------------------------------------
 
             // Diperlukan untuk "Remember Me" di Laravel Auth
             $table->rememberToken();

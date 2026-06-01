@@ -28,14 +28,13 @@
     {{-- ========================================================= --}}
     {{-- WRAPPER --}}
     {{-- ========================================================= --}}
-    <div class="min-h-screen flex">
+    <div class="min-h-screen flex items-start">
 
         {{-- ========================================================= --}}
         {{-- LEFT PANEL --}}
         {{-- ========================================================= --}}
         <div
-            class="hidden lg:flex lg:w-5/12 xl:w-[42%] bg-linear-to-br from-blue-900 via-blue-800 to-blue-700 relative overflow-hidden flex-col justify-between p-12 top-0 h-screen">
-
+            class="hidden lg:flex lg:w-5/12 xl:w-[42%] bg-linear-to-br from-blue-900 via-blue-800 to-blue-700 sticky overflow-hidden flex-col justify-between p-12 top-0 h-screen">
             {{-- Decorative Circles --}}
             <div class="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3">
             </div>
