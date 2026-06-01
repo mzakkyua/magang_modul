@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache; // Tambahan untuk fitur Cache
 use App\Models\VacancyMagang;
 use App\Models\ApplicationMemberMagang;
+use App\Models\Division;
 
 class DashboardMagangController extends Controller
 {
@@ -75,260 +77,63 @@ class DashboardMagangController extends Controller
     public function index(Request $request)
     {
 
-        /**
-         * ============================================================
-         * SECTION 1
-         * USER LOGIN
-         * ============================================================
-         *
-         * Mengambil user yang sedang login menggunakan guard magang.
-         *
-         * Guard magang digunakan untuk:
-         * - mahasiswa
-         * - siswa SMK
-         * - peneliti
-         * - peserta magang lainnya
-         *
-         * Middleware yang seharusnya digunakan pada route:
-         *
-         * auth:magang
-         *
-         * Sehingga dashboard hanya bisa diakses oleh user yang login.
-         */
-
         $user = Auth::guard('magang')->user();
-
-
-        /**
-         * ============================================================
-         * STEP 1
-         * CEK STATUS SISWA SMK
-         * ============================================================
-         *
-         * Dashboard memiliki beberapa perbedaan tampilan
-         * khusus untuk siswa SMK.
-         *
-         * Oleh karena itu sistem perlu mengecek apakah user
-         * memiliki education_level = siswa_smk.
-         *
-         * optional() digunakan untuk mencegah error jika
-         * profile belum ada.
-         */
 
         $isSMK = optional($user->profile)->education_level === 'SMK';
 
-
-
-        /**
-         * ============================================================
-         * SECTION 2
-         * SEARCH INPUT
-         * ============================================================
-         *
-         * Mengambil input pencarian dari user.
-         *
-         * Parameter:
-         * ?search=keyword
-         *
-         * trim() digunakan untuk menghapus spasi di awal
-         * dan akhir input agar query lebih akurat.
-         *
-         * Contoh:
-         *
-         * "   magang   "
-         *
-         * menjadi:
-         *
-         * "magang"
-         */
-
         $search = trim($request->search);
 
-
-
-        /**
-         * ============================================================
-         * SECTION 3
-         * BASE QUERY LOWONGAN
-         * ============================================================
-         *
-         * Membuat base query untuk vacancy.
-         *
-         * Tujuan:
-         *
-         * - Menghindari duplikasi query
-         * - Membuat kode lebih maintainable
-         * - Mempermudah penambahan filter di masa depan
-         *
-         * Filter dasar:
-         *
-         * status = open
-         *
-         * Artinya hanya lowongan yang masih dibuka
-         * yang akan ditampilkan pada dashboard.
-         *
-         * ============================================================
-         */
-
         $baseQuery = VacancyMagang::query()
-
-            /**
-             * ========================================================
-             * FILTER STATUS
-             * ========================================================
-             *
-             * Hanya menampilkan lowongan dengan status open.
-             *
-             * Status yang mungkin ada:
-             *
-             * open
-             * closed
-             * archived
-             *
-             * Dashboard hanya menampilkan lowongan aktif.
-             */
-
             ->where('status', 'open')
-
-
-            /**
-             * ========================================================
-             * SEARCH FILTER
-             * ========================================================
-             *
-             * Filter pencarian hanya dijalankan jika
-             * user memasukkan keyword search.
-             *
-             * Laravel method:
-             *
-             * when(condition, callback)
-             *
-             * Digunakan untuk menjalankan query secara conditional.
-             */
-
             ->when($search, function ($query) use ($search) {
-
-                /**
-                 * ====================================================
-                 * SEARCH LOGIC
-                 * ====================================================
-                 *
-                 * Pencarian dilakukan pada beberapa kolom:
-                 *
-                 * - title
-                 * - division_name
-                 * - description
-                 *
-                 * Menggunakan LIKE untuk partial matching.
-                 *
-                 * Contoh:
-                 *
-                 * search = "data"
-                 *
-                 * akan cocok dengan:
-                 *
-                 * "Data Analyst"
-                 * "Big Data Research"
-                 * "Data Processing"
-                 */
-
                 $query->where(function ($q) use ($search) {
-
                     $q->where('title', 'LIKE', "%{$search}%")
                         ->orWhere('division_name', 'LIKE', "%{$search}%")
                         ->orWhere('description', 'LIKE', "%{$search}%");
                 });
             });
 
-
-
-        /**
-         * ============================================================
-         * SECTION 4
-         * QUERY LOWONGAN MAGANG
-         * ============================================================
-         *
-         * Mengambil semua lowongan dengan type = magang.
-         *
-         * Data yang ditampilkan:
-         *
-         * - judul lowongan
-         * - divisi
-         * - deskripsi
-         * - tanggal
-         * - kuota
-         *
-         * Data diurutkan dari yang terbaru menggunakan latest().
-         */
-
         $vacanciesMagang = (clone $baseQuery)
-
             ->where('type', 'magang')
-
-            /**
-             * ========================================================
-             * SORTING DATA
-             * ========================================================
-             *
-             * latest() secara default menggunakan
-             * kolom created_at DESC.
-             *
-             * Artinya lowongan terbaru akan muncul di atas.
-             */
-
             ->latest()
-
             ->get();
-
-
-
-        /**
-         * ============================================================
-         * SECTION 5
-         * QUERY LOWONGAN PENELITIAN
-         * ============================================================
-         *
-         * Mengambil semua lowongan dengan type = penelitian.
-         *
-         * Sistem magang ini juga menerima pendaftaran
-         * untuk kegiatan penelitian.
-         */
 
         $vacanciesPenelitian = (clone $baseQuery)
-
             ->where('type', 'penelitian')
-
             ->latest()
-
             ->get();
-
-
 
         /**
          * ============================================================
-         * SECTION 6
-         * RETURN VIEW
+         * STATS BAR DIGITAL (Menghitung Peserta, Divisi, Alumni)
+         * Disimpan di Cache 10 menit agar query database tidak jebol
          * ============================================================
-         *
-         * Mengirim data ke view dashboard peserta magang.
-         *
-         * View:
-         *
-         * resources/views/magang/dashboard/index.blade.php
-         *
-         * Data yang dikirim ke view:
-         *
-         * vacanciesMagang
-         * vacanciesPenelitian
-         * isSMK
-         * search
          */
+        $globalStats = Cache::remember('global_stats_magang', now()->addMinutes(10), function () {
+            return [
+                // 1. Hitung Divisi Aktif
+                'jumlahDivisi' => Division::active()->count(),
+
+                // 2. Hitung Peserta Aktif (Member active + Aplikasi accepted)
+                'pesertaAktif' => ApplicationMemberMagang::where('individual_status', 'active')
+                    ->whereHas('application', function ($q) {
+                        $q->where('status', 'accepted');
+                    })->count(),
+
+                // 3. Hitung Alumni (Member finished + Aplikasi completed)
+                'alumniMagang' => ApplicationMemberMagang::where('individual_status', 'finished')
+                    ->whereHas('application', function ($q) {
+                        $q->where('status', 'completed');
+                    })->count(),
+            ];
+        });
 
         return view('magang.dashboard.index', compact(
             'vacanciesMagang',
             'vacanciesPenelitian',
             'isSMK',
-            'search'
+            'search',
+            'globalStats' // <- Data dikirim ke view Blade
         ));
     }
 

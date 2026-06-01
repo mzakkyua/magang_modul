@@ -6,13 +6,14 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 /**
  * ======================================================================
  * MODEL: UserMagang
  * ======================================================================
  */
-class UserMagang extends Authenticatable implements CanResetPasswordContract
+class UserMagang extends Authenticatable implements CanResetPasswordContract, MustVerifyEmail
 {
     use Notifiable, CanResetPassword;
 
@@ -50,6 +51,7 @@ class UserMagang extends Authenticatable implements CanResetPasswordContract
     // ======================================================================
 
     protected $casts = [
+        'email_verified_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

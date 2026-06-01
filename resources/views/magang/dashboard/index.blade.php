@@ -56,30 +56,41 @@
             </div>
         </div>
 
-        <div class="absolute bottom-0 left-0 right-0 bg-white/10 backdrop-blur-md border-t border-white/20">
-            <div class="max-w-7xl mx-auto px-6 py-4 grid grid-cols-3 divide-x divide-white/20">
-                <div class="text-center px-4">
-                    <p class="text-white font-extrabold text-xl md:text-2xl">100+</p>
-                    <p class="text-blue-200 text-xs mt-0.5">Peserta Aktif</p>
-                </div>
-                <div class="text-center px-4">
-                    <p class="text-white font-extrabold text-xl md:text-2xl">15+</p>
-                    <p class="text-blue-200 text-xs mt-0.5">Divisi Tersedia</p>
-                </div>
-                <div class="text-center px-4">
-                    <p class="text-white font-extrabold text-xl md:text-2xl">500+</p>
-                    <p class="text-blue-200 text-xs mt-0.5">Alumni Magang</p>
+        {{-- ============================================================ --}}
+        {{-- STATS BAR — Dinamis mengambil data dari Database             --}}
+        {{-- ============================================================ --}}
+        <div class="absolute bottom-0 left-0 z-20 w-full bg-white/10 backdrop-blur-md border-t border-white/20">
+            <div class="max-w-6xl mx-auto px-6 py-4">
+                <div class="grid grid-cols-3 divide-x divide-white/20">
+
+                    <div class="text-center px-4">
+                        <p class="text-white font-extrabold text-xl md:text-2xl tabular-nums">
+                            {{ $globalStats['pesertaAktif'] }}+</p>
+                        <p class="text-blue-200/80 text-[9px] md:text-[10px] font-semibold uppercase tracking-wider mt-0.5">
+                            Peserta Aktif</p>
+                    </div>
+
+                    <div class="text-center px-4">
+                        <p class="text-white font-extrabold text-xl md:text-2xl tabular-nums">
+                            {{ $globalStats['jumlahDivisi'] }}+</p>
+                        <p class="text-blue-200/80 text-[9px] md:text-[10px] font-semibold uppercase tracking-wider mt-0.5">
+                            Divisi Tersedia</p>
+                    </div>
+
+                    <div class="text-center px-4">
+                        <p class="text-white font-extrabold text-xl md:text-2xl tabular-nums">
+                            {{ $globalStats['alumniMagang'] }}+</p>
+                        <p class="text-blue-200/80 text-[9px] md:text-[10px] font-semibold uppercase tracking-wider mt-0.5">
+                            Alumni Magang</p>
+                    </div>
+
                 </div>
             </div>
         </div>
 
     </section>
 
-    {{-- ===================== SERVICE SECTION ===================== --}}
-    <section>
-        @include('program.section')
-        @include('program.modal')
-    </section>
+
 
     {{-- ===================== SEARCH & LOWONGAN SECTION ===================== --}}
     <section class="px-4 md:px-6 py-16" id="lowongan">

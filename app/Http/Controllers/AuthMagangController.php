@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Database\QueryException;
+use Illuminate\Auth\Events\Registered;
 
 use App\Models\UserMagang;
 use App\Models\ProfileMagang;
@@ -103,7 +104,17 @@ class AuthMagangController extends Controller
             throw new \Exception('Registrasi gagal.');
         }
 
+        /**
+         * ==========================================
+         * PANGGIL PAK POS (Kirim Email Verifikasi)
+         * ==========================================
+         * Memicu Laravel untuk mengirimkan email berisi link verifikasi
+         * karena model UserMagang mengimplementasikan MustVerifyEmail.
+         */
+        event(new Registered($user));
+
         Auth::guard('magang')->login($user);
+
         /**
          * Anti session fixation
          */
@@ -170,13 +181,12 @@ class AuthMagangController extends Controller
 
         /**
          * ==========================================
-         * LOGIN ADMIN
+         * 1. LOGIN ADMIN
          * ==========================================
          */
         if (Auth::guard('web')->attempt($credentials, $remember)) {
 
             RateLimiter::clear($key);
-
             $request->session()->regenerate();
 
             DB::table('sessions')
@@ -196,13 +206,12 @@ class AuthMagangController extends Controller
 
         /**
          * ==========================================
-         * LOGIN PESERTA
+         * 3. LOGIN PESERTA (Reguler)
          * ==========================================
          */
         if (Auth::guard('magang')->attempt($credentials, $remember)) {
 
             RateLimiter::clear($key);
-
             $request->session()->regenerate();
 
             DB::table('sessions')
