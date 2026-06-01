@@ -183,54 +183,82 @@ Route::middleware('guest:magang')->group(function () {
 */
 Route::middleware('auth:magang')->group(function () {
 
-    // Dashboard
-    Route::get('/dashboard', [DashboardMagangController::class, 'index'])
-        ->name('dashboard.index');
+    // ==========================================================
+    // AREA BEBAS (TIDAK DIGEMBOK VERIFIED)
+    // ==========================================================
+    // Biarkan 3 rute verifikasi email tetap di sini (jangan dimasukkan ke dalam grup verified di bawah)
+    Route::get('/email/verify', function () {
+        return view('auth.magang-verify-email');
+    })->name('verification.notice');
 
-    Route::get('/dashboard/lowongan/{id}', [DashboardMagangController::class, 'show'])
-        ->name('dashboard.show');
+    Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+        $request->fulfill();
+        return view('auth.magang-verify-success');
+    })->middleware('signed')->name('verification.verify');
 
-    // Profil
-    Route::get('/profile', [ProfileMagangController::class, 'edit'])
-        ->name('profile.edit');
+    // ==========================================================
+    // AREA BEBAS (TIDAK DIGEMBOK VERIFIED)
+    // ==========================================================
+    Route::get('/email/verify', function (Request $request) {
+        // Cek: Apakah user ini sebenarnya sudah verifikasi?
+        if ($request->user('magang')->hasVerifiedEmail()) {
+            return redirect()->route('dashboard.index');
+        }
 
-    Route::put('/profile', [ProfileMagangController::class, 'update'])
-        ->name('profile.update');
+        return view('auth.magang-verify-email');
+    })->name('verification.notice');
 
-    Route::delete('/profile/delete-cv', [ProfileMagangController::class, 'deleteCv'])
-        ->name('profile.delete.cv');
+    // ==========================================================
+    // AREA TERGEMBOK (WAJIB KLIK EMAIL DULU)
+    // ==========================================================
+    Route::middleware('verified')->group(function () {
 
-    // Pendaftaran magang
-    Route::post('/applications', [ApplicationMagangController::class, 'store'])
-        ->name('applications.store')
-        ->middleware('throttle:10,1'); // mencegah spam submit lamaran
+        // Pindahkan SEMUA rute aplikasi peserta ke dalam grup ini!
 
-    // Status lamaran
-    Route::get('/status', [StatusMagangController::class, 'index'])
-        ->name('status');
+        // Dashboard
+        Route::get('/dashboard', [DashboardMagangController::class, 'index'])
+            ->name('dashboard.index');
 
-    // Nilai
-    Route::get('/nilai', [DashboardMagangController::class, 'nilai'])
-        ->name('nilai');
+        Route::get('/dashboard/lowongan/{id}', [DashboardMagangController::class, 'show'])
+            ->name('dashboard.show');
 
-    /*
-    | Sertifikat Peserta
-    |
-    | CATATAN: Pastikan controller menggunakan type-hint Certificate $certificate
-    | bukan $id agar binding bekerja. Ownership check tetap ada di controller.
-    */
-    Route::get('/sertifikat', [CertificateController::class, 'index'])
-        ->name('certificates.index');
+        // Profil
+        Route::get('/profile', [ProfileMagangController::class, 'edit'])
+            ->name('profile.edit');
 
-    Route::get('/sertifikat/{certificate}/view', [CertificateController::class, 'view'])
-        ->name('certificates.view');
+        Route::put('/profile', [ProfileMagangController::class, 'update'])
+            ->name('profile.update');
 
-    Route::get('/sertifikat/{certificate}/download', [CertificateController::class, 'download'])
-        ->name('certificates.download');
+        Route::delete('/profile/delete-cv', [ProfileMagangController::class, 'deleteCv'])
+            ->name('profile.delete.cv');
 
-    Route::get('/vacancies/{vacancy}/snapshot', [LandingController::class, 'snapshot'])
-        ->middleware(['throttle:60,1'])
-        ->name('vacancies.snapshot');
+        // Pendaftaran magang
+        Route::post('/applications', [ApplicationMagangController::class, 'store'])
+            ->name('applications.store')
+            ->middleware('throttle:10,1');
+
+        // Status lamaran
+        Route::get('/status', [StatusMagangController::class, 'index'])
+            ->name('status');
+
+        // Nilai
+        Route::get('/nilai', [DashboardMagangController::class, 'nilai'])
+            ->name('nilai');
+
+        // Sertifikat Peserta
+        Route::get('/sertifikat', [CertificateController::class, 'index'])
+            ->name('certificates.index');
+
+        Route::get('/sertifikat/{certificate}/view', [CertificateController::class, 'view'])
+            ->name('certificates.view');
+
+        Route::get('/sertifikat/{certificate}/download', [CertificateController::class, 'download'])
+            ->name('certificates.download');
+
+        Route::get('/vacancies/{vacancy}/snapshot', [LandingController::class, 'snapshot'])
+            ->middleware(['throttle:60,1'])
+            ->name('vacancies.snapshot');
+    });
 });
 
 
