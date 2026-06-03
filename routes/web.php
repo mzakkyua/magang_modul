@@ -34,6 +34,7 @@ use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\PegawaiController;
 use App\Http\Controllers\Admin\PesertaController;
 use App\Http\Controllers\Admin\DivisionController;
+use App\Http\Controllers\Admin\ImportPesertaController;
 
 // ---------------------
 // AUTH RESET PASSWORD
@@ -388,6 +389,14 @@ Route::prefix('admin')
         // Di dalam group middleware admin
         Route::get('/peserta', [PesertaController::class, 'index'])
             ->name('peserta.index');
+
+        Route::get('/peserta/export', [PesertaController::class, 'export'])
+            ->name('peserta.export');
+
+        Route::get('/peserta/import/template', [ImportPesertaController::class, 'downloadTemplate'])
+            ->name('peserta.import.template');
+        Route::post('/peserta/import', [ImportPesertaController::class, 'store'])
+            ->name('peserta.import.store');
 
         Route::get('/peserta/{member}', [PesertaController::class, 'show'])
             ->name('peserta.show');

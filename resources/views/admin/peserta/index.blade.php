@@ -5,17 +5,106 @@
 @section('content')
 
     {{-- ============================================================ --}}
-    {{-- HEADER                                                        --}}
+    {{-- HEADER                                                       --}}
     {{-- ============================================================ --}}
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+
+        {{-- BAGIAN KIRI: Judul & Subjudul --}}
         <div>
             <h1 class="text-xl font-extrabold text-gray-900 tracking-tight">Rekap Peserta Magang</h1>
             <p class="text-xs text-gray-500 mt-0.5">Semua peserta, status, nilai, dan sertifikat dalam satu tempat.</p>
         </div>
-        <a href="{{ route('admin.certificates.create') }}"
-            class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm transition-all shrink-0">
-            <i class="bi bi-cloud-arrow-up-fill"></i> Unggah Sertifikat
-        </a>
+
+        {{-- BAGIAN KANAN: Kumpulan Tombol Aksi (Dibungkus flex agar sejajar) --}}
+        <div class="flex flex-wrap items-center gap-2">
+
+            {{-- Tombol 1: Import Data --}}
+            <button type="button" onclick="document.getElementById('modalImportArsip').classList.remove('hidden')"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-xl shadow-sm transition-all">
+                <i class="bi bi-file-earmark-excel-fill"></i> Import Data Lama
+            </button>
+
+            {{-- Tombol 2: Export Excel --}}
+            <a href="{{ route('admin.peserta.export', request()->query()) }}"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-sm transition-all">
+                <i class="bi bi-file-earmark-spreadsheet-fill"></i> Export Excel
+            </a>
+
+            {{-- Tombol 3: Unggah Sertifikat --}}
+            <a href="{{ route('admin.certificates.create') }}"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl shadow-sm transition-all shrink-0">
+                <i class="bi bi-cloud-arrow-up-fill"></i> Unggah Sertifikat
+            </a>
+
+        </div>
+    </div>
+
+    {{-- ============================================================ --}}
+    {{-- KOTAK SURAT AJAIB (MODAL IMPORT) - Diletakkan di luar Header --}}
+    {{-- ============================================================ --}}
+    <div id="modalImportArsip" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog"
+        aria-modal="true">
+
+        {{-- Background Gelap (Klik untuk menutup) --}}
+        <div class="fixed inset-0 bg-gray-900 bg-opacity-50 transition-opacity backdrop-blur-sm"
+            onclick="document.getElementById('modalImportArsip').classList.add('hidden')"></div>
+
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div
+                    class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+
+                    {{-- Header Modal --}}
+                    <div class="bg-gray-50 px-5 py-4 border-b border-gray-100 flex justify-between items-center">
+                        <h3 class="text-base font-black text-gray-900 flex items-center gap-2">
+                            <i class="bi bi-cloud-arrow-up-fill text-emerald-500"></i> Import Arsip Magang
+                        </h3>
+                        <button type="button" onclick="document.getElementById('modalImportArsip').classList.add('hidden')"
+                            class="text-gray-400 hover:text-gray-600">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+
+                    {{-- Isi Modal --}}
+                    <div class="px-5 py-6">
+
+                        {{-- Langkah 1: Download Template --}}
+                        <div class="mb-6 p-4 bg-blue-50 border border-blue-100 rounded-xl">
+                            <h4 class="text-sm font-bold text-blue-800 mb-2">Langkah 1: Gunakan Template Resmi</h4>
+                            <p class="text-xs text-blue-600 mb-3">Harap pindahkan data lama Anda ke dalam format Excel yang
+                                telah kami sediakan agar sistem dapat membacanya dengan benar.</p>
+                            <a href="{{ route('admin.peserta.import.template') }}"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-blue-700 border border-blue-200 hover:bg-blue-100 rounded-lg text-xs font-bold transition-all shadow-sm">
+                                <i class="bi bi-download"></i> Download Template Excel
+                            </a>
+                        </div>
+
+                        {{-- Langkah 2: Upload File --}}
+                        <form action="{{ route('admin.peserta.import.store') }}" method="POST"
+                            enctype="multipart/form-data">
+                            @csrf
+                            <h4 class="text-sm font-bold text-gray-800 mb-2">Langkah 2: Unggah File Excel</h4>
+                            <input type="file" name="file_excel" accept=".xlsx, .xls, .csv" required
+                                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 border border-gray-200 rounded-xl p-1 mb-1 cursor-pointer">
+                            <p class="text-[10px] text-gray-400 mt-1">*Maksimal ukuran file 5MB. Pastikan file berisi header
+                                sesuai template.</p>
+
+                            <div class="mt-6 flex justify-end gap-2">
+                                <button type="button"
+                                    onclick="document.getElementById('modalImportArsip').classList.add('hidden')"
+                                    class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm font-bold hover:bg-gray-50">Batal</button>
+                                <button type="submit"
+                                    onclick="this.innerHTML='Memproses...'; this.classList.add('opacity-50', 'cursor-wait');"
+                                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold flex items-center gap-2 shadow-sm">
+                                    <i class="bi bi-upload"></i> Proses Import
+                                </button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     {{-- ============================================================ --}}

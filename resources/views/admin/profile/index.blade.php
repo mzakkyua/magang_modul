@@ -96,31 +96,6 @@
             {{-- ===================== KOLOM KANAN: FORM ===================== --}}
             <div class="col-span-1 md:col-span-2 space-y-5">
 
-                {{-- Flash Messages --}}
-                @if (session('success'))
-                    <div class="flex items-start gap-3 bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
-                        <i class="bi bi-check-circle-fill text-emerald-500 mt-0.5 shrink-0"></i>
-                        <div>
-                            <p class="font-bold text-emerald-700 text-sm">Berhasil!</p>
-                            <p class="text-emerald-600 text-xs mt-0.5">{{ session('success') }}</p>
-                        </div>
-                    </div>
-                @endif
-
-                @if ($errors->any())
-                    <div class="flex items-start gap-3 bg-red-50 border border-red-200 rounded-2xl p-4">
-                        <i class="bi bi-exclamation-circle-fill text-red-400 mt-0.5 shrink-0"></i>
-                        <div>
-                            <p class="font-bold text-red-700 text-sm mb-1">Terdapat kesalahan:</p>
-                            <ul class="space-y-0.5">
-                                @foreach ($errors->all() as $error)
-                                    <li class="text-red-500 text-xs">• {{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    </div>
-                @endif
-
                 <form action="{{ route('admin.profile.update') }}" method="POST" id="profileForm"
                     enctype="multipart/form-data">
                     @csrf
