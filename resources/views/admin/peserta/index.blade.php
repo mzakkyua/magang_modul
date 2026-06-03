@@ -5,176 +5,159 @@
 @section('content')
 
     {{-- ============================================================ --}}
-    {{-- HEADER & SUMMARY STATS                                       --}}
+    {{-- HEADER                                                        --}}
     {{-- ============================================================ --}}
-    <div class="mb-8">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <div>
-                <h1 class="text-2xl font-extrabold text-gray-900 tracking-tight">Rekap Peserta Magang</h1>
-                <p class="text-sm text-gray-500 mt-1">Pusat kontrol data peserta, status, nilai, dan sertifikat.</p>
-            </div>
-            <a href="{{ route('admin.certificates.create') }}"
-                class="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-sm transition-all focus:ring-4 focus:ring-indigo-200 shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
-                    <path fill-rule="evenodd"
-                        d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z"
-                        clip-rule="evenodd" />
-                </svg>
-                Unggah Sertifikat Massal
-            </a>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+        <div>
+            <h1 class="text-xl font-extrabold text-gray-900 tracking-tight">Rekap Peserta Magang</h1>
+            <p class="text-xs text-gray-500 mt-0.5">Semua peserta, status, nilai, dan sertifikat dalam satu tempat.</p>
         </div>
-
-        {{-- Summary Stats Bar (Scrollable horizontally on mobile) --}}
-        <div
-            class="flex overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3 lg:grid-cols-5 gap-4 hide-scrollbar">
-
-            {{-- Total --}}
-            <div
-                class="bg-white rounded-2xl border border-gray-200 p-4 flex flex-col justify-center min-w-40 sm:min-w-0 shadow-sm relative overflow-hidden">
-                <div class="flex items-center justify-between mb-2 z-10 relative">
-                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Peserta</p>
-                    <div class="w-8 h-8 rounded-lg bg-gray-50 text-gray-400 flex items-center justify-center"><i
-                            class="bi bi-people-fill"></i></div>
-                </div>
-                <p class="text-2xl font-black text-gray-900 z-10 relative">{{ number_format($stats['total']) }}</p>
-            </div>
-
-            {{-- Aktif --}}
-            <div
-                class="bg-blue-50 rounded-2xl border border-blue-100 p-4 flex flex-col justify-center min-w-40in-w-0 shadow-sm relative overflow-hidden">
-                <div class="flex items-center justify-between mb-2 z-10 relative">
-                    <p class="text-xs font-bold text-blue-600 uppercase tracking-wider">Sedang Magang</p>
-                    <div class="w-8 h-8 rounded-lg bg-white text-blue-500 flex items-center justify-center shadow-sm"><i
-                            class="bi bi-person-workspace"></i></div>
-                </div>
-                <p class="text-2xl font-black text-blue-700 z-10 relative">{{ number_format($stats['aktif']) }}</p>
-            </div>
-
-            {{-- Selesai --}}
-            <div
-                class="bg-emerald-50 rounded-2xl border border-emerald-100 p-4 flex flex-col justify-center min-w-40 sm:min-w-0 shadow-sm relative overflow-hidden">
-                <div class="flex items-center justify-between mb-2 z-10 relative">
-                    <p class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Selesai</p>
-                    <div class="w-8 h-8 rounded-lg bg-white text-emerald-500 flex items-center justify-center shadow-sm"><i
-                            class="bi bi-check-circle-fill"></i></div>
-                </div>
-                <p class="text-2xl font-black text-emerald-700 z-10 relative">{{ number_format($stats['selesai']) }}</p>
-            </div>
-
-            {{-- Bersertifikat --}}
-            <div
-                class="bg-violet-50 rounded-2xl border border-violet-100 p-4 flex flex-col justify-center min-w-40 sm:min-w-0 shadow-sm relative overflow-hidden">
-                <div class="flex items-center justify-between mb-2 z-10 relative">
-                    <p class="text-xs font-bold text-violet-600 uppercase tracking-wider">Bersertifikat</p>
-                    <div class="w-8 h-8 rounded-lg bg-white text-violet-500 flex items-center justify-center shadow-sm"><i
-                            class="bi bi-award-fill"></i></div>
-                </div>
-                <p class="text-2xl font-black text-violet-700 z-10 relative">{{ number_format($stats['bersertif']) }}</p>
-            </div>
-
-            {{-- Belum Dinilai --}}
-            <div
-                class="rounded-2xl border p-4 flex flex-col justify-center min-w-40 sm:min-w-0 shadow-sm relative overflow-hidden transition-colors {{ $stats['belum_nilai'] > 0 ? 'bg-rose-50 border-rose-200' : 'bg-gray-50 border-gray-200' }}">
-                <div class="flex items-center justify-between mb-2 z-10 relative">
-                    <p
-                        class="text-xs font-bold uppercase tracking-wider {{ $stats['belum_nilai'] > 0 ? 'text-rose-600' : 'text-gray-500' }}">
-                        Belum Dinilai</p>
-                    <div
-                        class="w-8 h-8 rounded-lg flex items-center justify-center shadow-sm {{ $stats['belum_nilai'] > 0 ? 'bg-white text-rose-500' : 'bg-white text-gray-400' }}">
-                        <i class="bi bi-exclamation-triangle-fill"></i>
-                    </div>
-                </div>
-                <p
-                    class="text-2xl font-black z-10 relative {{ $stats['belum_nilai'] > 0 ? 'text-rose-700' : 'text-gray-700' }}">
-                    {{ number_format($stats['belum_nilai']) }}</p>
-            </div>
-
-        </div>
+        <a href="{{ route('admin.certificates.create') }}"
+            class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm transition-all shrink-0">
+            <i class="bi bi-cloud-arrow-up-fill"></i> Unggah Sertifikat
+        </a>
     </div>
 
     {{-- ============================================================ --}}
-    {{-- FILTER & SEARCH BAR                                          --}}
+    {{-- SUMMARY STATS — 5 kartu tipis                                --}}
     {{-- ============================================================ --}}
-    <div class="bg-white rounded-2xl border border-gray-200 p-5 mb-6 shadow-sm">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-5">
+
+        {{-- Total --}}
+        <div class="bg-white rounded-xl border border-gray-200 px-4 py-3 flex items-center gap-3 shadow-sm">
+            <div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 shrink-0">
+                <i class="bi bi-people-fill text-sm"></i>
+            </div>
+            <div>
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Total</p>
+                <p class="text-lg font-black text-gray-900 leading-tight">{{ number_format($stats['total']) }}</p>
+            </div>
+        </div>
+
+        {{-- Aktif --}}
+        <div class="bg-blue-50 rounded-xl border border-blue-100 px-4 py-3 flex items-center gap-3 shadow-sm">
+            <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-blue-500 shadow-sm shrink-0">
+                <i class="bi bi-person-workspace text-sm"></i>
+            </div>
+            <div>
+                <p class="text-[10px] font-bold text-blue-500 uppercase tracking-wider">Aktif</p>
+                <p class="text-lg font-black text-blue-700 leading-tight">{{ number_format($stats['aktif']) }}</p>
+            </div>
+        </div>
+
+        {{-- Selesai --}}
+        <div class="bg-emerald-50 rounded-xl border border-emerald-100 px-4 py-3 flex items-center gap-3 shadow-sm">
+            <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-emerald-500 shadow-sm shrink-0">
+                <i class="bi bi-check-circle-fill text-sm"></i>
+            </div>
+            <div>
+                <p class="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Selesai</p>
+                <p class="text-lg font-black text-emerald-700 leading-tight">{{ number_format($stats['selesai']) }}</p>
+            </div>
+        </div>
+
+        {{-- Bersertifikat --}}
+        <div class="bg-violet-50 rounded-xl border border-violet-100 px-4 py-3 flex items-center gap-3 shadow-sm">
+            <div class="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-violet-500 shadow-sm shrink-0">
+                <i class="bi bi-award-fill text-sm"></i>
+            </div>
+            <div>
+                <p class="text-[10px] font-bold text-violet-500 uppercase tracking-wider">Sertifikat</p>
+                <p class="text-lg font-black text-violet-700 leading-tight">{{ number_format($stats['bersertif']) }}</p>
+            </div>
+        </div>
+
+        {{-- Belum Dinilai --}}
+        <div
+            class="rounded-xl border px-4 py-3 flex items-center gap-3 shadow-sm {{ $stats['belum_nilai'] > 0 ? 'bg-rose-50 border-rose-200' : 'bg-gray-50 border-gray-200' }}">
+            <div
+                class="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm shrink-0 {{ $stats['belum_nilai'] > 0 ? 'text-rose-500' : 'text-gray-400' }}">
+                <i class="bi bi-exclamation-triangle-fill text-sm"></i>
+            </div>
+            <div>
+                <p
+                    class="text-[10px] font-bold uppercase tracking-wider {{ $stats['belum_nilai'] > 0 ? 'text-rose-500' : 'text-gray-400' }}">
+                    Belum Nilai</p>
+                <p
+                    class="text-lg font-black leading-tight {{ $stats['belum_nilai'] > 0 ? 'text-rose-700' : 'text-gray-600' }}">
+                    {{ number_format($stats['belum_nilai']) }}</p>
+            </div>
+        </div>
+
+    </div>
+
+    {{-- ============================================================ --}}
+    {{-- FILTER BAR — compact single row                              --}}
+    {{-- ============================================================ --}}
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-4">
         <form method="GET" action="{{ route('admin.peserta.index') }}" id="filterForm">
-            <div class="flex flex-col lg:flex-row gap-4">
+            <div class="flex flex-wrap lg:flex-nowrap items-end gap-3 p-3">
 
                 {{-- Search --}}
-                <div class="flex-1">
-                    <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Cari
-                        Peserta</label>
+                <div class="flex-1 min-w-48">
                     <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <i class="bi bi-search text-gray-400"></i>
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="bi bi-search text-gray-400 text-xs"></i>
                         </div>
                         <input type="text" name="search" value="{{ request('search') }}"
-                            placeholder="Ketik nama atau email..."
-                            class="w-full pl-11 pr-4 py-2.5 rounded-xl border border-gray-300 text-sm font-medium text-gray-900 bg-gray-50 hover:bg-white focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all">
+                            placeholder="Cari nama atau email..."
+                            class="w-full pl-8 pr-3 py-2 rounded-lg border border-gray-300 text-xs font-medium text-gray-900 bg-gray-50 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all">
                     </div>
                 </div>
 
-                <div class="flex flex-wrap sm:flex-nowrap gap-4">
-                    {{-- Filter: Status --}}
-                    <div class="flex-1 sm:w-40 shrink-0">
-                        <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Status
-                            Magang</label>
-                        <select name="status" onchange="document.getElementById('filterForm').submit()"
-                            class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm font-semibold text-gray-700 bg-gray-50 hover:bg-white focus:bg-white outline-none appearance-none transition-all cursor-pointer">
-                            <option value="all" {{ request('status', 'all') === 'all' ? 'selected' : '' }}>Semua Status
+                {{-- Status --}}
+                <div class="w-36 shrink-0">
+                    <select name="status" onchange="document.getElementById('filterForm').submit()"
+                        class="w-full px-3 py-2 rounded-lg border border-gray-300 text-xs font-semibold text-gray-700 bg-gray-50 focus:bg-white outline-none appearance-none cursor-pointer transition-all">
+                        <option value="all" {{ request('status', 'all') === 'all' ? 'selected' : '' }}>Semua Status
+                        </option>
+                        @foreach ($allStatuses as $val => $label)
+                            <option value="{{ $val }}" {{ request('status') === $val ? 'selected' : '' }}>
+                                {{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Sertifikat --}}
+                <div class="w-32 shrink-0">
+                    <select name="sertifikat" onchange="document.getElementById('filterForm').submit()"
+                        class="w-full px-3 py-2 rounded-lg border border-gray-300 text-xs font-semibold text-gray-700 bg-gray-50 focus:bg-white outline-none appearance-none cursor-pointer transition-all">
+                        <option value="all" {{ request('sertifikat', 'all') === 'all' ? 'selected' : '' }}>Semua Sertif
+                        </option>
+                        <option value="sudah" {{ request('sertifikat') === 'sudah' ? 'selected' : '' }}>Sudah Terbit
+                        </option>
+                        <option value="belum" {{ request('sertifikat') === 'belum' ? 'selected' : '' }}>Belum Terbit
+                        </option>
+                    </select>
+                </div>
+
+                {{-- Divisi (Superadmin) --}}
+                @if ($divisiList->isNotEmpty())
+                    <div class="w-44 shrink-0">
+                        <select name="divisi" onchange="document.getElementById('filterForm').submit()"
+                            class="w-full px-3 py-2 rounded-lg border border-gray-300 text-xs font-semibold text-gray-700 bg-gray-50 focus:bg-white outline-none appearance-none cursor-pointer transition-all">
+                            <option value="all" {{ request('divisi', 'all') === 'all' ? 'selected' : '' }}>Semua Divisi
                             </option>
-                            @foreach ($allStatuses as $val => $label)
-                                <option value="{{ $val }}" {{ request('status') === $val ? 'selected' : '' }}>
-                                    {{ $label }}</option>
+                            @foreach ($divisiList as $div)
+                                <option value="{{ $div }}" {{ request('divisi') === $div ? 'selected' : '' }}>
+                                    {{ $div }}</option>
                             @endforeach
                         </select>
                     </div>
+                @endif
 
-                    {{-- Filter: Sertifikat --}}
-                    <div class="flex-1 sm:w-36 shrink-0">
-                        <label
-                            class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Sertifikat</label>
-                        <select name="sertifikat" onchange="document.getElementById('filterForm').submit()"
-                            class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm font-semibold text-gray-700 bg-gray-50 hover:bg-white focus:bg-white outline-none appearance-none transition-all cursor-pointer">
-                            <option value="all" {{ request('sertifikat', 'all') === 'all' ? 'selected' : '' }}>Semua
-                            </option>
-                            <option value="sudah" {{ request('sertifikat') === 'sudah' ? 'selected' : '' }}>Selesai
-                            </option>
-                            <option value="belum" {{ request('sertifikat') === 'belum' ? 'selected' : '' }}>Belum</option>
-                        </select>
-                    </div>
-
-                    {{-- Filter: Divisi (Superadmin Only) --}}
-                    @if ($divisiList->isNotEmpty())
-                        <div class="w-full sm:w-48 shrink-0">
-                            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">Divisi
-                                Penempatan</label>
-                            <select name="divisi" onchange="document.getElementById('filterForm').submit()"
-                                class="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm font-semibold text-gray-700 bg-gray-50 hover:bg-white focus:bg-white outline-none appearance-none transition-all cursor-pointer">
-                                <option value="all" {{ request('divisi', 'all') === 'all' ? 'selected' : '' }}>Semua
-                                    Divisi</option>
-                                @foreach ($divisiList as $div)
-                                    <option value="{{ $div }}"
-                                        {{ request('divisi') === $div ? 'selected' : '' }}>{{ $div }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    @endif
-                </div>
-
-                {{-- Action Buttons --}}
-                <div class="flex gap-2 items-end shrink-0 w-full lg:w-auto">
+                {{-- Tombol --}}
+                <div class="flex gap-2 shrink-0">
                     <button type="submit"
-                        class="flex-1 lg:flex-none px-6 py-2.5 bg-gray-900 text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition-all shadow-md focus:ring-4 focus:ring-gray-200">
-                        Filter Data
+                        class="px-4 py-2 bg-gray-900 text-white text-xs font-bold rounded-lg hover:bg-gray-800 transition-all shadow-sm">
+                        Filter
                     </button>
-
-                    @if (request()->hasAny(['search', 'status', 'sertifikat', 'divisi']) &&
-                            (request('search') ||
-                                request('status') !== 'all' ||
-                                request('sertifikat') !== 'all' ||
-                                request('divisi') !== 'all'))
-                        <a href="{{ route('admin.peserta.index') }}" title="Reset Pencarian"
-                            class="px-4 py-2.5 bg-white border border-gray-300 text-gray-600 text-sm font-bold rounded-xl hover:bg-gray-50 hover:text-red-600 hover:border-red-300 transition-all flex items-center justify-center">
+                    @if (request('search') ||
+                            (request('status') && request('status') !== 'all') ||
+                            (request('sertifikat') && request('sertifikat') !== 'all') ||
+                            (request('divisi') && request('divisi') !== 'all'))
+                        <a href="{{ route('admin.peserta.index') }}"
+                            class="px-3 py-2 bg-white border border-gray-300 text-gray-500 text-xs font-bold rounded-lg hover:text-red-500 hover:border-red-300 transition-all flex items-center">
                             <i class="bi bi-x-lg"></i>
                         </a>
                     @endif
@@ -185,75 +168,71 @@
     </div>
 
     {{-- ============================================================ --}}
-    {{-- TABEL REKAP PESERTA (Responsive Grid Cards on Mobile)        --}}
+    {{-- TABEL PESERTA                                                 --}}
     {{-- ============================================================ --}}
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
 
-        {{-- Header Data --}}
-        <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-            <h3 class="font-bold text-gray-900 text-sm flex items-center gap-2">
-                <i class="bi bi-person-lines-fill text-indigo-500"></i> Detail Peserta
+        {{-- Header --}}
+        <div class="px-4 py-3 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+            <h3 class="font-bold text-gray-900 text-xs flex items-center gap-2">
+                <i class="bi bi-person-lines-fill text-indigo-500"></i> Daftar Peserta
             </h3>
-            <span class="text-xs font-bold bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full">
-                {{ $members->total() }} Data Ditemukan
+            <span class="text-[10px] font-bold bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full">
+                {{ $members->total() }} data
             </span>
         </div>
 
         @if ($members->isEmpty())
-            <div class="px-6 py-20 text-center flex flex-col items-center">
+            <div class="py-16 text-center flex flex-col items-center">
                 <div
-                    class="w-20 h-20 bg-gray-50 border-2 border-dashed border-gray-200 rounded-full flex items-center justify-center mb-4 text-gray-400">
-                    <i class="bi bi-search text-2xl"></i>
+                    class="w-14 h-14 bg-gray-50 border-2 border-dashed border-gray-200 rounded-full flex items-center justify-center mb-3 text-gray-300">
+                    <i class="bi bi-search text-xl"></i>
                 </div>
-                <h4 class="text-gray-900 font-bold mb-1">Data Tidak Ditemukan</h4>
-                <p class="text-sm text-gray-500 max-w-sm">Tidak ada peserta yang cocok dengan filter atau kata kunci
-                    pencarian Anda. Silakan coba kriteria lain.</p>
+                <h4 class="text-sm text-gray-900 font-bold mb-1">Data Tidak Ditemukan</h4>
+                <p class="text-xs text-gray-500 max-w-xs">Tidak ada peserta yang cocok dengan filter pencarian Anda.</p>
                 @if (request()->hasAny(['search', 'status', 'sertifikat', 'divisi']))
                     <a href="{{ route('admin.peserta.index') }}"
-                        class="mt-4 text-sm font-bold text-indigo-600 hover:text-indigo-800 underline underline-offset-2">Reset
-                        Semua Filter</a>
+                        class="mt-3 text-xs font-bold text-indigo-600 hover:underline">Reset Filter</a>
                 @endif
             </div>
         @else
-            {{-- Wrapper untuk Grid (Mobile) & Table (Desktop) --}}
-            <div class="w-full">
-                {{-- Desktop Table View (Hidden on mobile) --}}
-                <div class="hidden lg:block w-full">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr
-                                class="bg-white border-b border-gray-200 text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
-                                <th class="px-6 py-4">Informasi Peserta</th>
-                                <th class="px-6 py-4">Penempatan Divisi</th>
-                                <th class="px-6 py-4 text-center">Status Magang</th>
-                                <th class="px-6 py-4 text-center">Penilaian</th>
-                                <th class="px-6 py-4 text-center">Sertifikat</th>
-                                <th class="px-6 py-4 text-center">Aksi Cepat</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            @foreach ($members as $member)
-                                @include('admin.peserta.partials.row', ['member' => $member])
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-
-                {{-- Mobile Grid View (Hidden on desktop) --}}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 lg:hidden bg-gray-50/50">
-                    @foreach ($members as $member)
-                        @include('admin.peserta.partials.card', ['member' => $member])
-                    @endforeach
-                </div>
+            {{-- Desktop Table --}}
+            <div class="hidden lg:block">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr
+                            class="border-b border-gray-100 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">
+                            <th class="px-4 py-2.5">Peserta</th>
+                            <th class="px-4 py-2.5 hidden md:table-cell">Penempatan</th>
+                            <th class="px-4 py-2.5 text-center">Status</th>
+                            <th class="px-4 py-2.5 text-center hidden sm:table-cell">Nilai</th>
+                            <th class="px-4 py-2.5 text-center hidden sm:table-cell">Sertif</th>
+                            <th class="px-4 py-2.5 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($members as $member)
+                            @include('admin.peserta.partials.row', ['member' => $member])
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
 
-            {{-- Pagination Footer --}}
+            {{-- Mobile Cards --}}
+            <div class="flex flex-col gap-2 p-3 lg:hidden bg-gray-50/50">
+                @foreach ($members as $member)
+                    @include('admin.peserta.partials.card', ['member' => $member])
+                @endforeach
+            </div>
+
+            {{-- Pagination --}}
             @if ($members->hasPages())
-                <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 mt-auto">
+                <div class="px-4 py-3 border-t border-gray-100 bg-gray-50">
                     {{ $members->links() }}
                 </div>
             @endif
         @endif
+
     </div>
 
 @endsection

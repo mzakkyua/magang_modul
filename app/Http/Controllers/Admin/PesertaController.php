@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\ApplicationMemberMagang;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Collection;
 use App\Models\VacancyMagang;
 use Illuminate\Http\Request;
 
@@ -12,32 +11,11 @@ use Illuminate\Http\Request;
  * ======================================================================
  * CONTROLLER: PesertaController
  * ======================================================================
- *
- * Halaman rekap terpusat untuk admin — menampilkan SEMUA peserta magang
- * beserta informasi lengkap: status magang, nilai, dan sertifikat.
- *
- * Admin tidak perlu loncat-loncat antar halaman. Satu halaman,
- * semua data, langsung bisa dicari dan difilter.
- *
- * FITUR:
- *   - Search by nama / email peserta
- *   - Filter by status magang (all / pending / verified / interview /
- *                              accepted / completed / resigned)
- *   - Filter by divisi (hanya superadmin)
- *   - Filter by status sertifikat (semua / sudah / belum)
- *   - Pagination
- *   - Aksi langsung: nilai → assessment, belum sertifikat → upload
- * ======================================================================
  */
 class PesertaController extends Controller
 {
-    // ======================================================================
-    // KONFIGURASI
-    // ======================================================================
+    private const PER_PAGE = 20;
 
-    private const PER_PAGE = 15;
-
-    /** Semua status yang dikenali sistem */
     private const ALL_STATUSES = [
         'pending'   => 'Menunggu',
         'verified'  => 'Terverifikasi',
@@ -49,14 +27,13 @@ class PesertaController extends Controller
     ];
 
     // ======================================================================
-    // INDEX — REKAP PESERTA TERPUSAT
+    // INDEX — REKAP PESERTA TERPUSAT (compact list)
     // ======================================================================
 
     public function index(Request $request)
     {
         $hakAkses = request()->attributes->get('magang_access');
 
-        // ── Base query ────────────────────────────────────────────────────
         $query = ApplicationMemberMagang::with([
             'user.profile',
             'application.vacancy',
@@ -64,14 +41,12 @@ class PesertaController extends Controller
             'certificate',
         ]);
 
-        // ── Filter divisi (admin biasa hanya lihat divisinya) ─────────────
         if ($hakAkses && !$hakAkses->isSuperAdmin()) {
             $query->whereHas('application.vacancy', function ($q) use ($hakAkses) {
                 $q->where('division_name', $hakAkses->division_name);
             });
         }
 
-        // ── Filter: Search nama / email ───────────────────────────────────
         if ($request->filled('search')) {
             $search = trim($request->search);
             $query->where(function ($q) use ($search) {
@@ -83,21 +58,18 @@ class PesertaController extends Controller
             });
         }
 
-        // ── Filter: Status magang ─────────────────────────────────────────
         if ($request->filled('status') && $request->status !== 'all') {
             $query->whereHas('application', function ($q) use ($request) {
                 $q->where('status', $request->status);
             });
         }
 
-        // ── Filter: Divisi (superadmin bisa pilih) ────────────────────────
         if ($hakAkses && $hakAkses->isSuperAdmin() && $request->filled('divisi') && $request->divisi !== 'all') {
             $query->whereHas('application.vacancy', function ($q) use ($request) {
                 $q->where('division_name', $request->divisi);
             });
         }
 
-        // ── Filter: Status sertifikat ─────────────────────────────────────
         if ($request->filled('sertifikat') && $request->sertifikat !== 'all') {
             if ($request->sertifikat === 'sudah') {
                 $query->whereHas('certificate');
@@ -106,9 +78,7 @@ class PesertaController extends Controller
             }
         }
 
-        // ── Ambil daftar divisi untuk filter dropdown (superadmin) ────────
-        $divisiList = collect(); // selalu collection, bukan array
-
+        $divisiList = collect();
         if ($hakAkses && $hakAkses->isSuperAdmin()) {
             $divisiList = VacancyMagang::select('division_name')
                 ->distinct()
@@ -116,13 +86,12 @@ class PesertaController extends Controller
                 ->pluck('division_name');
         }
 
-        // ── Eksekusi query dengan pagination ──────────────────────────────
         $members = $query
             ->orderByDesc('id')
             ->paginate(self::PER_PAGE)
             ->withQueryString();
 
-        // ── Statistik ringkas untuk summary bar ───────────────────────────
+        // ── Statistik ──────────────────────────────────────────────────
         $statsQuery = ApplicationMemberMagang::query();
         if ($hakAkses && !$hakAkses->isSuperAdmin()) {
             $statsQuery->whereHas('application.vacancy', function ($q) use ($hakAkses) {
@@ -130,78 +99,57 @@ class PesertaController extends Controller
             });
         }
 
-        /**
-         * --------------------------------------------------------------
-         * TOTAL PESERTA
-         * --------------------------------------------------------------
-         */
         $totalMembers = (clone $statsQuery)->count();
 
-        /**
-         * --------------------------------------------------------------
-         * STATUS COUNTS (1 QUERY GROUP BY)
-         * --------------------------------------------------------------
-         */
         $statusCounts = (clone $statsQuery)
-            ->join(
-                'applications_magang',
-                'application_members_magang.application_id',
-                '=',
-                'applications_magang.id'
-            )
+            ->join('applications_magang', 'application_members_magang.application_id', '=', 'applications_magang.id')
             ->selectRaw('applications_magang.status, COUNT(*) as total')
             ->groupBy('applications_magang.status')
             ->pluck('total', 'status');
 
-        /**
-         * --------------------------------------------------------------
-         * PESERTA BERSERTIFIKAT
-         * --------------------------------------------------------------
-         */
-        $bersertifCount = (clone $statsQuery)
-            ->whereHas('certificate')
-            ->count();
+        $bersertifCount = (clone $statsQuery)->whereHas('certificate')->count();
 
-        /**
-         * --------------------------------------------------------------
-         * PESERTA BELUM DINILAI
-         * --------------------------------------------------------------
-         *
-         * Hanya peserta accepted
-         * yang belum punya assessment.
-         */
         $belumNilaiCount = (clone $statsQuery)
-            ->whereHas('application', function ($q) {
-                $q->where('status', 'accepted');
-            })
+            ->whereHas('application', fn($q) => $q->where('status', 'accepted'))
             ->whereDoesntHave('assessment')
             ->count();
 
-        /**
-         * --------------------------------------------------------------
-         * FINAL ARRAY
-         * --------------------------------------------------------------
-         */
         $stats = [
-            'total' => $totalMembers,
-
-            'aktif' => (int) (
-                $statusCounts['accepted'] ?? 0
-            ),
-
-            'selesai' => (int) (
-                $statusCounts['completed'] ?? 0
-            ),
-
-            'bersertif' => $bersertifCount,
-
+            'total'       => $totalMembers,
+            'aktif'       => (int) ($statusCounts['accepted'] ?? 0),
+            'selesai'     => (int) ($statusCounts['completed'] ?? 0),
+            'bersertif'   => $bersertifCount,
             'belum_nilai' => $belumNilaiCount,
         ];
 
-        return view('admin.peserta.index', compact(
-            'members',
-            'divisiList',
-            'stats',
-        ))->with('allStatuses', self::ALL_STATUSES);
+        return view('admin.peserta.index', compact('members', 'divisiList', 'stats'))
+            ->with('allStatuses', self::ALL_STATUSES);
+    }
+
+    // ======================================================================
+    // SHOW — DETAIL LENGKAP SATU PESERTA
+    // ======================================================================
+
+    public function show(ApplicationMemberMagang $member)
+    {
+        $hakAkses = request()->attributes->get('magang_access');
+
+        // Guard: admin non-super hanya boleh lihat divisinya sendiri
+        if ($hakAkses && !$hakAkses->isSuperAdmin()) {
+            $divisi = optional(optional($member->application)->vacancy)->division_name;
+            if ($divisi !== $hakAkses->division_name) {
+                abort(403, 'Akses ditolak.');
+            }
+        }
+
+        $member->load([
+            'user.profile',
+            'application.vacancy',
+            'application.leader.profile',
+            'assessment',
+            'certificate',
+        ]);
+
+        return view('admin.peserta.show', compact('member'));
     }
 }

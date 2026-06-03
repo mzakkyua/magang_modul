@@ -389,6 +389,9 @@ Route::prefix('admin')
         Route::get('/peserta', [PesertaController::class, 'index'])
             ->name('peserta.index');
 
+        Route::get('/peserta/{member}', [PesertaController::class, 'show'])
+            ->name('peserta.show');
+
         /*
 |--------------------------------------------------------------------------
 | Master Divisi Magang
