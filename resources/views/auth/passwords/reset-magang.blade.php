@@ -45,14 +45,6 @@
             }
         }
 
-        .input-wrap:focus-within .input-bottom-line {
-            transform: scaleX(1);
-        }
-
-        .input-wrap:focus-within .input-icon {
-            color: #3b82f6;
-        }
-
         .btn-shimmer {
             position: relative;
             overflow: hidden;
@@ -171,118 +163,43 @@
                 {{-- TOKEN (hidden) --}}
                 <input type="hidden" name="token" value="{{ $token }}">
 
-                {{-- EMAIL (readonly) --}}
-                <div class="input-wrap relative group">
-                    <div
-                        class="input-icon absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none
-                                text-gray-300 z-10">
+                {{-- EMAIL (Readonly) --}}
+                <x-input-field name="email" label="Email" type="email" :value="$email ?? old('email')" readonly>
+                    <x-slot:icon>
                         <i class="bi bi-envelope text-sm"></i>
-                    </div>
-                    <input type="email" name="email" value="{{ $email ?? old('email') }}" readonly placeholder=" "
-                        class="peer w-full pt-5 pb-2 pl-10 pr-3.5 rounded-xl
-                               border border-gray-100 bg-gray-50
-                               text-sm font-medium text-gray-400 outline-none cursor-not-allowed">
-                    <label
-                        class="absolute pointer-events-none select-none left-10
-                                  top-2.5 text-[10.5px] font-bold text-gray-300
-                                  peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2
-                                  peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal
-                                  transition-all duration-200 ease-out origin-left">
-                        Email
-                    </label>
-                </div>
+                    </x-slot:icon>
+                </x-input-field>
 
                 {{-- PASSWORD BARU --}}
                 <div>
-                    <div class="input-wrap relative group">
-                        <div
-                            class="input-icon absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none
-                                    text-gray-400 transition-colors duration-200 z-10">
+                    <x-input-field name="password" label="Password Baru" type="password" required minlength="8">
+                        <x-slot:icon>
                             <i class="bi bi-lock text-sm"></i>
-                        </div>
-                        <input type="password" name="password" id="password" minlength="8" required placeholder=" "
-                            class="peer w-full pt-5 pb-2 pl-10 pr-10 rounded-xl border bg-white
-                                   text-sm font-medium text-gray-800 outline-none
-                                   transition-all duration-200
-                                   {{ $errors->has('password')
-                                       ? 'border-red-300 focus:ring-2 focus:ring-red-100'
-                                       : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/20 focus:border-blue-400 focus:ring-2 focus:ring-blue-100' }}">
-                        <label for="password"
-                            class="absolute pointer-events-none select-none left-10
-                                      transition-all duration-200 ease-out origin-left
-                                      top-2.5 text-[10.5px] font-bold
-                                      peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2
-                                      peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal
-                                      peer-focus:top-2.5 peer-focus:translate-y-0
-                                      peer-focus:text-[10.5px] peer-focus:font-bold
-                                      {{ $errors->has('password') ? 'text-red-400 peer-focus:text-red-500' : 'text-gray-400 peer-focus:text-blue-500' }}">
-                            Password Baru
-                        </label>
-                        {{-- Bottom slide --}}
-                        <div
-                            class="absolute bottom-0 left-0 right-0 h-0.5 rounded-b-xl overflow-hidden pointer-events-none">
-                            <div
-                                class="input-bottom-line h-full origin-left scale-x-0 transition-transform duration-300 ease-out
-                                        {{ $errors->has('password') ? 'bg-red-500' : 'bg-blue-500' }}">
-                            </div>
-                        </div>
-                        {{-- Toggle show/hide --}}
-                        <button type="button" id="togglePassword"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-500 transition-colors duration-200 z-10">
-                            <i class="bi bi-eye-slash text-base" id="toggleIcon"></i>
-                        </button>
-                    </div>
+                        </x-slot:icon>
+                        <x-slot:append>
+                            <button type="button" id="togglePassword"
+                                class="text-gray-400 hover:text-blue-500 focus:outline-none transition-colors duration-200">
+                                <i class="bi bi-eye-slash text-base" id="toggleIcon"></i>
+                            </button>
+                        </x-slot:append>
+                    </x-input-field>
 
                     {{-- Password strength bar --}}
-                    <div class="mt-2 -mb-1">
+                    <div class="mt-2">
                         <div class="h-1 bg-gray-100 rounded-full overflow-hidden">
                             <div id="strength-bar-fill"></div>
                         </div>
                         <p id="strength-text" class="text-[10.5px] font-semibold mt-1 text-gray-300"></p>
                     </div>
-
-                    @error('password')
-                        <p class="flex items-center gap-1.5 text-red-500 text-xs font-medium mt-1.5">
-                            <i class="bi bi-exclamation-circle-fill text-[11px]"></i>
-                            {{ $message }}
-                        </p>
-                    @enderror
                 </div>
 
                 {{-- KONFIRMASI PASSWORD --}}
                 <div>
-                    <div class="input-wrap relative group">
-                        <div
-                            class="input-icon absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none
-                                    text-gray-400 transition-colors duration-200 z-10">
+                    <x-input-field name="password_confirmation" label="Konfirmasi Password" type="password" required>
+                        <x-slot:icon>
                             <i class="bi bi-lock-fill text-sm"></i>
-                        </div>
-                        <input type="password" name="password_confirmation" id="password_confirmation" required
-                            placeholder=" "
-                            class="peer w-full pt-5 pb-2 pl-10 pr-3.5 rounded-xl border bg-white
-                                   text-sm font-medium text-gray-800 outline-none
-                                   transition-all duration-200
-                                   border-gray-200 hover:border-blue-300 hover:bg-blue-50/20
-                                   focus:border-blue-400 focus:ring-2 focus:ring-blue-100">
-                        <label for="password_confirmation"
-                            class="absolute pointer-events-none select-none left-10
-                                      transition-all duration-200 ease-out origin-left
-                                      top-2.5 text-[10.5px] font-bold text-gray-400
-                                      peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2
-                                      peer-placeholder-shown:text-sm peer-placeholder-shown:font-normal
-                                      peer-focus:top-2.5 peer-focus:translate-y-0
-                                      peer-focus:text-[10.5px] peer-focus:font-bold peer-focus:text-blue-500">
-                            Konfirmasi Password
-                        </label>
-                        {{-- Bottom slide --}}
-                        <div
-                            class="absolute bottom-0 left-0 right-0 h-0.5 rounded-b-xl overflow-hidden pointer-events-none">
-                            <div
-                                class="input-bottom-line h-full origin-left scale-x-0 bg-blue-500
-                                        transition-transform duration-300 ease-out">
-                            </div>
-                        </div>
-                    </div>
+                        </x-slot:icon>
+                    </x-input-field>
                     {{-- Match indicator --}}
                     <p id="match-text" class="text-[10.5px] font-semibold mt-1.5 hidden"></p>
                 </div>
@@ -290,9 +207,9 @@
                 {{-- SUBMIT --}}
                 <button type="submit" id="submitBtn"
                     class="btn-shimmer w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-xl
-                           text-sm hover:bg-blue-700 active:scale-[0.98]
-                           transition-all duration-200
-                           shadow-md shadow-blue-600/25 hover:shadow-blue-600/40 hover:-translate-y-0.5">
+               text-sm hover:bg-blue-700 active:scale-[0.98]
+               transition-all duration-200
+               shadow-md shadow-blue-600/25 hover:shadow-blue-600/40 hover:-translate-y-0.5">
                     <span id="submitText" class="flex items-center justify-center gap-2">
                         <i class="bi bi-shield-check"></i> Reset Password
                     </span>

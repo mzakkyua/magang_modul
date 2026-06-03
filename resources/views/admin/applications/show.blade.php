@@ -123,14 +123,17 @@
                         @if ($profile && ($profile->cv_file_path || $profile->proposal_file_path))
                             <div class="bg-white p-3 rounded border flex flex-wrap gap-3">
                                 @if ($profile->cv_file_path)
-                                    <a href="{{ Storage::url($profile->cv_file_path) }}" target="_blank"
+                                    {{-- CV --}}
+                                    <a href="{{ route('admin.applications.files.cv', $member->user_id) }}" target="_blank"
                                         class="inline-flex items-center gap-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded transition">
                                         <i class="bi bi-file-earmark-person-fill text-blue-500"></i> Lihat CV
                                     </a>
                                 @endif
 
                                 @if ($profile->proposal_file_path)
-                                    <a href="{{ Storage::url($profile->proposal_file_path) }}" target="_blank"
+                                    {{-- Proposal --}}
+                                    <a href="{{ route('admin.applications.files.proposal', $member->user_id) }}"
+                                        target="_blank"
                                         class="inline-flex items-center gap-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded transition">
                                         <i class="bi bi-file-earmark-text-fill text-amber-500"></i> Lihat Proposal
                                     </a>

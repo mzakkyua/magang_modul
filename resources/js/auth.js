@@ -77,27 +77,3 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 });
-
-// ================= 3. PASSWORD TOGGLE (Fungsi Global) =================
-// Ditaruh di luar DOMContentLoaded agar bisa dipanggil langsung dari onclick="..." di HTML
-window.togglePassword = function (inputId) {
-    const input = document.getElementById(inputId);
-    const eyeIcon = document.getElementById("eye-" + inputId);
-    const eyeSlashIcon = document.getElementById("eye-slash-" + inputId);
-
-    if (!input) return; // Cegah error jika elemen tidak ada
-
-    if (input.type === "password") {
-        input.type = "text";
-        eyeIcon.classList.remove("hidden");
-        eyeIcon.classList.add("block");
-        eyeSlashIcon.classList.remove("block");
-        eyeSlashIcon.classList.add("hidden");
-    } else {
-        input.type = "password";
-        eyeIcon.classList.remove("block");
-        eyeIcon.classList.add("hidden");
-        eyeSlashIcon.classList.remove("hidden");
-        eyeSlashIcon.classList.add("block");
-    }
-};

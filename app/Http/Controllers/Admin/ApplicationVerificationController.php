@@ -3,14 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\ApplicationMagang;
 use App\Models\MagangAccessRight;
 use App\Models\AssessmentMagang;
+use App\Helpers\DashboardCache;
+use App\Models\ProfileMagang;
+
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Helpers\DashboardCache;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * ======================================================================
@@ -518,5 +521,57 @@ class ApplicationVerificationController extends Controller
         return redirect()
             ->route('admin.applications.show', $result['app_id'])
             ->with('success', $msg);
+    }
+
+    // ======================================================================
+    // SERVE CV PESERTA (stream file private ke browser admin)
+    // ======================================================================
+    public function serveCv(int $userId)
+    {
+        $hakAkses = $this->resolveHakAkses();
+
+        $profile = ProfileMagang::where('user_id', $userId)->firstOrFail();
+
+        if (!$profile->cv_file_path) {
+            abort(404, 'File CV tidak ditemukan.');
+        }
+
+        if (!Storage::disk('local')->exists($profile->cv_file_path)) {
+            abort(404, 'File CV tidak ada di storage.');
+        }
+
+        return response()->file(
+            Storage::disk('local')->path($profile->cv_file_path),
+            [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="CV_' . $userId . '.pdf"',
+            ]
+        );
+    }
+
+    // ======================================================================
+    // SERVE PROPOSAL PESERTA (stream file private ke browser admin)
+    // ======================================================================
+    public function serveProposal(int $userId)
+    {
+        $hakAkses = $this->resolveHakAkses();
+
+        $profile = ProfileMagang::where('user_id', $userId)->firstOrFail();
+
+        if (!$profile->proposal_file_path) {
+            abort(404, 'File Proposal tidak ditemukan.');
+        }
+
+        if (!Storage::disk('local')->exists($profile->proposal_file_path)) {
+            abort(404, 'File Proposal tidak ada di storage.');
+        }
+
+        return response()->file(
+            Storage::disk('local')->path($profile->proposal_file_path),
+            [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="Proposal_' . $userId . '.pdf"',
+            ]
+        );
     }
 }

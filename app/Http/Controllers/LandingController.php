@@ -311,12 +311,13 @@ class LandingController extends Controller
          * Hanya relevan untuk divisi yang tidak punya lowongan open.
          * ----------------------------------------------------------
          */
-        $closedEndDates = DB::table('vacancies_magang')
+        // SESUDAH — dari semua vacancy open + closed
+        $allEndDates = DB::table('vacancies_magang')
             ->select([
                 'division_name',
                 DB::raw('MAX(end_date) as latest_end_date'),
             ])
-            ->where('status', VacancyMagang::STATUS_CLOSED)
+            ->whereIn('status', [VacancyMagang::STATUS_OPEN, VacancyMagang::STATUS_CLOSED])
             ->groupBy('division_name')
             ->get()
             ->keyBy('division_name');
@@ -338,7 +339,7 @@ class LandingController extends Controller
          * ----------------------------------------------------------
          */
         $allDivisionNames = $grouped->keys()
-            ->merge($closedEndDates->keys())
+            ->merge($allEndDates->keys())     // ← ganti ke nama baru
             ->unique()
             ->sort()
             ->values();
@@ -350,7 +351,7 @@ class LandingController extends Controller
          */
         return $allDivisionNames->map(function (string $divisionName) use (
             $grouped,
-            $closedEndDates,
+            $allEndDates,     // ← ganti ke nama baru
         ) {
             /** @var \Illuminate\Support\Collection $vacancies */
             $vacancies     = $grouped->get($divisionName, collect());
@@ -391,13 +392,19 @@ class LandingController extends Controller
              * Diambil dari MAX(end_date) closed vacancies divisi tsb.
              */
             $estimatedOpen = null;
+            $lastBatchEnd  = null;
 
-            if (! $hasOpen && isset($closedEndDates[$divisionName])) {
-                $latestEnd = $closedEndDates[$divisionName]->latest_end_date;
+            if (isset($allEndDates[$divisionName])) {
+                $latestEnd = $allEndDates[$divisionName]->latest_end_date;
 
                 if ($latestEnd) {
-                    $estimatedOpen = Carbon::parse($latestEnd)
-                        ->translatedFormat('F Y');
+                    $lastBatchEnd = Carbon::parse($latestEnd)
+                        ->translatedFormat('d F Y');
+
+                    if (! $hasOpen) {
+                        $estimatedOpen = Carbon::parse($latestEnd)
+                            ->translatedFormat('F Y');
+                    }
                 }
             }
 
@@ -409,6 +416,7 @@ class LandingController extends Controller
                 'has_unlimited'   => $hasUnlimited,
                 'has_open'        => $hasOpen,
                 'estimated_open'  => $estimatedOpen,
+                'last_batch_end'  => $lastBatchEnd,
             ];
         })->values();
     }

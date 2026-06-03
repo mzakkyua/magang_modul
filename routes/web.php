@@ -148,6 +148,31 @@ Route::get('/calendar/events', [CalendarController::class, 'fetch'])
 
 /*
 |--------------------------------------------------------------------------
+| RUTE VERIFIKASI EMAIL (MOBILE-FRIENDLY / TANPA LOGIN)
+|--------------------------------------------------------------------------
+| Memungkinkan peserta klik link dari HP tanpa harus login terlebih dahulu.
+*/
+Route::get('/email/verify/{id}/{hash}', function (Illuminate\Http\Request $request, $id, $hash) {
+    // 1. Cari user berdasarkan ID di link
+    $user = \App\Models\UserMagang::findOrFail($id);
+
+    // 2. Cocokkan kunci rahasia (hash) di link dengan email user
+    if (! hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+        abort(403, 'Link verifikasi tidak valid, rusak, atau sudah diubah!');
+    }
+
+    // 3. Jika belum verifikasi, tandai sebagai terverifikasi sekarang
+    if (! $user->hasVerifiedEmail()) {
+        $user->markEmailAsVerified();
+        event(new \Illuminate\Auth\Events\Verified($user));
+    }
+
+    // 4. Tampilkan halaman sukses!
+    return view('auth.magang-verify-success');
+})->middleware('signed')->name('verification.verify');
+
+/*
+|--------------------------------------------------------------------------
 | 2. ZONA GUEST PESERTA MAGANG
 |--------------------------------------------------------------------------
 | Hanya untuk peserta yang BELUM login (guard: magang).
@@ -186,27 +211,28 @@ Route::middleware('auth:magang')->group(function () {
     // ==========================================================
     // AREA BEBAS (TIDAK DIGEMBOK VERIFIED)
     // ==========================================================
-    // Biarkan 3 rute verifikasi email tetap di sini (jangan dimasukkan ke dalam grup verified di bawah)
-    Route::get('/email/verify', function () {
-        return view('auth.magang-verify-email');
-    })->name('verification.notice');
 
-    Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-        $request->fulfill();
-        return view('auth.magang-verify-success');
-    })->middleware('signed')->name('verification.verify');
-
-    // ==========================================================
-    // AREA BEBAS (TIDAK DIGEMBOK VERIFIED)
-    // ==========================================================
+    // 1. Halaman Peringatan Verifikasi
     Route::get('/email/verify', function (Request $request) {
-        // Cek: Apakah user ini sebenarnya sudah verifikasi?
         if ($request->user('magang')->hasVerifiedEmail()) {
             return redirect()->route('dashboard.index');
         }
-
         return view('auth.magang-verify-email');
     })->name('verification.notice');
+
+
+    // 3. Tombol Kirim Ulang Email (INI YANG SEBELUMNYA HILANG!)
+    Route::post('/email/verification-notification', function (Request $request) {
+        $request->user('magang')->sendEmailVerificationNotification();
+        return back()->with('status', 'verification-link-sent');
+    })->middleware('throttle:6,1')->name('verification.send');
+
+    // 4. Jalur Pengecekan Rahasia (AJAX) untuk Auto-Redirect
+    Route::get('/email/check-status', function (Illuminate\Http\Request $request) {
+        return response()->json([
+            'verified' => $request->user('magang')->hasVerifiedEmail()
+        ]);
+    })->name('verification.check');
 
     // ==========================================================
     // AREA TERGEMBOK (WAJIB KLIK EMAIL DULU)
@@ -231,6 +257,9 @@ Route::middleware('auth:magang')->group(function () {
 
         Route::delete('/profile/delete-cv', [ProfileMagangController::class, 'deleteCv'])
             ->name('profile.delete.cv');
+
+        Route::get('/profile/cv', [ProfileMagangController::class, 'serveCv'])
+            ->name('profile.cv.view');
 
         // Pendaftaran magang
         Route::post('/applications', [ApplicationMagangController::class, 'store'])
@@ -299,8 +328,20 @@ Route::prefix('admin')
         // Verifikasi Lamaran
         Route::get('/applications', [ApplicationVerificationController::class, 'index'])
             ->name('applications.index');
+
+        // ✅ Route spesifik DULU sebelum route dengan {parameter}
+        Route::get('/applications/files/cv/{userId}', [ApplicationVerificationController::class, 'serveCv'])
+            ->name('applications.files.cv')       // ← hapus 'admin.' di depan
+            ->whereNumber('userId');
+
+        Route::get('/applications/files/proposal/{userId}', [ApplicationVerificationController::class, 'serveProposal'])
+            ->name('applications.files.proposal') // ← hapus 'admin.' di depan
+            ->whereNumber('userId');
+
+        // ✅ Route dengan {parameter} BELAKANGAN
         Route::get('/applications/{application}', [ApplicationVerificationController::class, 'show'])
             ->name('applications.show');
+
         Route::patch('/applications/{application}/update-status', [ApplicationVerificationController::class, 'updateStatus'])
             ->name('applications.update-status');
 

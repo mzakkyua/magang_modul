@@ -102,6 +102,20 @@
                 </div>
             @endif
 
+            {{-- ============================================================ --}}
+            {{-- ✅ FIX: DELETE CV FORM DIPINDAH KE SINI — DI LUAR profileForm --}}
+            {{-- Root cause bug: form bersarang (nested form) menyebabkan       --}}
+            {{-- @method('DELETE') menimpa @method('PUT') di form utama,        --}}
+            {{-- sehingga setiap submit profileForm terbaca sebagai DELETE.      --}}
+            {{-- ============================================================ --}}
+            @if ($profile->cv_file_path ?? false)
+                <form id="delete-cv-form" action="{{ route('profile.delete.cv') }}" method="POST" class="hidden">
+                    @csrf
+                    @method('DELETE')
+                </form>
+            @endif
+
+            {{-- ===================== FORM UTAMA ===================== --}}
             <form id="profileForm" method="POST" action="{{ route('profile.update') }}" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
@@ -291,6 +305,7 @@
                             </div>
 
                             <div class="p-5 grid md:grid-cols-2 gap-5">
+
                                 {{-- ── CV ── --}}
                                 <div>
                                     <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
@@ -314,22 +329,18 @@
                                                 </div>
                                             </div>
                                             <div class="flex gap-1.5 shrink-0">
-                                                <a href="{{ asset('storage/' . $profile->cv_file_path) }}"
-                                                    target="_blank"
+                                                <a href="{{ route('profile.cv.view') }}" target="_blank"
                                                     class="w-7 h-7 bg-white rounded-lg border border-blue-200 flex items-center justify-center text-blue-500 hover:bg-blue-600 hover:text-white transition-all text-xs">
                                                     <i class="bi bi-eye-fill"></i>
                                                 </a>
-                                                <button type="button"
-                                                    onclick="if(confirm('Yakin hapus CV ini?')) document.getElementById('delete-cv-form').submit();"
+                                                {{-- ✅ FIX: Tombol hapus CV tetap di sini, form-nya sudah dipindah ke luar --}}
+                                                <button type="button" onclick="confirmHapusCV()"
                                                     class="w-7 h-7 bg-white rounded-lg border border-red-200 flex items-center justify-center text-red-400 hover:bg-red-500 hover:text-white transition-all text-xs">
                                                     <i class="bi bi-trash-fill"></i>
                                                 </button>
                                             </div>
                                         </div>
-                                        <form id="delete-cv-form" action="{{ route('profile.delete.cv') }}"
-                                            method="POST" class="hidden">
-                                            @csrf @method('DELETE')
-                                        </form>
+                                        {{-- ✅ FIX: Form delete-cv TIDAK lagi di sini. Sudah dipindah ke luar profileForm. --}}
                                         <p class="text-[10px] text-gray-400 mb-2">
                                             <i class="bi bi-info-circle mr-0.5"></i> Pilih file baru untuk mengganti:
                                         </p>
@@ -350,7 +361,7 @@
                                             <p
                                                 class="text-sm font-semibold text-gray-500 group-hover:text-blue-600 transition-colors">
                                                 Pilih file CV</p>
-                                            <p class="text-[10px] text-gray-400 mt-0.5">PDF, maks 5MB</p>
+                                            <p class="text-[10px] text-gray-400 mt-0.5">PDF, maks 2MB</p>
                                         </div>
                                         <div id="cvPreview"
                                             class="hidden items-center gap-1.5 bg-white border border-blue-200 rounded-lg px-3 py-1.5 text-xs font-bold text-blue-600">
@@ -497,6 +508,8 @@
                     </div>
                 </div>
             </form>
+            {{-- ===================== END FORM UTAMA ===================== --}}
+
         </div>
     </div>
 
@@ -535,6 +548,7 @@
                 btnText.textContent = 'Menyimpan...';
             });
 
+            // ── Preview file CV setelah dipilih ──
             const cvInput = document.getElementById('cvInput');
             const cvPreview = document.getElementById('cvPreview');
             const cvDropText = document.getElementById('cvDropText');
@@ -550,6 +564,7 @@
                 }
             });
 
+            // ── Preview file Proposal setelah dipilih ──
             const proposalInput = document.getElementById('proposalInput');
             const proposalPreview = document.getElementById('proposalPreview');
             const proposalDropText = document.getElementById('proposalDropText');
@@ -565,6 +580,7 @@
                 }
             });
 
+            // ── Highlight sidenav berdasarkan scroll ──
             const sections = ['sec-info', 'sec-docs', 'sec-security'];
             const navLinks = document.querySelectorAll('.sidenav-link');
             const activeClass = ['bg-white', 'text-blue-600', 'shadow-sm', 'border', 'border-gray-100'];
@@ -588,5 +604,23 @@
                 });
             });
         });
+
+        function confirmHapusCV() {
+            Swal.fire({
+                title: 'Hapus CV?',
+                text: 'File CV Anda akan dihapus permanen dan tidak bisa dikembalikan.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('delete-cv-form').submit();
+                }
+            });
+        }
     </script>
 @endsection

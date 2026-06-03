@@ -225,10 +225,10 @@
                                     </div>
                                     <div>
                                         <p class="text-sm font-bold text-gray-900 leading-tight">
-                                            {{ $app->leader->name ?? 'User Terhapus' }}
+                                            {{ $app->leader?->profile?->full_name ?? ($app->leader?->name ?? 'Tidak Diketahui') }}
                                         </p>
                                         <p class="text-xs text-gray-400 mt-0.5">
-                                            {{ $app->leader->email ?? '-' }}
+                                            {{ $app->leader?->email ?? '-' }}
                                         </p>
                                     </div>
                                 </div>

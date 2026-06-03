@@ -30,9 +30,9 @@ return new class extends Migration
             $table->string('username', 50)->unique();
             $table->string('email', 100)->unique();
 
-            // --- TAMBAHAN BARU UNTUK VERIFIKASI & GOOGLE SSO ---
-            $table->timestamp('email_verified_at')->nullable(); // Tanggal verifikasi email
-            $table->string('google_id')->unique()->nullable();  // ID unik dari akun Google
+            // --- TAMBAHAN BARU UNTUK VERIFIKASI  ---
+            $table->timestamp('email_verified_at')->nullable(); // Tanggal verifikasi email  // ID unik dari akun Google
+
             $table->string('password_hash');
             // ---------------------------------------------------
 

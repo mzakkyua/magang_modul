@@ -35,34 +35,6 @@
         </div>
     </div>
 
-    {{-- ================================================================
-     FLASH MESSAGES
-     ================================================================ --}}
-    @if (session('success'))
-        <div
-            class="mb-6 flex items-start gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-4 shadow-sm">
-            <svg class="w-6 h-6 shrink-0 text-emerald-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                fill="currentColor">
-                <path fill-rule="evenodd"
-                    d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"
-                    clip-rule="evenodd" />
-            </svg>
-            <p class="text-sm font-medium pt-0.5">{{ session('success') }}</p>
-        </div>
-    @endif
-
-    @if (session('error'))
-        <div class="mb-6 flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 shadow-sm">
-            <svg class="w-6 h-6 shrink-0 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                fill="currentColor">
-                <path fill-rule="evenodd"
-                    d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z"
-                    clip-rule="evenodd" />
-            </svg>
-            <p class="text-sm font-medium pt-0.5">{{ session('error') }}</p>
-        </div>
-    @endif
-
     @if ($errors->any())
         <div class="mb-6 flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 shadow-sm">
             <svg class="w-6 h-6 shrink-0 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
@@ -88,8 +60,8 @@
                 $role = $user->magangAccessRight->role ?? null;
                 $divisionName = $user->magangAccessRight->division_name ?? '';
 
-                $isSuperadmin = $role === 'superadmin';
-                $isAdminBidang = $role === 'admin_bidang';
+                $isSuperadmin = $role === \App\Models\MagangAccessRight::ROLE_SUPERADMIN;
+                $isAdminBidang = $role === \App\Models\MagangAccessRight::ROLE_DIVISION_ADMIN;
                 $hasAccess = !is_null($role);
 
                 $initial = strtoupper(substr($user->name, 0, 1));
@@ -189,7 +161,7 @@
                 </div>
 
                 {{-- FORM CONTROL --}}
-                <div class="flex-1 p-4 lg:p-5">
+                <div class="flex-1 p-4 lg:p-5 relative">
                     @if ($isMe)
                         {{-- TAMPILAN JIKA INI ADALAH AKUN SUPERADMIN ITU SENDIRI --}}
                         <div class="flex items-center justify-end h-full w-full">
@@ -362,6 +334,10 @@
                         isChanged = true;
                     }
 
+                    if (currentRole === '') {
+                        isValid = false;
+                    }
+
                     // Logic 3: Is it valid? (Admin Bidang MUST select division)
                     if (currentRole === 'admin_bidang' && divInput.value === '') {
                         isValid = false;
@@ -405,6 +381,19 @@
                 });
             });
 
+        });
+
+        form.addEventListener('submit', function() {
+            // Simpan konten asli tombol untuk di-restore jika gagal
+            const originalHTML = submitBtn.innerHTML;
+            submitBtn.setAttribute('disabled', 'true');
+            submitBtn.innerHTML = spinnerSVG + ' <span>Memproses...</span>';
+
+            // Timeout sebagai fallback jika response lambat/error
+            setTimeout(() => {
+                submitBtn.removeAttribute('disabled');
+                submitBtn.innerHTML = originalHTML;
+            }, 8000);
         });
     </script>
 

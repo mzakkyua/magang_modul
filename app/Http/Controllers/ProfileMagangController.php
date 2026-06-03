@@ -279,6 +279,34 @@ class ProfileMagangController extends Controller
         return back()->with('error', 'Gagal menghapus file atau file tidak ditemukan.');
     }
 
+    // ======================================================================
+    // SERVE CV (stream file private ke browser)
+    // ======================================================================
+
+    public function serveCv()
+    {
+        /** @var UserMagang $user */
+        $user    = $this->getAuthUser();
+        $profile = ProfileMagang::where('user_id', $user->id)->firstOrFail();
+
+        if (!$profile->cv_file_path) {
+            abort(404, 'File CV tidak ditemukan.');
+        }
+
+        // Pastikan file benar-benar ada di disk
+        if (!Storage::disk(self::CV_DISK)->exists($profile->cv_file_path)) {
+            abort(404, 'File CV tidak ditemukan di storage.');
+        }
+
+        // Stream file ke browser (inline = tampil di tab, bukan download)
+        return response()->file(
+            Storage::disk(self::CV_DISK)->path($profile->cv_file_path),
+            [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="CV.pdf"',
+            ]
+        );
+    }
 
     // ======================================================================
     // PRIVATE HELPERS

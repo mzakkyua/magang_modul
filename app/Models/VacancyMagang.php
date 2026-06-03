@@ -46,13 +46,13 @@ class VacancyMagang extends Model
             \Illuminate\Support\Facades\Cache::forget('landing_division_stats');
             \Illuminate\Support\Facades\Cache::forget('landing_vacancies_magang');
             \Illuminate\Support\Facades\Cache::forget('landing_vacancies_penelitian');
+            \Illuminate\Support\Facades\Cache::forget('division_capacity_data');
         };
 
         static::created($clearCache);
         static::updated($clearCache);
         static::deleted($clearCache);
     }
-
     /**
      * =====================================================
      * CONSTANT DOMAIN VALUE

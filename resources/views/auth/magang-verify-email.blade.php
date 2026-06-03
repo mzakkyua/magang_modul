@@ -61,13 +61,26 @@
         </div>
     </div>
 
-    @push('scripts')
-        <script>
-            setTimeout(function() {
-                window.location.reload(1);
-            }, 3000);
-        </script>
+    <script>
+        // Bertanya ke server setiap 5 detik (5000 milidetik)
+        setInterval(function() {
+            fetch('{{ route('verification.check') }}', {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest', // Memberi tahu Laravel ini adalah request AJAX
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Jika server menjawab 'verified: true' (sudah diklik di HP)
+                    if (data.verified) {
+                        // Tarik user pindah ke Dashboard sekarang juga!
+                        window.location.href = '{{ route('dashboard.index') }}';
+                    }
+                })
+                .catch(error => console.log('Menunggu verifikasi...'));
+        }, 5000); // Waktu diubah jadi 5 detik agar server lebih santai
+    </script>
+</body>
 
-    </body>
-
-    </html>
+</html>

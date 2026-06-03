@@ -109,7 +109,7 @@
                                            text-gray-800 outline-none transition-all duration-200
                                            border-gray-200 bg-white
                                            hover:border-blue-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-100
-                                           @error('score_behavior') border-red-300 @enderror"
+                                           @error('score_behavior') @enderror"
                                         placeholder="0">
                                     <span
                                         class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium">pts</span>
@@ -133,7 +133,7 @@
                                            text-gray-800 outline-none transition-all duration-200
                                            border-gray-200 bg-white
                                            hover:border-blue-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-100
-                                           @error('score_discipline') border-red-300 @enderror"
+                                           @error('score_discipline') @enderror"
                                         placeholder="0">
                                     <span
                                         class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium">pts</span>
@@ -157,7 +157,7 @@
                                            text-gray-800 outline-none transition-all duration-200
                                            border-gray-200 bg-white
                                            hover:border-blue-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-100
-                                           @error('score_performance') border-red-300 @enderror"
+                                           @error('score_performance') @enderror"
                                         placeholder="0">
                                     <span
                                         class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-medium">pts</span>

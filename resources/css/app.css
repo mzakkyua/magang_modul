@@ -11,3 +11,11 @@
         "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
         "Noto Color Emoji";
 }
+
+/* Menonaktifkan icon mata bawaan browser (khususnya Microsoft Edge) pada input password */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none;
+    width: 0;
+    height: 0;
+}

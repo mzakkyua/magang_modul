@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Admin - @yield('title', 'Dashboard')</title>
-    s
+
     <link rel="icon" type="image/svg+xml" href="{{ asset('assets/images/favicon.svg') }}">
 
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/admin/delete-confirm.js'])
@@ -29,21 +29,34 @@
     @stack('styles')
 </head>
 
+
 <body class="bg-slate-100 antialiased">
 
-    <div class="flex h-screen overflow-hidden">
+    {{-- Mobile topbar — di luar flex container --}}
+    <div
+        class="md:hidden flex items-center justify-between h-14 px-4 bg-white border-b border-slate-100 shadow-sm sticky top-0 z-30">
+        <div class="flex items-center gap-2.5">
+            <div class="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center">
+                <i class="bi bi-briefcase-fill text-white text-xs"></i>
+            </div>
+            <span class="text-sm font-extrabold tracking-tight text-gray-900">SINAKERTRANS</span>
+        </div>
+        <button onclick="toggleMobileMenu()"
+            class="w-9 h-9 flex items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 transition-colors">
+            <i class="bi bi-list text-xl"></i>
+        </button>
+    </div>
 
-        {{-- ===================== SIDEBAR ===================== --}}
+    {{-- Desktop layout --}}
+    <div class="flex md:h-screen md:overflow-hidden">
+
         @include('partials.sidebar')
 
-        {{-- ===================== MAIN AREA ===================== --}}
-        <div class="flex-1 flex flex-col overflow-hidden">
+        <div class="flex-1 flex flex-col md:overflow-hidden min-w-0">
 
-            {{-- ===================== HEADER / TOPBAR ===================== --}}
+            {{-- Header desktop only --}}
             <header
-                class="h-16 flex items-center justify-between px-6 bg-white border-b border-slate-100 shadow-sm shrink-0">
-
-                {{-- Kiri: Judul halaman + breadcrumb --}}
+                class="hidden md:flex h-16 items-center justify-between px-6 bg-white border-b border-slate-100 shadow-sm shrink-0">
                 <div>
                     <h2 class="text-base font-bold text-gray-900 leading-tight">
                         @yield('title', 'Dashboard')
@@ -54,18 +67,12 @@
                         {{ now()->translatedFormat('l, d F Y') }}
                     </p>
                 </div>
-
-                {{-- Kanan: Aksi header (bisa di-push dari halaman child) --}}
                 <div class="flex items-center gap-3">
                     @stack('header_actions')
-
-                    {{-- Notifikasi (placeholder) --}}
                     <button
                         class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition text-slate-500 hover:text-slate-700">
                         <i class="bi bi-bell text-base"></i>
                     </button>
-
-                    {{-- Avatar kecil di topbar --}}
                     <div
                         class="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center border-2 border-blue-200 overflow-hidden shrink-0">
                         @if (Auth::user()->profile_photo_path)
@@ -76,46 +83,32 @@
                         @endif
                     </div>
                 </div>
-
             </header>
 
-            {{-- ===================== MAIN CONTENT ===================== --}}
-            <main class="flex-1 overflow-y-auto bg-slate-100 p-6">
+            {{-- Main content --}}
+            <main class="flex-1 md:overflow-y-auto bg-slate-100 p-4 md:p-6">
 
-                {{-- Flash message: Success --}}
                 @if (session('success'))
                     <div
                         class="mb-5 flex items-start gap-3 p-4 text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-2xl">
                         <i class="bi bi-check-circle-fill text-emerald-500 mt-0.5 shrink-0"></i>
-                        <div>
-                            <span class="font-bold block">Berhasil!</span>
-                            {{ session('success') }}
-                        </div>
+                        <div><span class="font-bold block">Berhasil!</span>{{ session('success') }}</div>
                     </div>
                 @endif
 
-                {{-- Flash message: Error --}}
                 @if (session('error'))
                     <div
                         class="mb-5 flex items-start gap-3 p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-2xl">
                         <i class="bi bi-exclamation-circle-fill text-red-400 mt-0.5 shrink-0"></i>
-                        <div>
-                            <span class="font-bold block">Terjadi Kesalahan!</span>
-                            {{ session('error') }}
-                        </div>
+                        <div><span class="font-bold block">Terjadi Kesalahan!</span>{{ session('error') }}</div>
                     </div>
                 @endif
 
-                {{-- Flash message: Info --}}
                 @if (session('info'))
                     <div
                         class="mb-5 flex items-start gap-3 p-4 text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-2xl">
                         <i class="bi bi-info-circle-fill text-blue-400 mt-0.5 shrink-0"></i>
-
-                        <div>
-                            <span class="font-bold block">Informasi</span>
-                            {{ session('info') }}
-                        </div>
+                        <div><span class="font-bold block">Informasi</span>{{ session('info') }}</div>
                     </div>
                 @endif
 
@@ -127,7 +120,6 @@
     </div>
 
     @stack('scripts')
-
 </body>
 
 </html>
