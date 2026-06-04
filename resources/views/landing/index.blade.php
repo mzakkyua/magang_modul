@@ -21,9 +21,9 @@
         {{-- BACKGROUND                                                     --}}
         {{-- ============================================================ --}}
         <div class="absolute inset-0 z-0">
-            {{-- TODO: ganti dengan asset() lokal --}}
-            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b2/New_office.jpg" alt="Kantor Disnakertrans"
-                class="w-full h-full object-cover object-center" loading="eager" />
+            {{-- Gambar Background dari Asset Lokal --}}
+            <img src="{{ asset('assets/images/hero-bg.png') }}?v={{ file_exists(public_path('assets/images/hero-bg.png')) ? filemtime(public_path('assets/images/hero-bg.png')) : '1' }}"
+                alt="Kantor Disnakertrans" class="w-full h-full object-cover object-center" loading="eager" />
             {{-- Gradient biru — konsisten dengan palet existing --}}
             <div class="absolute inset-0 bg-linear-to-r from-blue-900/95 via-blue-800/88 to-blue-700/65"></div>
         </div>
@@ -434,13 +434,13 @@
                     </div>
                 </div>
 
-                {{-- ── KANAN: FOTO + PILAR PROGRAM ── --}}
-                <div class="flex flex-col gap-6">
+
+                {{-- ── KANAN: FOTO + 4 PILAR (DIBUNGKUS SATU DIV AGAR TIDAK BOCOR KE KIRI) ── --}}
+                <div class="flex flex-col gap-8">
 
                     {{-- Foto --}}
-                    {{-- WARNING: Ganti URL src ini dengan asset() lokal --}}
                     <div class="relative overflow-hidden rounded-2xl aspect-video bg-gray-100 shadow-inner">
-                        <img src="https://kilasjatim.com/wp-content/uploads/2025/04/100-e1744800110750.webp"
+                        <img src="{{ asset('assets/images/kantor-disnaker.jpg') }}?v={{ file_exists(public_path('assets/images/kantor-disnaker.jpg')) ? filemtime(public_path('assets/images/kantor-disnaker.jpg')) : '1' }}"
                             class="w-full h-full object-cover object-center transition-transform duration-700 hover:scale-105"
                             alt="Dinas Tenaga Kerja Jawa Timur" loading="lazy" />
 
@@ -459,7 +459,7 @@
                     </div>
 
                     {{-- 4 Pilar Program (Menggunakan Inline SVG) --}}
-                    <div class="mt-2">
+                    <div>
                         <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Fokus Utama Program
                         </p>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -540,7 +540,6 @@
 
                         </div>
                     </div>
-
                 </div>
 
             </div>
@@ -550,123 +549,7 @@
 
 
     {{-- ===================== GALLERY SECTION — MODERN CLEAN REDESIGN ===================== --}}
-    {{--
-        KONSEP: Bento grid — ukuran foto bervariasi dalam satu grid ketat.
-        Hover: overlay minimalis, teks muncul dari bawah dengan efek smooth.
-        Tidak ada caption permanen, tidak ada tag strip di bawah.
-        Background: abu sangat terang agar foto "pop".
-    --}}
-    <section class="py-11 bg-gray-50" id="gallery">
-        <div class="max-w-7xl mx-auto px-6">
-
-            {{-- Header minimalis --}}
-            <div class="mb-12">
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Dokumentasi</span>
-                <div class="flex items-end justify-between mt-2">
-                    <h2 class="text-3xl md:text-4xl font-extrabold text-gray-900">Galeri Kegiatan</h2>
-                    <p class="text-sm text-gray-400 hidden md:block">Momen dari kegiatan magang Disnakertrans Jatim</p>
-                </div>
-                <div class="h-px bg-gray-200 mt-6"></div>
-            </div>
-
-            {{-- BENTO GRID: asimetris 3 kolom, 2 baris --}}
-            <div class="grid grid-cols-1 md:grid-cols-12 grid-rows-1 md:grid-rows-2 gap-3"
-                style="height: auto; min-height: 480px;">
-
-                {{-- [1] Foto besar kiri — baris 1+2, kolom 1–5 --}}
-                <div class="md:col-span-5 md:row-span-2 group relative overflow-hidden rounded-2xl bg-gray-200 min-h-64">
-                    <img src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-1.jpeg"
-                        alt="Kegiatan Magang"
-                        class="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" />
-                    {{-- Overlay hover --}}
-                    <div class="absolute inset-0 bg-gray-900/0 group-hover:bg-gray-900/40 transition-all duration-500">
-                    </div>
-                    <div
-                        class="absolute bottom-0 left-0 right-0 p-5 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-400">
-                        <p class="text-white text-sm font-bold leading-tight">Aktivitas Divisi TIK</p>
-                        <p class="text-white/70 text-xs mt-1">Disnakertrans Jawa Timur</p>
-                    </div>
-                    {{-- Nomor pojok --}}
-                    <div
-                        class="absolute top-4 left-4 w-7 h-7 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center">
-                        <span class="text-[10px] font-extrabold text-gray-800">01</span>
-                    </div>
-                </div>
-
-                {{-- [2] Foto kanan atas — baris 1, kolom 6–9 --}}
-                <div class="md:col-span-4 md:row-span-1 group relative overflow-hidden rounded-2xl bg-gray-200 min-h-48">
-                    <img src="https://www.suarasurabaya.net/wp-content/uploads/2023/01/Kegiatan-Uji-Kompetensi-Kejuruan-HMI-Berbasis-PLC-yang-dilakukan-UPT-Balai-Latihan-Kerja-Surabaya-735x493.jpg.webp"
-                        alt="Uji Kompetensi"
-                        class="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" />
-                    <div class="absolute inset-0 bg-gray-900/0 group-hover:bg-gray-900/40 transition-all duration-500">
-                    </div>
-                    <div
-                        class="absolute bottom-0 left-0 right-0 p-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-400">
-                        <p class="text-white text-xs font-bold">Uji Kompetensi Kejuruan</p>
-                        <p class="text-white/70 text-[10px] mt-0.5">Balai Latihan Kerja Surabaya</p>
-                    </div>
-                    <div
-                        class="absolute top-4 left-4 w-7 h-7 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center">
-                        <span class="text-[10px] font-extrabold text-gray-800">02</span>
-                    </div>
-                </div>
-
-                {{-- [3] Kotak kanan atas kecil — baris 1, kolom 10–12, info card --}}
-                <div
-                    class="md:col-span-3 md:row-span-1 rounded-2xl bg-blue-600 p-6 flex flex-col justify-between min-h-48">
-                    <div>
-                        <i class="bi bi-mortarboard-fill text-blue-200 text-2xl mb-3 block"></i>
-                        <p class="text-white font-extrabold text-xl leading-tight">Program<br>Magang<br>Resmi</p>
-                    </div>
-                    <div>
-                        <p class="text-blue-200 text-xs leading-relaxed">
-                            Dikelola langsung oleh Pemprov Jawa Timur dengan pembimbingan terstruktur.
-                        </p>
-                        <div class="mt-3 h-px bg-blue-500"></div>
-                        <p class="text-blue-300 text-[10px] mt-2 font-semibold uppercase tracking-wider">Sejak 2020</p>
-                    </div>
-                </div>
-
-                {{-- [4] Foto bawah tengah — baris 2, kolom 6–9 --}}
-                <div class="md:col-span-4 md:row-span-1 group relative overflow-hidden rounded-2xl bg-gray-200 min-h-48">
-                    <img src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-2.jpeg"
-                        alt="Workshop Magang"
-                        class="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" />
-                    <div class="absolute inset-0 bg-gray-900/0 group-hover:bg-gray-900/40 transition-all duration-500">
-                    </div>
-                    <div
-                        class="absolute bottom-0 left-0 right-0 p-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-400">
-                        <p class="text-white text-xs font-bold">Workshop & Pelatihan</p>
-                        <p class="text-white/70 text-[10px] mt-0.5">Divisi Pengembangan SDM</p>
-                    </div>
-                    <div
-                        class="absolute top-4 left-4 w-7 h-7 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center">
-                        <span class="text-[10px] font-extrabold text-gray-800">03</span>
-                    </div>
-                </div>
-
-                {{-- [5] Foto bawah kanan — baris 2, kolom 10–12 --}}
-                <div class="md:col-span-3 md:row-span-1 group relative overflow-hidden rounded-2xl bg-gray-200 min-h-48">
-                    <img src="https://sinaker.disnakertrans.jatimprov.go.id/assets/landing/img/galeri/tik-3.jpeg"
-                        alt="Dokumentasi Magang"
-                        class="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105" />
-                    <div class="absolute inset-0 bg-gray-900/0 group-hover:bg-gray-900/40 transition-all duration-500">
-                    </div>
-                    <div
-                        class="absolute bottom-0 left-0 right-0 p-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-400">
-                        <p class="text-white text-xs font-bold">Dokumentasi Harian</p>
-                        <p class="text-white/70 text-[10px] mt-0.5">Divisi Umum</p>
-                    </div>
-                    <div
-                        class="absolute top-4 left-4 w-7 h-7 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center">
-                        <span class="text-[10px] font-extrabold text-gray-800">04</span>
-                    </div>
-                </div>
-
-            </div>
-
-        </div>
-    </section>
+    <x-gallery-landing />
 
     {{-- ===================== SCRIPTS ===================== --}}
     @push('script')

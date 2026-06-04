@@ -137,9 +137,13 @@
                 @endphp
 
                 <a href="{{ $logoUrl }}" class="flex items-center gap-2.5 shrink-0 transition hover:opacity-80">
-                    <div class="logo-pulse-ring relative w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center"
+                    <div class="logo-pulse-ring relative w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center overflow-hidden"
                         style="box-shadow: 0 0 0 3px rgba(37,99,235,0.15), 0 4px 12px rgba(37,99,235,0.3);">
-                        <i class="bi bi-briefcase-fill text-white text-sm"></i>
+
+                        {{-- Ikon koper diganti dengan gambar logo lokal (favicon.svg) --}}
+                        <img src="{{ asset('assets/images/favicon.svg') }}?v={{ file_exists(public_path('assets/images/favicon.svg')) ? filemtime(public_path('assets/images/favicon.svg')) : '1' }}"
+                            alt="Logo Icon" class="w-5 h-5 object-contain" />
+
                     </div>
                     <span class="text-xl font-extrabold text-blue-600 tracking-tight">SINAKERTRANS</span>
                 </a>
@@ -402,6 +406,7 @@
         <footer id="footer" class="text-white pt-14 pb-8 text-sm relative overflow-hidden"
             style="background-color: #060d1f;">
 
+            {{-- Efek Cahaya Background (Tetap Dipertahankan) --}}
             <div class="absolute top-0 left-0 right-0 h-px"
                 style="background: linear-gradient(90deg, transparent, #2563eb 30%, #6366f1 60%, transparent);"></div>
 
@@ -413,13 +418,18 @@
             </div>
 
             <div class="container mx-auto px-4 relative z-10">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
 
-                    <div>
-                        <a href="/" class="flex items-center gap-2.5 mb-4 w-fit">
-                            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shrink-0"
+                {{-- Grid dirubah menjadi 12 kolom agar bisa dibagi proporsional (Tanpa Newsletter) --}}
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-10 mb-12">
+
+                    {{-- 1. Brand & Info Kontak (Porsi paling besar: 5 Kolom) --}}
+                    <div class="md:col-span-12 lg:col-span-5">
+                        <a href="/" class="flex items-center gap-2.5 mb-4 w-fit transition hover:opacity-80">
+                            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shrink-0 overflow-hidden"
                                 style="box-shadow: 0 0 16px rgba(37,99,235,0.45);">
-                                <i class="bi bi-briefcase-fill text-white text-sm"></i>
+                                {{-- Menggunakan Favicon Lokal --}}
+                                <img src="{{ asset('assets/images/favicon.svg') }}?v={{ file_exists(public_path('assets/images/favicon.svg')) ? filemtime(public_path('assets/images/favicon.svg')) : '1' }}"
+                                    alt="Logo" class="w-5 h-5 object-contain" />
                             </div>
                             <span class="text-lg font-extrabold text-white tracking-tight">SINAKERTRANS</span>
                         </a>
@@ -449,7 +459,8 @@
                         </div>
                     </div>
 
-                    <div>
+                    {{-- 2. Useful Links (Porsi: 3 Kolom) --}}
+                    <div class="md:col-span-6 lg:col-span-3 lg:ml-auto">
                         <h4 class="text-[10px] font-bold uppercase tracking-widest mb-4 pb-3"
                             style="color: #64748b; border-bottom: 1px solid rgba(255,255,255,0.05);">
                             Useful Links
@@ -460,59 +471,42 @@
                             <li><a href="#about" class="text-xs transition-colors duration-150 hover:text-blue-400"
                                     style="color: #475569;">Tentang Kami</a></li>
                             <li><a href="#lowongan" class="text-xs transition-colors duration-150 hover:text-blue-400"
-                                    style="color: #475569;">Lowongan</a></li>
+                                    style="color: #475569;">Lowongan Magang</a></li>
                             <li><a href="#gallery" class="text-xs transition-colors duration-150 hover:text-blue-400"
-                                    style="color: #475569;">Galeri</a></li>
-                            <li><a href="#" class="text-xs transition-colors duration-150 hover:text-blue-400"
-                                    style="color: #475569;">Privacy Policy</a></li>
+                                    style="color: #475569;">Galeri Kegiatan</a></li>
                         </ul>
                     </div>
 
-                    <div>
+                    {{-- 3. Layanan Sistem Magang (Porsi: 4 Kolom) --}}
+                    <div class="md:col-span-6 lg:col-span-4">
                         <h4 class="text-[10px] font-bold uppercase tracking-widest mb-4 pb-3"
                             style="color: #64748b; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                            Layanan Kami
+                            Layanan Sistem
                         </h4>
                         <ul class="space-y-2.5">
-                            <li><a href="#" class="text-xs transition-colors duration-150 hover:text-blue-400"
-                                    style="color: #475569;">Usulan Kepegawaian</a></li>
-                            <li><a href="#" class="text-xs transition-colors duration-150 hover:text-blue-400"
-                                    style="color: #475569;">Dokumen Digital</a></li>
-                            <li><a href="#" class="text-xs transition-colors duration-150 hover:text-blue-400"
-                                    style="color: #475569;">Simulasi Kredit</a></li>
-                            <li><a href="#" class="text-xs transition-colors duration-150 hover:text-blue-400"
-                                    style="color: #475569;">Arsip & Surat</a></li>
+                            <li><a href="#lowongan" class="text-xs transition-colors duration-150 hover:text-blue-400"
+                                    style="color: #475569;">Pendaftaran Peserta Baru</a></li>
+                            <li><a href="/login" class="text-xs transition-colors duration-150 hover:text-blue-400"
+                                    style="color: #475569;">Portal Login Peserta</a></li>
+                            <li><a href="/dashboard"
+                                    class="text-xs transition-colors duration-150 hover:text-blue-400"
+                                    style="color: #475569;">Jadwal & Kalender Magang</a></li>
+                            <li><a href="/dashboard/sertifikat"
+                                    class="text-xs transition-colors duration-150 hover:text-blue-400"
+                                    style="color: #475569;">Unduh Sertifikat Kelulusan</a></li>
                         </ul>
-                    </div>
-
-                    <div>
-                        <h4 class="text-[10px] font-bold uppercase tracking-widest mb-4 pb-3"
-                            style="color: #64748b; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                            Newsletter
-                        </h4>
-                        <p class="text-xs leading-relaxed mb-4" style="color: #475569;">
-                            Berlangganan untuk mendapatkan informasi terbaru seputar kepegawaian.
-                        </p>
-                        <form action="#" class="flex rounded-xl overflow-hidden transition-all duration-200"
-                            style="border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.03);">
-                            <input type="email" placeholder="Email Anda"
-                                class="flex-1 px-3 py-2.5 bg-transparent border-none outline-none text-white text-xs placeholder-gray-600 font-medium">
-                            <button type="submit"
-                                class="bg-blue-600 px-4 py-2.5 text-white text-xs font-bold hover:bg-blue-500 transition-colors duration-150 shrink-0">
-                                Sub
-                            </button>
-                        </form>
                     </div>
 
                 </div>
 
+                {{-- Copyright Bawah --}}
                 <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3"
                     style="border-top: 1px solid rgba(255,255,255,0.04);">
-                    <p class="text-xs" style="color: #334155;">
+                    <p class="text-xs text-center sm:text-left" style="color: #334155;">
                         &copy; {{ date('Y') }} <strong style="color: #475569;">SINAKERTRANS</strong> — Dinas
-                        Tenaga Kerja dan Transmigrasi Jawa Timur
+                        Tenaga Kerja dan Transmigrasi Prov. Jawa Timur
                     </p>
-                    <span class="text-[10px] px-3 py-1 rounded-md font-medium"
+                    <span class="text-[10px] px-3 py-1 rounded-md font-medium shrink-0"
                         style="color: #334155; border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02);">
                         Sistem Manajemen Magang
                     </span>

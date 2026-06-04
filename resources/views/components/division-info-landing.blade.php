@@ -13,59 +13,25 @@
 
     /**
      * ========================================================================
-     * 2. CUSTOM OVERRIDES (KAMUS GAMBAR & IKON SPESIFIK)
+     * 2. KAMUS IKON SPESIFIK (HANYA UNTUK IKON SVG)
      * ========================================================================
-     * * PANDUAN UNTUK DEVELOPER SELANJUTNYA:
-     * Jika instansi menambahkan divisi baru dan ingin menggunakan foto/ikon spesifik,
-     * tambahkan ke dalam array di bawah ini.
-     * * ATURAN PENULISAN KEY:
-     * - Key array HARUS menggunakan HURUF KECIL SEMUA (lowercase).
-     * - Contoh: Jika di database namanya "Hubungan Industrial", tulis key-nya: 'hubungan industrial'.
-     * * CARA MENGGANTI IKON (MENGGUNAKAN HEROICONS):
-     * 1. Buka website: https://heroicons.com/
-     * 2. Cari ikon yang sesuai, pastikan memilih style "Outline" (garis tepi).
-     * 3. Arahkan kursor ke ikon, lalu klik "Copy SVG".
-     * 4. Paste SVG tersebut di text editor sementara (seperti Notepad).
-     * Bentuknya akan seperti ini:
-     * <svg ...><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
-     * 5. Ambil HANYA teks yang berada di dalam atribut d="..."
-     * 6. Paste teks tersebut ke dalam value 'icon' di bawah ini.
+     * Foto background sekarang OTOMATIS membaca dari folder:
+     * public/assets/images/divisions/
      */
-    $customOverrides = [
-        'hubungan industrial' => [
-            'image' => 'https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=800&auto=format&fit=crop',
-            // Ikon Timbangan / Scale (relevan untuk mediasi & hukum)
-            'icon' =>
-                'M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3',
-        ],
-        'pelatihan dan produktivitas' => [
-            'image' => 'https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=800&auto=format&fit=crop',
-            // Ikon Academic / Topi Toga (relevan untuk pelatihan)
-            'icon' =>
-                'M12 14l9-5-9-5-9 5 9 5z M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z M12 14v7',
-        ],
-        'pengembangan sdm dan tik' => [
-            // Ikon Desktop / Komputer (relevan untuk IT)
-            'image' => 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=800&auto=format&fit=crop',
-            'icon' =>
-                'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
-        ],
+    $customIcons = [
+        'hubungan industrial' =>
+            'M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3',
+        'pelatihan dan produktivitas' =>
+            'M12 14l9-5-9-5-9 5 9 5z M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z M12 14v7',
+        'pengembangan sdm dan tik' =>
+            'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
     ];
 
     /**
      * ========================================================================
-     * 3. FALLBACK ASSETS
+     * 3. FALLBACK ICONS (JIKA DIVISI TIDAK ADA DI KAMUS ATAS)
      * ========================================================================
-     * Jika divisi tidak didaftarkan di $customOverrides atas, sistem akan
-     * otomatis mengambil gambar dan ikon secara acak namun konsisten (berdasarkan nama).
      */
-    $fallbackImages = [
-        'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=800&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1573164713988-8665fc963095?q=80&w=800&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=800&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=800&auto=format&fit=crop',
-    ];
-
     $fallbackIcons = [
         'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', // Briefcase
         'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', // Building
@@ -74,20 +40,40 @@
     ];
 
     // ========================================================================
-    // 4. PROSES PEMBUATAN KONTEN DINAMIS
+    // 4. PROSES PEMBUATAN KONTEN & PENCARIAN FOTO OTOMATIS
     // ========================================================================
     $finalDivisions = [];
     foreach ($activeDivisions as $name) {
         $nameLower = strtolower(trim($name));
+        $slug = Str::slug($name); // Mengubah "Hubungan Industrial" jadi "hubungan-industrial"
         $seed = abs(crc32($name));
 
-        if (array_key_exists($nameLower, $customOverrides)) {
-            $imageUrl = $customOverrides[$nameLower]['image'] ?? $fallbackImages[$seed % count($fallbackImages)];
-            $iconSvg = $customOverrides[$nameLower]['icon'] ?? $fallbackIcons[$seed % count($fallbackIcons)];
-        } else {
-            $imageUrl = $fallbackImages[$seed % count($fallbackImages)];
-            $iconSvg = $fallbackIcons[$seed % count($fallbackIcons)];
+        // A. CEK FOTO LOKAL (Apakah ada file yg namanya sesuai dengan slug divisi?)
+        $imageAssetPath = null;
+        $extensions = ['jpg', 'jpeg', 'png'];
+
+        foreach ($extensions as $ext) {
+            $checkPath = "assets/images/divisions/{$slug}.{$ext}";
+            if (file_exists(public_path($checkPath))) {
+                $imageAssetPath = $checkPath;
+                break; // Ketemu! Hentikan pencarian.
+            }
         }
+
+        // B. JIKA FOTO SPESIFIK TIDAK ADA, GUNAKAN FALLBACK (default-1 s/d default-4)
+        if (!$imageAssetPath) {
+            $fallbackNum = ($seed % 4) + 1; // Menghasilkan angka 1 sampai 4
+            $imageAssetPath = "assets/images/divisions/default-{$fallbackNum}.jpg";
+        }
+
+        // C. BUAT URL DENGAN CACHE BUSTER
+        $imageUrl =
+            asset($imageAssetPath) .
+            '?v=' .
+            (file_exists(public_path($imageAssetPath)) ? filemtime(public_path($imageAssetPath)) : '1');
+
+        // D. TENTUKAN IKON
+        $iconSvg = $customIcons[$nameLower] ?? $fallbackIcons[$seed % count($fallbackIcons)];
 
         $finalDivisions[] = [
             'name' => $name,
@@ -126,10 +112,8 @@
             </div>
 
             {{-- Cards Grid --}}
-            {{-- Cards Container: Flexbox Centering --}}
             <div class="flex flex-wrap justify-center gap-6">
                 @foreach ($finalDivisions as $index => $div)
-                    {{-- Rumus calc() memastikan lebar card sama persis dengan grid-cols-3, tapi bisa rata tengah --}}
                     <div
                         class="group flex flex-col w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] max-w-md bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300 text-left">
 
@@ -144,7 +128,7 @@
                             {{-- Icon & Category Badge --}}
                             <div class="absolute bottom-4 left-4 right-4 flex items-end justify-between">
                                 <div
-                                    class="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-white border border-white/30">
+                                    class="w-10 h-10 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-white border border-white/30 shadow-sm">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="{{ $div['icon'] }}">

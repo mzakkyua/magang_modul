@@ -307,7 +307,9 @@
 <script>
     (function() {
         /* ── State ── */
-        const TODAY = new Date();
+        const RAW_TODAY = new Date();
+        const TODAY = new Date(RAW_TODAY.getFullYear(), RAW_TODAY.getMonth(), RAW_TODAY.getDate());
+
         const ID_DAYS = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
         const ID_MONTHS_FULL = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus',
             'September', 'Oktober', 'November', 'Desember'
@@ -322,12 +324,15 @@
         let internshipEnd = null;
         let globalEvents = [];
 
-        /* ── Today badge ── */
+        function parseSafeDate(dateString) {
+            if (!dateString) return null;
+            const parts = dateString.split('-');
+            return new Date(parts[0], parts[1] - 1, parts[2]);
+        }
+
         document.getElementById('cal-today-badge').textContent =
-            ID_DAYS[TODAY.getDay()] + ', ' +
-            TODAY.getDate() + ' ' +
-            ID_MONTHS_FULL[TODAY.getMonth()] + ' ' +
-            TODAY.getFullYear();
+            ID_DAYS[TODAY.getDay()] + ', ' + TODAY.getDate() + ' ' + ID_MONTHS_FULL[TODAY.getMonth()] + ' ' + TODAY
+            .getFullYear();
 
         /* ── Fetch events dari backend ── */
         const csrfMeta = document.querySelector('meta[name="csrf-token"]');
@@ -342,44 +347,50 @@
             .then(events => {
                 events.forEach(e => {
                     if (e.extendedProps && e.extendedProps.type === 'internship') {
-                        internshipStart = new Date(e.start);
-                        // Backend sudah +1 hari pada end (FC eksklusif), kurangi kembali
-                        const endRaw = new Date(e.end);
-                        endRaw.setDate(endRaw.getDate() - 1);
-                        internshipEnd = endRaw;
+                        internshipStart = parseSafeDate(e.start);
+                        internshipEnd = parseSafeDate(e.end);
+                        if (internshipEnd) internshipEnd.setDate(internshipEnd.getDate() - 1);
                     } else {
+                        const startDt = parseSafeDate(e.start);
+                        let endDt = parseSafeDate(e.end);
+                        if (endDt) {
+                            endDt.setDate(endDt.getDate() - 1);
+                        } else {
+                            endDt = new Date(startDt);
+                        }
+
                         globalEvents.push({
-                            date: new Date(e.start),
+                            startDate: startDt,
+                            endDate: endDt,
                             color: e.color || '#3b82f6',
-                            title: e.title.replace(/^📌\s*/, '')
+                            title: e.title.replace(/^📌\s*/, ''),
+                            description: e.extendedProps ? e.extendedProps.description : null
                         });
                     }
                 });
+
                 renderGrid();
                 renderEventList();
             })
-            .catch(() => renderGrid());
+            .catch(err => {
+                console.error("Gagal memuat kalender:", err);
+                renderGrid();
+            });
 
         /* ── Render grid ── */
         function renderGrid() {
             const grid = document.getElementById('cal-grid');
-
-            // Hapus semua cell lama, sisakan 7 header
             while (grid.children.length > 7) grid.removeChild(grid.lastChild);
-
-            document.getElementById('cal-month-label').textContent =
-                ID_MONTHS_FULL[curMonth] + ' ' + curYear;
+            document.getElementById('cal-month-label').textContent = ID_MONTHS_FULL[curMonth] + ' ' + curYear;
 
             const firstDay = new Date(curYear, curMonth, 1).getDay();
             const daysInMonth = new Date(curYear, curMonth + 1, 0).getDate();
             const prevDays = new Date(curYear, curMonth, 0).getDate();
 
-            // Filler bulan lalu
             for (let i = firstDay - 1; i >= 0; i--) {
                 grid.appendChild(buildCell(prevDays - i, true, false, 'none', []));
             }
 
-            // Hari bulan ini
             for (let d = 1; d <= daysInMonth; d++) {
                 const date = new Date(curYear, curMonth, d);
                 const isToday = date.toDateString() === TODAY.toDateString();
@@ -391,11 +402,10 @@
                     else barType = 'bar-mid';
                 }
 
-                const evts = globalEvents.filter(e => e.date.toDateString() === date.toDateString());
+                const evts = globalEvents.filter(e => date >= e.startDate && date <= e.endDate);
                 grid.appendChild(buildCell(d, false, isToday, barType, evts));
             }
 
-            // Filler bulan berikutnya
             const total = firstDay + daysInMonth;
             const remaining = total % 7 === 0 ? 0 : 7 - (total % 7);
             for (let i = 1; i <= remaining; i++) {
@@ -407,15 +417,11 @@
             const cell = document.createElement('div');
             cell.className = 'cal-cell';
 
-            // Angka hari
             const num = document.createElement('div');
-            num.className = 'cal-day-num' +
-                (isToday ? ' is-today' : '') +
-                (isOther ? ' is-other' : '');
+            num.className = 'cal-day-num' + (isToday ? ' is-today' : '') + (isOther ? ' is-other' : '');
             num.textContent = day;
             cell.appendChild(num);
 
-            // Dots event resmi
             if (events.length) {
                 const dots = document.createElement('div');
                 dots.className = 'cal-dots';
@@ -428,13 +434,11 @@
                 cell.appendChild(dots);
             }
 
-            // Bar magang
             if (barType !== 'none') {
                 const bar = document.createElement('div');
                 bar.className = 'internship-bar ' + barType;
                 cell.appendChild(bar);
             }
-
             return cell;
         }
 
@@ -443,53 +447,133 @@
             const list = document.getElementById('cal-event-list');
             list.innerHTML = '';
 
-            // Magang aktif
+            // Render Magang Aktif
             if (internshipStart && internshipEnd) {
-                list.appendChild(buildEventItem('#10b981', 'Masa Magang Aktif', null, 'cei-badge badge-active',
-                    'Aktif'));
+                let badgeText = 'Aktif';
+                let badgeClass = 'cei-badge badge-active';
+
+                if (TODAY < internshipStart) {
+                    badgeText = 'Mendatang';
+                    badgeClass = 'cei-badge badge-upcoming';
+                } else if (TODAY > internshipEnd) {
+                    badgeText = 'Berakhir';
+                    badgeClass = 'cei-badge bg-gray-200 text-gray-600';
+                }
+
+                const item = buildEventItem('#10b981', 'Masa Magang', null, badgeClass, badgeText);
+                list.appendChild(item);
             }
 
-            // Event resmi mendatang (maks 3)
             const upcoming = globalEvents
-                .filter(e => e.date >= TODAY)
-                .sort((a, b) => a.date - b.date)
+                .filter(e => e.endDate >= TODAY)
+                .sort((a, b) => a.startDate - b.startDate)
                 .slice(0, 3);
 
             upcoming.forEach(ev => {
-                const dateStr = ev.date.getDate() + ' ' + ID_MONTHS_SHORT[ev.date.getMonth()];
+                let dateStr = ev.startDate.getDate() + ' ' + ID_MONTHS_SHORT[ev.startDate.getMonth()];
+                if (ev.startDate.toDateString() !== ev.endDate.toDateString()) {
+                    dateStr += ' - ' + ev.endDate.getDate() + ' ' + ID_MONTHS_SHORT[ev.endDate.getMonth()];
+                }
+
                 list.appendChild(buildEventItem(ev.color, ev.title, dateStr, 'cei-badge badge-upcoming',
-                    null));
+                    null, ev.description));
             });
+
+            if (upcoming.length === 0 && (!internshipStart || !internshipEnd)) {
+                list.innerHTML =
+                    '<p style="text-align:center; font-size:10px; color:#94a3b8; margin-top:10px;">Tidak ada agenda terdekat</p>';
+            }
         }
 
-        function buildEventItem(color, title, dateStr, badgeClass, badgeText) {
+        // 🟢 FUNGSI PEMBUAT KOTAK (Pop Up & Posisi Keterangan Kanan Bawah)
+        function buildEventItem(color, title, dateStr, badgeClass, badgeText, description = null) {
             const item = document.createElement('div');
             item.className = 'cal-event-item';
+
+            item.style.cursor = 'pointer';
+            item.style.transition = 'transform 0.15s ease, box-shadow 0.15s ease';
+            item.onmouseover = () => {
+                item.style.transform = 'scale(1.02)';
+                item.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05)';
+            };
+            item.onmouseout = () => {
+                item.style.transform = 'scale(1)';
+                item.style.boxShadow = 'none';
+            };
+
+            item.onclick = () => {
+                const detailPesan = description ? description : 'Tidak ada keterangan tambahan.';
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: title,
+                        html: `<div style="text-align:left; font-size:14px; margin-top:10px;"><b>Tanggal:</b> ${dateStr || '-'}<br><br><b>Keterangan:</b><br>${detailPesan}</div>`,
+                        icon: 'info',
+                        confirmButtonColor: '#3b82f6',
+                        confirmButtonText: 'Tutup'
+                    });
+                } else {
+                    alert(`📌 ${title}\n📅 ${dateStr || '-'}\n\n📝 Keterangan:\n${detailPesan}`);
+                }
+            };
 
             const dot = document.createElement('span');
             dot.className = 'cei-dot';
             dot.style.background = color;
 
-            const ttl = document.createElement('span');
+            const textContainer = document.createElement('div');
+            textContainer.style.flex = '1';
+            textContainer.style.overflow = 'hidden';
+
+            const ttl = document.createElement('div');
             ttl.className = 'cei-title';
             ttl.textContent = title;
+            textContainer.appendChild(ttl);
 
             item.appendChild(dot);
-            item.appendChild(ttl);
+            item.appendChild(textContainer);
 
-            if (dateStr) {
-                const dt = document.createElement('span');
-                dt.className = 'cei-date';
-                dt.textContent = dateStr;
-                item.appendChild(dt);
+            // Wadah Kanan (Keterangan & Badge)
+            const rightInfo = document.createElement('div');
+            rightInfo.style.display = 'flex';
+            rightInfo.style.flexDirection = 'column';
+            rightInfo.style.alignItems = 'flex-end';
+            rightInfo.style.gap = '3px';
+
+            if (dateStr || badgeText) {
+                const topRow = document.createElement('div');
+                topRow.style.display = 'flex';
+                topRow.style.gap = '5px';
+                topRow.style.alignItems = 'center';
+
+                if (dateStr) {
+                    const dt = document.createElement('span');
+                    dt.className = 'cei-date';
+                    dt.textContent = dateStr;
+                    topRow.appendChild(dt);
+                }
+
+                if (badgeText) {
+                    const bdg = document.createElement('span');
+                    bdg.className = badgeClass;
+                    bdg.textContent = badgeText;
+                    topRow.appendChild(bdg);
+                }
+                rightInfo.appendChild(topRow);
             }
 
-            if (badgeText) {
-                const bdg = document.createElement('span');
-                bdg.className = badgeClass;
-                bdg.textContent = badgeText;
-                item.appendChild(bdg);
+            if (description) {
+                const desc = document.createElement('div');
+                desc.style.fontSize = '9px';
+                desc.style.color = '#94a3b8';
+                desc.style.whiteSpace = 'nowrap';
+                desc.style.maxWidth = '120px';
+                desc.style.overflow = 'hidden';
+                desc.style.textOverflow = 'ellipsis';
+                desc.textContent = description;
+                rightInfo.appendChild(desc);
             }
+
+            item.appendChild(rightInfo);
 
             return item;
         }
