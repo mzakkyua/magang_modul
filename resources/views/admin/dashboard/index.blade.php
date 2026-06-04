@@ -121,126 +121,129 @@
     {{-- ===================== TABEL + INFO SISTEM ===================== --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        {{-- ===================== PENDAFTARAN TERBARU (2/3) ===================== --}}
-        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        {{-- ===================== PENDAFTARAN TERBARU (COMPACT) ===================== --}}
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
 
             {{-- Header --}}
-            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50/50">
                 <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center">
-                        <i class="bi bi-clock-history text-blue-600 text-xs"></i>
-                    </div>
-                    <h3 class="font-bold text-gray-800 text-sm">Pendaftaran Terbaru</h3>
+                    <i class="bi bi-clock-history text-blue-600 text-sm"></i>
+                    <h3 class="font-extrabold text-gray-800 text-xs uppercase tracking-wide">Pendaftaran Terbaru</h3>
                 </div>
                 <a href="{{ route('admin.applications.index') }}"
-                    class="text-xs text-blue-600 hover:text-blue-800 font-semibold hover:underline transition flex items-center gap-1">
-                    Lihat Semua <i class="bi bi-arrow-right text-[10px]"></i>
+                    class="text-[10px] text-blue-600 hover:text-blue-800 font-extrabold hover:bg-blue-50 px-2 py-1 rounded-md transition-colors flex items-center gap-1">
+                    Lihat Semua <i class="bi bi-arrow-right"></i>
                 </a>
             </div>
 
             {{-- Table --}}
             <div class="overflow-x-auto">
-                <table class="min-w-full">
-                    <thead>
-                        <tr class="bg-gray-50 border-b border-gray-100">
-                            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th
+                                class="px-4 py-2 text-left text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
                                 Nama</th>
-                            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                            <th
+                                class="px-4 py-2 text-left text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
                                 Instansi</th>
-                            <th class="px-6 py-3 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                            <th
+                                class="px-4 py-2 text-left text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
                                 Tanggal</th>
-                            <th class="px-6 py-3 text-center text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                            <th
+                                class="px-4 py-2 text-center text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
                                 Status</th>
-                            <th class="px-6 py-3 text-right text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                            <th
+                                class="px-4 py-2 text-center text-[10px] font-extrabold text-gray-500 uppercase tracking-widest">
                                 Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-50">
+                    <tbody class="divide-y divide-gray-100">
 
                         @forelse ($pendaftaranTerbaru as $item)
-                            <tr class="hover:bg-gray-50/80 transition-colors">
+                            <tr class="hover:bg-blue-50/30 transition-colors">
 
                                 {{-- Nama --}}
-                                <td class="px-6 py-3.5">
-                                    <div class="flex items-center gap-2.5">
+                                <td class="px-4 py-2">
+                                    <div class="flex items-center gap-2">
                                         <div
-                                            class="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
-                                            <i class="bi bi-person-fill text-blue-400 text-sm"></i>
+                                            class="w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0">
+                                            <i class="bi bi-person-fill text-blue-500 text-xs"></i>
                                         </div>
-                                        <span class="text-sm font-bold text-gray-800">
+                                        <span class="text-xs font-extrabold text-gray-900 truncate max-w-[150px]">
                                             {{ $item->leader?->username ?? '-' }}
                                         </span>
                                     </div>
                                 </td>
 
                                 {{-- Instansi --}}
-                                <td class="px-6 py-3.5 text-sm text-gray-500">
+                                <td class="px-4 py-2 text-[10px] font-bold text-gray-600 truncate max-w-[150px]">
                                     {{ $item->leader?->profile?->institution_name ?? '-' }}
                                 </td>
 
                                 {{-- Tanggal --}}
-                                <td class="px-6 py-3.5 text-sm text-gray-500">
+                                <td class="px-4 py-2 text-[10px] font-bold text-gray-600">
                                     {{ $item->created_at?->format('d M Y') ?? '-' }}
                                 </td>
 
                                 {{-- Status --}}
-                                <td class="px-6 py-3.5 text-center">
+                                <td class="px-4 py-2 text-center">
                                     @switch($item->status)
                                         @case('pending')
                                             <span
-                                                class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-full">
-                                                <i class="bi bi-hourglass-split text-[9px]"></i> Pending
+                                                class="inline-flex items-center gap-1 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200 rounded-md">
+                                                <i class="bi bi-hourglass-split"></i> Pending
                                             </span>
                                         @break
 
                                         @case('accepted')
                                         @case('active')
                                             <span
-                                                class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full">
-                                                <i class="bi bi-check-circle-fill text-[9px]"></i> Aktif
+                                                class="inline-flex items-center gap-1 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md">
+                                                <i class="bi bi-check-circle-fill"></i> Aktif
                                             </span>
                                         @break
 
                                         @case('completed')
                                             <span
-                                                class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200 rounded-full">
-                                                <i class="bi bi-patch-check-fill text-[9px]"></i> Selesai
+                                                class="inline-flex items-center gap-1 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-blue-700 bg-blue-50 border border-blue-200 rounded-md">
+                                                <i class="bi bi-patch-check-fill"></i> Selesai
                                             </span>
                                         @break
 
                                         @case('rejected')
                                             <span
-                                                class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-red-600 bg-red-50 border border-red-200 rounded-full">
-                                                <i class="bi bi-x-circle-fill text-[9px]"></i> Ditolak
+                                                class="inline-flex items-center gap-1 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-red-600 bg-red-50 border border-red-200 rounded-md">
+                                                <i class="bi bi-x-circle-fill"></i> Ditolak
                                             </span>
                                         @break
 
                                         @default
                                             <span
-                                                class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-gray-500 bg-gray-100 border border-gray-200 rounded-full">
-                                                <i class="bi bi-question-circle text-[9px]"></i> Tidak Diketahui
+                                                class="inline-flex items-center gap-1 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-gray-500 bg-gray-100 border border-gray-200 rounded-md">
+                                                <i class="bi bi-question-circle"></i> Unknow
                                             </span>
                                     @endswitch
                                 </td>
 
                                 {{-- Aksi --}}
-                                <td class="px-6 py-3.5 text-right">
+                                <td class="px-4 py-2 text-center">
                                     <a href="{{ route('admin.applications.show', $item) }}"
-                                        class="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 border border-blue-200 bg-blue-50 px-2.5 py-1.5 rounded-lg hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-150">
-                                        Detail <i class="bi bi-arrow-right text-[10px]"></i>
+                                        class="inline-flex items-center gap-1 text-[10px] font-extrabold text-blue-700 border border-blue-200 bg-white px-2 py-1 rounded-md hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shadow-sm">
+                                        Detail <i class="bi bi-arrow-right"></i>
                                     </a>
                                 </td>
 
                             </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-16 text-center">
+                                    <td colspan="5" class="px-4 py-12 text-center">
                                         <div
-                                            class="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                                            <i class="bi bi-inbox text-2xl text-gray-300"></i>
+                                            class="w-10 h-10 bg-gray-50 border border-gray-200 rounded-xl flex items-center justify-center mx-auto mb-2">
+                                            <i class="bi bi-inbox-fill text-lg text-gray-300"></i>
                                         </div>
-                                        <p class="text-gray-500 font-semibold text-sm">Belum ada pendaftaran</p>
-                                        <p class="text-gray-400 text-xs mt-1">Data terbaru akan muncul di sini.</p>
+                                        <p class="text-gray-800 font-extrabold text-xs">Belum ada pendaftaran</p>
+                                        <p class="text-gray-400 text-[10px] mt-0.5">Data terbaru akan muncul di sini.</p>
                                     </td>
                                 </tr>
                             @endforelse
@@ -251,58 +254,61 @@
 
             </div>
 
-            {{-- ===================== PANEL KANAN: INFO + QUICK ACCESS ===================== --}}
-            <div class="space-y-4">
+            {{-- ===================== PANEL KANAN: INFO + QUICK ACCESS (COMPACT) ===================== --}}
+            <div class="space-y-3">
 
                 {{-- Info Sistem --}}
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div class="flex items-center gap-2 px-5 py-4 border-b border-gray-100">
-                        <div class="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center">
-                            <i class="bi bi-info-circle text-blue-600 text-xs"></i>
-                        </div>
-                        <h3 class="font-bold text-gray-800 text-sm">Informasi Sistem</h3>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="flex items-center gap-2 px-4 py-3 border-b border-gray-200 bg-gray-50/50">
+                        <i class="bi bi-info-circle-fill text-blue-600 text-xs"></i>
+                        <h3 class="font-extrabold text-gray-800 text-xs uppercase tracking-wide">Info Sistem</h3>
                     </div>
 
-                    <div class="p-5">
+                    <div class="p-4">
                         @if ($hakAkses->role === 'superadmin')
-                            <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-start gap-3">
-                                <i class="bi bi-shield-fill-check text-blue-500 mt-0.5 shrink-0"></i>
+                            <div class="bg-blue-50/80 border border-blue-100 rounded-lg p-3 flex items-start gap-2.5">
+                                <i class="bi bi-shield-fill-check text-blue-500 mt-0.5"></i>
                                 <div>
-                                    <p class="text-sm font-bold text-blue-800 mb-0.5">Super Admin</p>
-                                    <p class="text-xs text-blue-600 leading-relaxed">Akses penuh ke seluruh data magang dari
-                                        semua divisi.</p>
+                                    <p
+                                        class="text-[11px] font-black text-blue-800 leading-tight uppercase tracking-wider mb-0.5">
+                                        Super Admin</p>
+                                    <p class="text-[10px] font-medium text-blue-600 leading-snug">Akses penuh ke seluruh data
+                                        magang.</p>
                                 </div>
                             </div>
                         @else
-                            <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex items-start gap-3">
-                                <i class="bi bi-building text-indigo-500 mt-0.5 shrink-0"></i>
+                            <div class="bg-indigo-50/80 border border-indigo-100 rounded-lg p-3 flex items-start gap-2.5">
+                                <i class="bi bi-building-fill text-indigo-500 mt-0.5"></i>
                                 <div>
-                                    <p class="text-sm font-bold text-indigo-800 mb-0.5">Admin {{ $hakAkses->division_name }}
-                                    </p>
-                                    <p class="text-xs text-indigo-600 leading-relaxed">Data difilter otomatis sesuai divisi
+                                    <p
+                                        class="text-[11px] font-black text-indigo-800 leading-tight uppercase tracking-wider mb-0.5">
+                                        Admin {{ $hakAkses->division_name }}</p>
+                                    <p class="text-[10px] font-medium text-indigo-600 leading-snug">Data difilter sesuai divisi
                                         Anda.</p>
                                 </div>
                             </div>
                         @endif
 
                         {{-- Breakdown peserta --}}
-                        <div class="mt-4 space-y-2.5">
-                            <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Breakdown Peserta</p>
+                        <div class="mt-4 space-y-2">
+                            <p
+                                class="text-[9px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-1 mb-2">
+                                Breakdown Peserta</p>
 
                             <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2 text-sm text-gray-600">
-                                    <i class="bi bi-mortarboard text-blue-400 text-xs"></i>
-                                    Mahasiswa
+                                <div
+                                    class="flex items-center gap-2 text-[10px] font-bold text-gray-600 uppercase tracking-wider">
+                                    <i class="bi bi-mortarboard-fill text-blue-500"></i> Mahasiswa
                                 </div>
-                                <span class="font-bold text-gray-800 text-sm">{{ $totalMahasiswa }}</span>
+                                <span class="font-black text-gray-900 text-xs">{{ $totalMahasiswa }}</span>
                             </div>
 
                             <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-2 text-sm text-gray-600">
-                                    <i class="bi bi-backpack text-purple-400 text-xs"></i>
-                                    Siswa SMK
+                                <div
+                                    class="flex items-center gap-2 text-[10px] font-bold text-gray-600 uppercase tracking-wider">
+                                    <i class="bi bi-backpack-fill text-purple-500"></i> Siswa SMK
                                 </div>
-                                <span class="font-bold text-gray-800 text-sm">{{ $totalSiswa }}</span>
+                                <span class="font-black text-gray-900 text-xs">{{ $totalSiswa }}</span>
                             </div>
 
                             {{-- Progress bar total --}}
@@ -310,15 +316,15 @@
                                 $total = $totalMahasiswa + $totalSiswa;
                                 $pctMahasiswa = $total > 0 ? ($totalMahasiswa / $total) * 100 : 0;
                             @endphp
-                            <div class="mt-1">
-                                <div class="w-full h-2 bg-gray-100 rounded-full overflow-hidden flex">
+                            <div class="mt-2">
+                                <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden flex">
                                     <div class="h-full bg-blue-500 rounded-l-full" style="width: {{ $pctMahasiswa }}%"></div>
-                                    <div class="h-full bg-purple-400 rounded-r-full"
+                                    <div class="h-full bg-purple-500 rounded-r-full"
                                         style="width: {{ 100 - $pctMahasiswa }}%"></div>
                                 </div>
-                                <div class="flex justify-between text-[10px] text-gray-400 mt-1">
-                                    <span>Mahasiswa {{ round($pctMahasiswa) }}%</span>
-                                    <span>Siswa {{ round(100 - $pctMahasiswa) }}%</span>
+                                <div class="flex justify-between text-[9px] font-extrabold text-gray-400 mt-1 uppercase">
+                                    <span>{{ round($pctMahasiswa) }}%</span>
+                                    <span>{{ round(100 - $pctMahasiswa) }}%</span>
                                 </div>
                             </div>
                         </div>
@@ -326,50 +332,61 @@
                 </div>
 
                 {{-- Quick Access --}}
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                    <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">Akses Cepat</p>
-                    <div class="space-y-2">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                    <p
+                        class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 border-b border-gray-100 pb-1">
+                        Akses Cepat</p>
+
+                    <div class="space-y-1">
                         <a href="{{ route('admin.vacancies.index') }}"
-                            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition group">
-                            <i class="bi bi-briefcase text-gray-400 group-hover:text-blue-500 transition text-base"></i>
+                            class="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[11px] font-extrabold text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition group">
+                            <div
+                                class="w-6 h-6 rounded border border-gray-200 bg-gray-50 flex items-center justify-center group-hover:border-blue-200 group-hover:bg-blue-100 transition">
+                                <i class="bi bi-briefcase-fill text-gray-400 group-hover:text-blue-500"></i>
+                            </div>
                             Kelola Lowongan
-                            <i
-                                class="bi bi-arrow-right text-xs ml-auto text-gray-300 group-hover:text-blue-400 transition"></i>
+                            <i class="bi bi-chevron-right text-[10px] ml-auto text-gray-300 group-hover:text-blue-500"></i>
                         </a>
+
                         <a href="{{ route('admin.applications.index') }}"
-                            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition group">
-                            <i
-                                class="bi bi-file-earmark-check text-gray-400 group-hover:text-blue-500 transition text-base"></i>
+                            class="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[11px] font-extrabold text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition group">
+                            <div
+                                class="w-6 h-6 rounded border border-gray-200 bg-gray-50 flex items-center justify-center group-hover:border-blue-200 group-hover:bg-blue-100 transition">
+                                <i class="bi bi-ui-radios-grid text-gray-400 group-hover:text-blue-500"></i>
+                            </div>
                             Verifikasi Lamaran
                             @if ($perluVerifikasi > 0)
                                 <span
-                                    class="ml-auto text-[10px] font-bold bg-amber-100 text-amber-600 px-2 py-0.5 rounded-full">
-                                    {{ $perluVerifikasi }}
+                                    class="ml-auto text-[9px] font-black bg-amber-100 text-amber-600 border border-amber-200 px-1.5 py-0.5 rounded-md">
+                                    {{ $perluVerifikasi }} NEW
                                 </span>
                             @else
-                                <i
-                                    class="bi bi-arrow-right text-xs ml-auto text-gray-300 group-hover:text-blue-400 transition"></i>
+                                <i class="bi bi-chevron-right text-[10px] ml-auto text-gray-300 group-hover:text-blue-500"></i>
                             @endif
                         </a>
+
                         <a href="{{ route('admin.assessments.index') }}"
-                            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition group">
-                            <i class="bi bi-pencil-square text-gray-400 group-hover:text-blue-500 transition text-base"></i>
+                            class="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[11px] font-extrabold text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition group">
+                            <div
+                                class="w-6 h-6 rounded border border-gray-200 bg-gray-50 flex items-center justify-center group-hover:border-blue-200 group-hover:bg-blue-100 transition">
+                                <i class="bi bi-pencil-square text-gray-400 group-hover:text-blue-500"></i>
+                            </div>
                             Input Penilaian
-                            <i
-                                class="bi bi-arrow-right text-xs ml-auto text-gray-300 group-hover:text-blue-400 transition"></i>
+                            <i class="bi bi-chevron-right text-[10px] ml-auto text-gray-300 group-hover:text-blue-500"></i>
                         </a>
+
                         <a href="{{ route('admin.calendar.index') }}"
-                            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition group">
-                            <i class="bi bi-calendar-check text-gray-400 group-hover:text-blue-500 transition text-base"></i>
+                            class="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[11px] font-extrabold text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition group">
+                            <div
+                                class="w-6 h-6 rounded border border-gray-200 bg-gray-50 flex items-center justify-center group-hover:border-blue-200 group-hover:bg-blue-100 transition">
+                                <i class="bi bi-calendar-date-fill text-gray-400 group-hover:text-blue-500"></i>
+                            </div>
                             Jadwal Kegiatan
-                            <i
-                                class="bi bi-arrow-right text-xs ml-auto text-gray-300 group-hover:text-blue-400 transition"></i>
+                            <i class="bi bi-chevron-right text-[10px] ml-auto text-gray-300 group-hover:text-blue-500"></i>
                         </a>
                     </div>
                 </div>
 
             </div>
 
-        </div>
-
-    @endsection
+        @endsection
