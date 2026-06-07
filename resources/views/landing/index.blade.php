@@ -438,10 +438,11 @@
                 {{-- ── KANAN: FOTO + 4 PILAR (DIBUNGKUS SATU DIV AGAR TIDAK BOCOR KE KIRI) ── --}}
                 <div class="flex flex-col gap-8">
 
-                    {{-- Foto --}}
-                    <div class="relative overflow-hidden rounded-2xl aspect-video bg-gray-100 shadow-inner">
+                    {{-- Foto (Otomatis menyesuaikan ukuran, tidak kepotong, tidak raksasa) --}}
+                    <div
+                        class="relative overflow-hidden rounded-2xl bg-gray-50 border border-gray-100 shadow-sm flex items-center justify-center w-full max-h-96">
                         <img src="{{ asset('assets/images/kantor-disnaker.jpg') }}?v={{ file_exists(public_path('assets/images/kantor-disnaker.jpg')) ? filemtime(public_path('assets/images/kantor-disnaker.jpg')) : '1' }}"
-                            class="w-full h-full object-cover object-center transition-transform duration-700 hover:scale-105"
+                            class="w-auto h-auto max-w-full max-h-96 object-contain transition-transform duration-700 hover:scale-105"
                             alt="Dinas Tenaga Kerja Jawa Timur" loading="lazy" />
 
                         {{-- Caption --}}
@@ -458,91 +459,93 @@
                         </div>
                     </div>
 
-                    {{-- 4 Pilar Program (Menggunakan Inline SVG) --}}
-                    <div>
-                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Fokus Utama Program
-                        </p>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-
-                            {{-- Item 1: Kompetensi --}}
-                            <div
-                                class="flex items-start gap-2.5 p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:border-blue-200 hover:bg-blue-50 transition-all duration-200">
-                                <div
-                                    class="w-7 h-7 bg-white border border-gray-200 rounded-md flex items-center justify-center shrink-0 text-blue-600 shadow-sm mt-0.5">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
-                                        </path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p class="text-xs font-bold text-gray-800">Kompetensi</p>
-                                    <p class="text-[10px] text-gray-500 mt-0.5 leading-snug">Peningkatan skill tenaga kerja
-                                    </p>
-                                </div>
-                            </div>
-
-                            {{-- Item 2: Perlindungan --}}
-                            <div
-                                class="flex items-start gap-2.5 p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:border-blue-200 hover:bg-blue-50 transition-all duration-200">
-                                <div
-                                    class="w-7 h-7 bg-white border border-gray-200 rounded-md flex items-center justify-center shrink-0 text-blue-600 shadow-sm mt-0.5">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
-                                        </path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p class="text-xs font-bold text-gray-800">Perlindungan</p>
-                                    <p class="text-[10px] text-gray-500 mt-0.5 leading-snug">Hak-hak tenaga kerja terjamin
-                                    </p>
-                                </div>
-                            </div>
-
-                            {{-- Item 3: Lapangan Kerja --}}
-                            <div
-                                class="flex items-start gap-2.5 p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:border-blue-200 hover:bg-blue-50 transition-all duration-200">
-                                <div
-                                    class="w-7 h-7 bg-white border border-gray-200 rounded-md flex items-center justify-center shrink-0 text-blue-600 shadow-sm mt-0.5">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p class="text-xs font-bold text-gray-800">Lapangan Kerja</p>
-                                    <p class="text-[10px] text-gray-500 mt-0.5 leading-snug">Pengembangan peluang kerja</p>
-                                </div>
-                            </div>
-
-                            {{-- Item 4: Transmigrasi --}}
-                            <div
-                                class="flex items-start gap-2.5 p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:border-blue-200 hover:bg-blue-50 transition-all duration-200">
-                                <div
-                                    class="w-7 h-7 bg-white border border-gray-200 rounded-md flex items-center justify-center shrink-0 text-blue-600 shadow-sm mt-0.5">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
-                                        </path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <p class="text-xs font-bold text-gray-800">Transmigrasi</p>
-                                    <p class="text-[10px] text-gray-500 mt-0.5 leading-snug">Pengelolaan secara terencana
-                                    </p>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
                 </div>
 
+                {{-- 4 Pilar Program (Menggunakan Inline SVG) --}}
+                <div>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Fokus Utama Program
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+                        {{-- Item 1: Kompetensi --}}
+                        <div
+                            class="flex items-start gap-2.5 p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:border-blue-200 hover:bg-blue-50 transition-all duration-200">
+                            <div
+                                class="w-7 h-7 bg-white border border-gray-200 rounded-md flex items-center justify-center shrink-0 text-blue-600 shadow-sm mt-0.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                                    </path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-gray-800">Kompetensi</p>
+                                <p class="text-[10px] text-gray-500 mt-0.5 leading-snug">Peningkatan skill tenaga kerja
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- Item 2: Perlindungan --}}
+                        <div
+                            class="flex items-start gap-2.5 p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:border-blue-200 hover:bg-blue-50 transition-all duration-200">
+                            <div
+                                class="w-7 h-7 bg-white border border-gray-200 rounded-md flex items-center justify-center shrink-0 text-blue-600 shadow-sm mt-0.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                                    </path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-gray-800">Perlindungan</p>
+                                <p class="text-[10px] text-gray-500 mt-0.5 leading-snug">Hak-hak tenaga kerja terjamin
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- Item 3: Lapangan Kerja --}}
+                        <div
+                            class="flex items-start gap-2.5 p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:border-blue-200 hover:bg-blue-50 transition-all duration-200">
+                            <div
+                                class="w-7 h-7 bg-white border border-gray-200 rounded-md flex items-center justify-center shrink-0 text-blue-600 shadow-sm mt-0.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-gray-800">Lapangan Kerja</p>
+                                <p class="text-[10px] text-gray-500 mt-0.5 leading-snug">Pengembangan peluang kerja</p>
+                            </div>
+                        </div>
+
+                        {{-- Item 4: Transmigrasi --}}
+                        <div
+                            class="flex items-start gap-2.5 p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:border-blue-200 hover:bg-blue-50 transition-all duration-200">
+                            <div
+                                class="w-7 h-7 bg-white border border-gray-200 rounded-md flex items-center justify-center shrink-0 text-blue-600 shadow-sm mt-0.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
+                                    </path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-gray-800">Transmigrasi</p>
+                                <p class="text-[10px] text-gray-500 mt-0.5 leading-snug">Pengelolaan secara terencana
+                                </p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
             </div>
+
+        </div>
         </div>
     </section>
 

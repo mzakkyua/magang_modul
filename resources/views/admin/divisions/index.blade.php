@@ -24,6 +24,41 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
 
+        {{-- TANGKAP PESAN ERROR DARI CONTROLLER DI SINI --}}
+        @if ($errors->any())
+            <div
+                class="lg:col-span-3 mb-2 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3 shadow-sm animate-pulse">
+                <svg class="w-5 h-5 text-red-500 shrink-0 mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                    fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z"
+                        clip-rule="evenodd" />
+                </svg>
+                <div>
+                    <h4 class="text-sm font-extrabold text-red-800">Tindakan Ditolak Sistem!</h4>
+                    <ul class="text-xs font-bold text-red-600 mt-1 space-y-1">
+                        @foreach ($errors->all() as $error)
+                            <li>• {{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        @endif
+
+        {{-- TANGKAP PESAN SUCCESS JUGA --}}
+        @if (session('success'))
+            <div
+                class="lg:col-span-3 mb-2 p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-3 shadow-sm">
+                <svg class="w-5 h-5 text-emerald-500 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                    fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"
+                        clip-rule="evenodd" />
+                </svg>
+                <p class="text-sm font-bold text-emerald-800">{{ session('success') }}</p>
+            </div>
+        @endif
+
         {{-- ===================== TABEL DIVISI (KIRI) ===================== --}}
         <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
             <div class="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-gray-50/50">
@@ -126,7 +161,7 @@
                                 </form>
 
                                 <form action="{{ route('admin.divisions.destroy', $division) }}" method="POST"
-                                    onsubmit="return confirm('PERINGATAN: Hapus divisi {{ $division->name }}?\nData tidak dapat dikembalikan jika berhasil dihapus.')">
+                                    data-confirm="PERINGATAN: Hapus divisi {{ $division->name }}?\nData tidak dapat dikembalikan jika berhasil dihapus.">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" title="Hapus Divisi"
@@ -263,25 +298,39 @@
                 });
             });
 
-            // 2. Logic Loading Spinner Mencegah Double Submit (Untuk SEMUA form di halaman ini)
+            // 2. Logic Loading Spinner Mencegah Double Submit (Untuk SEMUA form)
             const allForms = document.querySelectorAll('form');
 
             allForms.forEach(form => {
-                form.addEventListener('submit', function() {
+                form.addEventListener('submit', function(e) {
+
+                    // CEK DULU: Apakah form ini butuh konfirmasi (punya data-confirm)?
+                    const confirmMessage = this.getAttribute('data-confirm');
+
+                    if (confirmMessage) {
+                        if (!window.confirm(confirmMessage)) {
+                            e.preventDefault(); // Batalkan pengiriman
+                            return; // Stop JS di sini
+                        }
+                    }
+
                     const btn = this.querySelector('button[type="submit"]');
                     if (btn) {
-                        // Kunci tombol saat disubmit
-                        btn.setAttribute('disabled', 'true');
-                        btn.classList.add('opacity-75', 'cursor-wait');
+                        // SULAPNYA DI SINI: Gunakan setTimeout agar browser jalan duluan
+                        setTimeout(() => {
+                            btn.setAttribute('disabled', 'true');
+                            btn.classList.add('opacity-75', 'cursor-wait');
 
-                        const spinnerSVG =
-                            `<svg class="animate-spin w-4 h-4 text-current mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
+                            const spinnerSVG =
+                                `<svg class="animate-spin w-4 h-4 text-current mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
 
-                        if (btn.innerText.trim() !== "") {
-                            btn.innerHTML = spinnerSVG + ' <span class="ml-2">Memproses...</span>';
-                        } else {
-                            btn.innerHTML = spinnerSVG;
-                        }
+                            if (btn.innerText.trim() !== "") {
+                                btn.innerHTML = spinnerSVG +
+                                    ' <span class="ml-2">Memproses...</span>';
+                            } else {
+                                btn.innerHTML = spinnerSVG;
+                            }
+                        }, 10); // Ditunda 10 milidetik (sangat cepat, mata tidak akan sadar)
                     }
                 });
             });
