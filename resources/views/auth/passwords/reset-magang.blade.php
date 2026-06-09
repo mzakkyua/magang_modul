@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reset Password - SINAKERTRANS</title>
 
+    {{-- Favicon dengan Auto Cache-Busting --}}
+    <link rel="icon" type="image/svg+xml"
+        href="{{ asset('assets/images/favicon.svg') }}?v={{ file_exists(public_path('assets/images/favicon.svg')) ? filemtime(public_path('assets/images/favicon.svg')) : '1' }}">
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     {{-- Bootstrap Icons --}}
@@ -80,11 +84,13 @@
     {{-- ========================= PANEL KIRI: BRANDING ========================= --}}
     <div class="hidden lg:flex flex-col justify-between w-105 shrink-0 px-12 py-12 border-r border-gray-100">
 
-        {{-- Logo --}}
-        <a href="{{ route('login') }}" class="flex items-center gap-2.5 w-fit">
-            <div class="logo-ring relative w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shrink-0"
+        {{-- Logo Desktop --}}
+        <a href="{{ route('login') }}" class="flex items-center gap-2.5 w-fit hover:opacity-90 transition-opacity">
+            <div class="logo-ring relative w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
                 style="box-shadow: 0 0 0 3px rgba(37,99,235,0.15), 0 4px 12px rgba(37,99,235,0.3);">
-                <i class="bi bi-briefcase-fill text-white text-sm"></i>
+                {{-- Implementasi Favicon Lokal --}}
+                <img src="{{ asset('assets/images/favicon.svg') }}?v={{ file_exists(public_path('assets/images/favicon.svg')) ? filemtime(public_path('assets/images/favicon.svg')) : '1' }}"
+                    alt="Logo" class="w-5 h-5 object-contain" />
             </div>
             <span class="text-xl font-extrabold text-blue-600 tracking-tight">SINAKERTRANS</span>
         </a>
@@ -129,9 +135,12 @@
     <div class="flex-1 flex flex-col items-center justify-center px-6 py-12">
 
         {{-- Logo mobile --}}
-        <a href="{{ route('login') }}" class="flex lg:hidden items-center gap-2 mb-8">
-            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <i class="bi bi-briefcase-fill text-white text-xs"></i>
+        <a href="{{ route('login') }}"
+            class="flex lg:hidden items-center gap-2 mb-8 hover:opacity-90 transition-opacity">
+            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center overflow-hidden">
+                {{-- Implementasi Favicon Lokal --}}
+                <img src="{{ asset('assets/images/favicon.svg') }}?v={{ file_exists(public_path('assets/images/favicon.svg')) ? filemtime(public_path('assets/images/favicon.svg')) : '1' }}"
+                    alt="Logo" class="w-5 h-5 object-contain" />
             </div>
             <span class="text-lg font-extrabold text-blue-600 tracking-tight">SINAKERTRANS</span>
         </a>

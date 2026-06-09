@@ -5,15 +5,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verifikasi Email - Sinakertrans</title>
-    <!-- Memanggil Tailwind CSS untuk styling cepat -->
-    <script src="https://cdn.tailwindcss.com"></script>
+
+    {{-- Favicon dengan Auto Cache-Busting --}}
+    <link rel="icon" type="image/svg+xml"
+        href="{{ asset('assets/images/favicon.svg') }}?v={{ file_exists(public_path('assets/images/favicon.svg')) ? filemtime(public_path('assets/images/favicon.svg')) : '1' }}">
+
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/admin/delete-confirm.js'])
 </head>
 
 <body class="bg-blue-50 flex items-center justify-center min-h-screen">
 
     <div class="bg-white p-8 rounded-xl shadow-lg max-w-md w-full text-center">
         <div class="mb-6">
-            <!-- Ikon Amplop Surat -->
             <svg class="w-20 h-20 mx-auto text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
@@ -29,7 +32,6 @@
             Silakan klik link tersebut untuk membuktikan bahwa ini benar-benar email Anda.
         </p>
 
-        <!-- Pesan Sukses jika menekan tombol Kirim Ulang -->
         @if (session('success'))
             <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 text-sm text-left"
                 role="alert">
@@ -40,7 +42,6 @@
         <div class="border-t border-gray-200 pt-6 mt-2">
             <p class="text-sm text-gray-500 mb-3">Belum menerima email dari kami?</p>
 
-            <!-- Tombol Kirim Ulang -->
             <form method="POST" action="{{ route('verification.send') }}">
                 @csrf
                 <button type="submit"
@@ -51,7 +52,6 @@
         </div>
 
         <div class="mt-6">
-            <!-- Tombol Logout -->
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button type="submit" class="text-sm text-red-500 hover:text-red-700 hover:underline">

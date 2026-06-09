@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Masuk - SINAKERTRANS</title>
 
+    {{-- Implementasi Favicon Auto Cache-Buster --}}
+    <link rel="icon" type="image/svg+xml"
+        href="{{ asset('assets/images/favicon.svg') }}?v={{ file_exists(public_path('assets/images/favicon.svg')) ? filemtime(public_path('assets/images/favicon.svg')) : '1' }}">
+
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/auth.js'])
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -31,8 +35,10 @@
             {{-- Logo --}}
             <a href="{{ route('landing.index') }}" class="flex items-center gap-2.5">
                 <div
-                    class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-md shadow-blue-600/20">
-                    <i class="bi bi-briefcase-fill text-white text-sm"></i>
+                    class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-md shadow-blue-600/20 overflow-hidden">
+                    {{-- Implementasi Favicon Auto Cache-Buster pada Logo Kiri --}}
+                    <img src="{{ asset('assets/images/favicon.svg') }}?v={{ file_exists(public_path('assets/images/favicon.svg')) ? filemtime(public_path('assets/images/favicon.svg')) : '1' }}"
+                        alt="Logo" class="w-6 h-6 object-contain" />
                 </div>
                 <span class="font-extrabold text-gray-900 text-xl tracking-tight">SINAKERTRANS</span>
             </a>
@@ -81,8 +87,10 @@
                 {{-- Header mobile (hanya muncul di layar kecil) --}}
                 <div class="lg:hidden mb-8">
                     <a href="{{ route('landing.index') }}" class="flex items-center gap-2.5 mb-1">
-                        <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
-                            <i class="bi bi-briefcase-fill text-white text-sm"></i>
+                        <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center overflow-hidden">
+                            {{-- Implementasi Favicon Auto Cache-Buster pada Logo Mobile --}}
+                            <img src="{{ asset('assets/images/favicon.svg') }}?v={{ file_exists(public_path('assets/images/favicon.svg')) ? filemtime(public_path('assets/images/favicon.svg')) : '1' }}"
+                                alt="Logo" class="w-6 h-6 object-contain" />
                         </div>
                         <span class="font-extrabold text-gray-900 text-xl tracking-tight">SINAKERTRANS</span>
                     </a>

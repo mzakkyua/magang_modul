@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar Akun - SINAKERTRANS</title>
 
+    {{-- Favicon dengan Auto Cache-Busting --}}
+    <link rel="icon" type="image/svg+xml"
+        href="{{ asset('assets/images/favicon.svg') }}?v={{ file_exists(public_path('assets/images/favicon.svg')) ? filemtime(public_path('assets/images/favicon.svg')) : '1' }}">
+
     @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/auth.js'])
 
     {{-- Google Fonts --}}
@@ -45,12 +49,15 @@
             <div class="absolute top-1/2 right-0 w-48 h-48 bg-blue-400/20 rounded-full translate-x-1/2 blur-3xl">
             </div>
 
-            {{-- Logo --}}
+            {{-- Logo Desktop --}}
             <div class="relative z-10">
-                <a href="{{ route('landing.index') }}" class="flex items-center gap-3 mb-3">
+                <a href="{{ route('landing.index') }}"
+                    class="flex items-center gap-3 mb-3 hover:opacity-90 transition-opacity">
                     <div
-                        class="w-11 h-11 bg-white/15 rounded-2xl flex items-center justify-center border border-white/20">
-                        <i class="bi bi-briefcase-fill text-white text-lg"></i>
+                        class="w-11 h-11 bg-white/15 rounded-2xl flex items-center justify-center border border-white/20 overflow-hidden">
+                        {{-- Implementasi Favicon Lokal --}}
+                        <img src="{{ asset('assets/images/favicon.svg') }}?v={{ file_exists(public_path('assets/images/favicon.svg')) ? filemtime(public_path('assets/images/favicon.svg')) : '1' }}"
+                            alt="Logo" class="w-6 h-6 object-contain" />
                     </div>
 
                     <span class="text-white font-extrabold text-2xl tracking-tight">
@@ -144,11 +151,14 @@
 
             <div class="w-full max-w-md">
 
-                {{-- Mobile Header --}}
+                {{-- Mobile Header (Hanya muncul di layar kecil) --}}
                 <div class="lg:hidden mb-8">
-                    <a href="{{ route('landing.index') }}" class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center">
-                            <i class="bi bi-briefcase-fill text-white"></i>
+                    <a href="{{ route('landing.index') }}"
+                        class="flex items-center gap-3 hover:opacity-90 transition-opacity">
+                        <div class="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center overflow-hidden">
+                            {{-- Implementasi Favicon Lokal di kotak biru --}}
+                            <img src="{{ asset('assets/images/favicon.svg') }}?v={{ file_exists(public_path('assets/images/favicon.svg')) ? filemtime(public_path('assets/images/favicon.svg')) : '1' }}"
+                                alt="Logo" class="w-6 h-6 object-contain" />
                         </div>
 
                         <span class="font-extrabold text-xl text-gray-900">
