@@ -177,7 +177,7 @@
                                     </div>
                                     <div>
                                         <p
-                                            class="font-extrabold text-xs leading-tight mb-0.5 truncate max-w-[250px]
+                                            class="font-extrabold text-xs leading-tight mb-0.5 truncate max-w-62.5
                                             {{ $vacancy->status === 'archived' ? 'text-gray-400' : 'text-gray-900 group-hover:text-blue-600' }}">
                                             {{ $vacancy->title }}
                                         </p>

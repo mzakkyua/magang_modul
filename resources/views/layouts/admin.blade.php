@@ -67,12 +67,25 @@
                         {{ now()->translatedFormat('l, d F Y') }}
                     </p>
                 </div>
+
+                {{-- AREA KANAN TOPBAR (Panduan, Lonceng, Profil) --}}
                 <div class="flex items-center gap-3">
                     @stack('header_actions')
+
+                    {{-- 1. TOMBOL BUKU PANDUAN ADMIN --}}
+                    <a href="{{ route('admin.guidebook.view') }}" target="_blank" rel="noopener noreferrer"
+                        title="Baca Buku Panduan Admin"
+                        class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-blue-50 flex items-center justify-center transition-colors text-slate-500 hover:text-blue-600 shadow-sm border border-transparent hover:border-blue-100">
+                        <i class="bi bi-question-circle-fill text-base"></i>
+                    </a>
+
+                    {{-- 2. TOMBOL NOTIFIKASI --}}
                     <button
                         class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition text-slate-500 hover:text-slate-700">
                         <i class="bi bi-bell text-base"></i>
                     </button>
+
+                    {{-- 3. FOTO PROFIL --}}
                     <div
                         class="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center border-2 border-blue-200 overflow-hidden shrink-0">
                         @if (Auth::user()->profile_photo_path)

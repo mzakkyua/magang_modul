@@ -554,6 +554,9 @@
     {{-- ===================== GALLERY SECTION — MODERN CLEAN REDESIGN ===================== --}}
     <x-gallery-landing />
 
+    {{-- Menampilkan tombol panduan khusus untuk pendaftar baru di halaman depan --}}
+    <x-floating-guide title="Panduan Peserta" :path="asset('assets/docs/guidebook-user.pdf')" />
+
     {{-- ===================== SCRIPTS ===================== --}}
     @push('script')
         <script>

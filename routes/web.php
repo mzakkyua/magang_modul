@@ -139,13 +139,26 @@ Route::get('/', [LandingController::class, 'index'])
 Route::get('/lowongan/{vacancy}', [LandingController::class, 'show'])
     ->name('landing.show');
 
-// Kalender publik
-Route::get('/calendar', [CalendarController::class, 'index'])
-    ->name('calendar');
 
-Route::get('/calendar/events', [CalendarController::class, 'fetch'])
-    ->name('calendar.events')
-    ->middleware('throttle:60,1');
+
+/*
+|--------------------------------------------------------------------------
+| CALENDAR USER 
+|--------------------------------------------------------------------------
+| Harus Login Sebagai Peserta Magang, tapi TIDAK HARUS VERIFIED.
+| Karena kalender juga menampilkan event selain yang berkaitan dengan magang, seperti workshop, seminar
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(['auth:magang', 'verified'])->group(function () {
+
+    Route::get('/calendar', [CalendarController::class, 'index'])
+        ->name('calendar');
+
+    Route::get('/calendar/events', [CalendarController::class, 'fetch'])
+        ->name('calendar.events')
+        ->middleware('throttle:60,1');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -308,6 +321,27 @@ Route::prefix('admin')
         // Dashboard
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])
             ->name('dashboard');
+
+        // ==========================================================
+        // RUTE PANDUAN ADMIN DI SINI
+        // ==========================================================
+        Route::get('/baca-panduan', function () {
+            $path = storage_path('app/secure-docs/guidebook-admin.pdf');
+
+            // Cek fisik file di sisi backend server
+            if (!file_exists($path) || filesize($path) < 1024) {
+                return back()->withErrors([
+                    'error' => "Gagal memuat dokumen. File 'guidebook-admin.pdf' tidak ditemukan atau corrupt di server. Silakan upload ulang file melalui File Manager cPanel."
+                ]);
+            }
+
+            // Tampilkan secara aman ke browser admin jika lolos pengecekan
+            return response()->file($path, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="guidebook-admin.pdf"'
+            ]);
+        })->name('guidebook.view');
+        // ==========================================================
 
         // Kalender admin
         Route::get('/calendar', [CalendarController::class, 'indexAdmin'])

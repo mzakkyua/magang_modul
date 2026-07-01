@@ -201,7 +201,7 @@ class ApplicationVerificationController extends Controller
         saat blade mengakses leader->profile->full_name.
         */
         $query = (clone $base)
-            ->with(['vacancy', 'leader.profile'])  // ← perbaikan: .profile ditambahkan
+            ->with(['vacancy', 'leader.profile']) 
             ->orderBy('created_at', 'desc');
 
         // STEP: Filter status (opsional, dari query param ?status=...)
